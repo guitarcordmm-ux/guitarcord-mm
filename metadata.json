@@ -1,0 +1,6 @@
+{
+  "name": "ChordStream Pro",
+  "description": "A minimalist, dark-themed professional guitar chord library featuring a premium glassmorphism interface, clean typography, and a professional Lyrics & Chord Creator tool.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
