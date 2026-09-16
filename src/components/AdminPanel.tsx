@@ -105,7 +105,7 @@ export function AdminPanel() {
   if (!isAdmin) {
     return (
       <div className="p-6 bg-black min-h-screen text-white flex flex-col items-center justify-center">
-        <h1 className="text-2xl font-bold mb-4 text-red-500">Access Denied</h1>
+        <h1 className="text-2xl font-bold mb-4 text-yellow-500">Access Denied</h1>
         <p className="mb-6 text-white/70">Your account ({currentUser?.email || 'Guest'}) is not authorized as an administrator.</p>
         <button 
           onClick={() => navigate('/')}
@@ -125,7 +125,7 @@ export function AdminPanel() {
           <h1 className="text-2xl font-bold">Admin Management Panel</h1>
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-xs text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+          <span className="text-xs text-yellow-400 bg-yellow-500/10 px-3 py-1 rounded-full border border-yellow-500/20">
             Admin: {currentUser?.email}
           </span>
           <button
@@ -133,7 +133,7 @@ export function AdminPanel() {
               await signOutUser();
               navigate('/');
             }}
-            className="text-xs text-red-400 hover:text-red-300"
+            className="text-xs text-yellow-400 hover:text-white"
           >
             Logout
           </button>
@@ -169,23 +169,23 @@ export function AdminPanel() {
                 <button onClick={() => setEditingSong(song)} className="bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded text-xs font-semibold transition-colors">Edit</button>
                 {statusTab === 'pending' && (
                   <>
-                    <button onClick={() => handleAction(song.id, 'approved')} className="bg-emerald-600 hover:bg-emerald-500 px-4 py-1.5 rounded text-xs font-semibold transition-colors">Approve</button>
-                    <button onClick={() => handleAction(song.id, 'rejected')} className="bg-red-600 hover:bg-red-500 px-4 py-1.5 rounded text-xs font-semibold transition-colors">Reject</button>
+                    <button onClick={() => handleAction(song.id, 'approved')} className="bg-yellow-600 hover:bg-yellow-500 px-4 py-1.5 rounded text-xs font-semibold transition-colors">Approve</button>
+                    <button onClick={() => handleAction(song.id, 'rejected')} className="bg-yellow-600 hover:bg-yellow-500 px-4 py-1.5 rounded text-xs font-semibold transition-colors">Reject</button>
                   </>
                 )}
                 {statusTab === 'approved' && (
-                   <button onClick={() => handleAction(song.id, 'rejected')} className="bg-red-600 hover:bg-red-500 px-4 py-1.5 rounded text-xs font-semibold transition-colors">Reject</button>
+                   <button onClick={() => handleAction(song.id, 'rejected')} className="bg-yellow-600 hover:bg-yellow-500 px-4 py-1.5 rounded text-xs font-semibold transition-colors">Reject</button>
                 )}
                 {statusTab === 'rejected' && (
-                   <button onClick={() => handleAction(song.id, 'approved')} className="bg-emerald-600 hover:bg-emerald-500 px-4 py-1.5 rounded text-xs font-semibold transition-colors">Approve</button>
+                   <button onClick={() => handleAction(song.id, 'approved')} className="bg-yellow-600 hover:bg-yellow-500 px-4 py-1.5 rounded text-xs font-semibold transition-colors">Approve</button>
                 )}
                 {statusTab === 'deleted' ? (
                   <>
-                    <button onClick={() => handleAction(song.id, 'restore')} className="bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 rounded text-xs font-semibold transition-colors">Restore</button>
-                    <button onClick={() => handleAction(song.id, 'delete')} className="bg-red-600 hover:bg-red-500 px-3 py-1.5 rounded text-xs font-semibold transition-colors">Delete Permanently</button>
+                    <button onClick={() => handleAction(song.id, 'restore')} className="bg-yellow-600 hover:bg-yellow-500 px-3 py-1.5 rounded text-xs font-semibold transition-colors">Restore</button>
+                    <button onClick={() => handleAction(song.id, 'delete')} className="bg-yellow-600 hover:bg-yellow-500 px-3 py-1.5 rounded text-xs font-semibold transition-colors">Delete Permanently</button>
                   </>
                 ) : (
-                  <button onClick={() => handleAction(song.id, 'deleted')} className="bg-red-600 hover:bg-red-500 px-3 py-1.5 rounded text-xs font-semibold transition-colors">Delete</button>
+                  <button onClick={() => handleAction(song.id, 'deleted')} className="bg-yellow-600 hover:bg-yellow-500 px-3 py-1.5 rounded text-xs font-semibold transition-colors">Delete</button>
                 )}
               </div>
             </div>
@@ -228,7 +228,7 @@ export function AdminPanel() {
               </button>
               <button 
                 onClick={confirmDelete}
-                className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded font-semibold transition-colors text-sm"
+                className="px-4 py-2 bg-yellow-600 hover:bg-yellow-500 rounded font-semibold transition-colors text-sm"
               >
                 Delete
               </button>
@@ -245,8 +245,8 @@ export function AdminPanel() {
             exit={{ opacity: 0, y: -20, scale: 0.9 }}
             className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-[300] px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 backdrop-blur-xl border ${
               status.type === 'success' 
-                ? 'bg-emerald-500/90 border-emerald-400/50 text-white' 
-                : 'bg-red-500/90 border-red-400/50 text-white'
+                ? 'bg-yellow-500/90 border-yellow-400/50 text-white' 
+                : 'bg-yellow-500/90 border-yellow-400/50 text-white'
             }`}
           >
             <span className="font-semibold text-sm tracking-wide">{status.message}</span>

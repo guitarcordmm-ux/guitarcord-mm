@@ -71,17 +71,17 @@ export function ChordBuilderModal({ isOpen, onClose, onSave, initialName = '', i
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm pt-safe pb-safe">
       <motion.div 
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="bg-[#111] border border-white/10 w-full max-w-xl rounded-[32px] overflow-hidden shadow-2xl flex flex-col md:flex-row"
+        className="bg-[#111] border border-white/10 w-full max-w-xl max-h-full overflow-y-auto rounded-[32px] shadow-2xl flex flex-col md:flex-row no-scrollbar"
       >
         {/* Left Side: Controls */}
         <div className="p-8 flex-1 border-r border-white/5 space-y-6">
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-black text-white italic uppercase tracking-tighter">
-              Chord <span className="text-blue-500">Builder</span>
+              Chord <span className="text-yellow-400">Builder</span>
             </h3>
             <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full text-white/40">
               <X className="w-5 h-5" />
@@ -98,11 +98,11 @@ export function ChordBuilderModal({ isOpen, onClose, onSave, initialName = '', i
                   setName(e.target.value);
                   if (errorMessage) setErrorMessage(null);
                 }}
-                className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white font-bold focus:outline-none focus:border-blue-500/50"
+                className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white font-bold focus:outline-none focus:border-yellow-400/50"
                 placeholder="e.g. Amaj9"
               />
               {errorMessage && (
-                <p className="text-red-400 text-xs mt-1 ml-2 font-medium">{errorMessage}</p>
+                <p className="text-yellow-400 text-xs mt-1 ml-2 font-medium">{errorMessage}</p>
               )}
             </div>
 
@@ -115,7 +115,7 @@ export function ChordBuilderModal({ isOpen, onClose, onSave, initialName = '', i
                   max="12" 
                   value={baseFret}
                   onChange={(e) => setBaseFret(parseInt(e.target.value))}
-                  className="flex-1 accent-blue-600"
+                  className="flex-1 accent-yellow-500"
                 />
                 <span className="text-white font-black text-xl w-8 text-center">{baseFret}</span>
               </div>
@@ -130,7 +130,7 @@ export function ChordBuilderModal({ isOpen, onClose, onSave, initialName = '', i
                     onClick={() => setSelectedFinger(typeof f === 'string' ? 5 : f)}
                     className={`w-10 h-10 rounded-xl flex items-center justify-center text-xs font-black transition-all border ${
                       (typeof f === 'string' ? selectedFinger === 5 : selectedFinger === f)
-                        ? 'bg-blue-600 border-blue-400 text-white shadow-lg' 
+                        ? 'bg-yellow-500 border-yellow-400 text-white shadow-lg' 
                         : 'bg-white/5 border-white/5 text-white/40 hover:text-white'
                     }`}
                   >
@@ -144,7 +144,7 @@ export function ChordBuilderModal({ isOpen, onClose, onSave, initialName = '', i
           <div className="pt-4 flex gap-3">
              <button
               onClick={handleSave}
-              className="flex-1 flex items-center justify-center gap-2 bg-white text-black py-4 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-blue-500 hover:text-white transition-all active:scale-95"
+              className="flex-1 flex items-center justify-center gap-2 bg-white text-black py-4 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-yellow-400 hover:text-white transition-all active:scale-95"
             >
               <Save className="w-4 h-4" />
               Save Chord
@@ -154,7 +154,7 @@ export function ChordBuilderModal({ isOpen, onClose, onSave, initialName = '', i
                 setFrets([0, 0, 0, 0, 0, 0]);
                 setFingers([0, 0, 0, 0, 0, 0]);
               }}
-              className="p-4 bg-white/5 text-white/40 hover:text-red-500 rounded-2xl border border-white/5 transition-all"
+              className="p-4 bg-white/5 text-white/40 hover:text-yellow-500 rounded-2xl border border-white/5 transition-all"
             >
               <Eraser className="w-5 h-5" />
             </button>
@@ -165,7 +165,7 @@ export function ChordBuilderModal({ isOpen, onClose, onSave, initialName = '', i
         <div className="bg-black/40 p-8 flex flex-col items-center justify-center min-w-[280px] border-l border-white/5">
           <div className="mb-8 w-full">
             <div className="flex items-center gap-2 mb-4">
-              <Eye className="w-3.5 h-3.5 text-blue-500" />
+              <Eye className="w-3.5 h-3.5 text-yellow-400" />
               <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Visual Preview</span>
             </div>
             <div className="bg-white/5 rounded-3xl p-4 flex justify-center">
@@ -225,7 +225,7 @@ export function ChordBuilderModal({ isOpen, onClose, onSave, initialName = '', i
                         {frets[stringIdx] === (fretRowIdx + 1) ? (
                           <motion.div 
                             layoutId={`dot-${stringIdx}`}
-                            className="w-6 h-6 rounded-full bg-blue-500 shadow-xl border-2 border-blue-400 flex items-center justify-center text-[10px] font-black text-white"
+                            className="w-6 h-6 rounded-full bg-yellow-400 shadow-xl border-2 border-yellow-400 flex items-center justify-center text-[10px] font-black text-white"
                           >
                             {fingers[stringIdx] === 5 ? 'T' : fingers[stringIdx]}
                           </motion.div>

@@ -175,7 +175,7 @@ export function ChordEditor({ onClose, onSubmit, initialContent = '', initialSon
           {chunks.map((c, i) => (
             <div key={i} className="flex flex-col justify-end min-w-0 mr-[0.3em] mb-2">
               {c.chord && (
-                <span className="text-[#0a84ff] font-bold h-[1.5rem] mb-[0.1em] text-[12px] sm:text-[15px] whitespace-nowrap bg-white/[0.04] px-1.5 rounded-md w-fit">
+                <span className="text-[#FFD600] font-bold h-[1.5rem] mb-[0.1em] text-[12px] sm:text-[15px] whitespace-nowrap bg-white/[0.04] px-1.5 rounded-md w-fit">
                   {c.chord}
                 </span>
               )}
@@ -206,8 +206,8 @@ export function ChordEditor({ onClose, onSubmit, initialContent = '', initialSon
       </Helmet>
       
       {/* Top Navigation */}
-      <div className="flex items-center justify-between px-3 sm:px-6 h-14 sm:h-16 border-b border-white/[0.05] bg-black/40 backdrop-blur-2xl z-50 shrink-0">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between px-3 sm:px-6 pt-safe pb-2 sm:pb-3 border-b border-white/[0.05] bg-black/40 backdrop-blur-2xl z-50 shrink-0">
+        <div className="flex items-center gap-3 pt-1">
           <button 
             onClick={onClose}
             className="flex items-center justify-center w-9 h-9 rounded-full bg-white/5 active:scale-95 transition-transform"
@@ -220,25 +220,25 @@ export function ChordEditor({ onClose, onSubmit, initialContent = '', initialSon
             </h2>
             <div className="flex items-center gap-1.5 overflow-hidden">
                <span className="text-[10px] text-white/40 uppercase tracking-widest font-black shrink-0">Draft</span>
-               {artist && <span className="text-[10px] text-[#0a84ff] truncate">• {artist}</span>}
+               {artist && <span className="text-[10px] text-[#FFD600] truncate">• {artist}</span>}
                {composer && <span className="text-[10px] text-white/40 truncate">• {composer}</span>}
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 pt-1">
           {viewMode !== 'preview' && (
             <button onClick={() => setViewMode('preview')} className="p-2.5 rounded-full bg-white/5 text-white/60"><Eye className="w-5 h-5" /></button>
           )}
           {viewMode === 'preview' && (
-            <button onClick={() => setViewMode('edit')} className="p-2.5 rounded-full bg-[#0a84ff]/20 text-[#0a84ff]"><Edit3 className="w-5 h-5" /></button>
+            <button onClick={() => setViewMode('edit')} className="p-2.5 rounded-full bg-[#FFD600]/20 text-[#FFD600]"><Edit3 className="w-5 h-5" /></button>
           )}
 
           <div className="h-6 w-[1px] bg-white/10 mx-1 hidden sm:block" />
           <button
             onClick={isAdmin && initialSongData?.id ? handleAdminUpdate : handleUploadPublic}
             className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all active:scale-95 ${
-              isAdmin ? 'bg-[#0a84ff] text-white shadow-[0_0_15px_rgba(10,132,255,0.3)]' : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
+              isAdmin ? 'bg-[#FFD600] text-white shadow-[0_0_15px_rgba(255,214,0,0.3)]' : 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20'
             }`}
           >
             {isAdmin ? (
@@ -268,7 +268,7 @@ export function ChordEditor({ onClose, onSubmit, initialContent = '', initialSon
                     placeholder="e.g. ချစ်သူရေ"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="w-full bg-white/5 border border-white/5 rounded-2xl px-4 py-4 text-xl font-bold text-white placeholder-white/10 focus:outline-none focus:border-[#0a84ff]/30 focus:bg-white/[0.07] transition-all"
+                    className="w-full bg-white/5 border border-white/5 rounded-2xl px-4 py-4 text-xl font-bold text-white placeholder-white/10 focus:outline-none focus:border-[#FFD600]/30 focus:bg-white/[0.07] transition-all"
                   />
                 </div>
                 
@@ -280,7 +280,7 @@ export function ChordEditor({ onClose, onSubmit, initialContent = '', initialSon
                       placeholder="e.g. ထူးအိမ်သင်"
                       value={artist}
                       onChange={(e) => setArtist(e.target.value)}
-                      className="w-full bg-white/5 border border-white/5 rounded-2xl px-4 py-3.5 text-[15px] font-medium text-white/80 placeholder-white/10 focus:outline-none focus:border-[#0a84ff]/30 focus:bg-white/[0.07] transition-all"
+                      className="w-full bg-white/5 border border-white/5 rounded-2xl px-4 py-3.5 text-[15px] font-medium text-white/80 placeholder-white/10 focus:outline-none focus:border-[#FFD600]/30 focus:bg-white/[0.07] transition-all"
                     />
                   </div>
                   <div>
@@ -290,7 +290,7 @@ export function ChordEditor({ onClose, onSubmit, initialContent = '', initialSon
                       placeholder="e.g. ထူးအိမ်သင်"
                       value={composer}
                       onChange={(e) => setComposer(e.target.value)}
-                      className="w-full bg-white/5 border border-white/5 rounded-2xl px-4 py-3.5 text-[15px] font-medium text-white/80 placeholder-white/10 focus:outline-none focus:border-[#0a84ff]/30 focus:bg-white/[0.07] transition-all"
+                      className="w-full bg-white/5 border border-white/5 rounded-2xl px-4 py-3.5 text-[15px] font-medium text-white/80 placeholder-white/10 focus:outline-none focus:border-[#FFD600]/30 focus:bg-white/[0.07] transition-all"
                     />
                   </div>
                   <div>
@@ -300,7 +300,7 @@ export function ChordEditor({ onClose, onSubmit, initialContent = '', initialSon
                       placeholder="e.g. Pop"
                       value={genre}
                       onChange={(e) => setGenre(e.target.value)}
-                      className="w-full bg-white/5 border border-white/5 rounded-2xl px-4 py-3.5 text-[15px] font-medium text-white/80 placeholder-white/10 focus:outline-none focus:border-[#0a84ff]/30 focus:bg-white/[0.07] transition-all"
+                      className="w-full bg-white/5 border border-white/5 rounded-2xl px-4 py-3.5 text-[15px] font-medium text-white/80 placeholder-white/10 focus:outline-none focus:border-[#FFD600]/30 focus:bg-white/[0.07] transition-all"
                     />
                   </div>
                 </div>
@@ -321,7 +321,7 @@ export function ChordEditor({ onClose, onSubmit, initialContent = '', initialSon
 
               <div className="pt-4 pb-10">
                 <div className="flex items-center justify-between mb-4 px-1">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#0a84ff]">Lyrics & Chords</label>
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#FFD600]">Lyrics & Chords</label>
                   <div className="flex items-center gap-1.5 p-1 bg-white/5 rounded-lg border border-white/5">
                     <Type className="w-3 h-3 text-white/30 ml-1.5" />
                     <span className="text-[10px] font-bold text-white/40 mr-1.5 uppercase">Mono</span>
@@ -343,8 +343,8 @@ export function ChordEditor({ onClose, onSubmit, initialContent = '', initialSon
           </div>
 
           {/* Sticky Mobile Chord Toolbar */}
-          <div className={`fixed bottom-0 left-0 right-0 z-[100] bg-black/80 backdrop-blur-2xl border-t border-white/5 p-3 transform transition-transform duration-300 ${isFocused ? 'translate-y-0' : 'sm:translate-y-0 translate-y-[calc(100%+20px)]'}`}>
-            <div className="max-w-4xl mx-auto flex flex-col gap-3">
+          <div className={`fixed bottom-0 left-0 right-0 z-[100] bg-black/90 backdrop-blur-2xl border-t border-white/10 px-3 pt-3 pb-safe transform transition-transform duration-300 ${isFocused ? 'translate-y-0' : 'sm:translate-y-0 translate-y-[calc(100%+20px)]'}`}>
+            <div className="max-w-4xl mx-auto flex flex-col gap-3 pb-2">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex gap-1 overflow-x-auto no-scrollbar pb-1">
                   {Object.keys(chordCategories).map(cat => (
@@ -352,14 +352,14 @@ export function ChordEditor({ onClose, onSubmit, initialContent = '', initialSon
                       key={cat}
                       onClick={() => setActiveCategory(cat)}
                       className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all ${
-                        activeCategory === cat ? 'bg-[#0a84ff] text-white' : 'bg-white/5 text-white/40'
+                        activeCategory === cat ? 'bg-[#FFD600] text-white' : 'bg-white/5 text-white/40'
                       }`}
                     >
                       {cat}
                     </button>
                   ))}
                 </div>
-                <button onClick={() => setIsBuilderOpen(true)} className="shrink-0 w-9 h-9 rounded-full bg-[#0a84ff]/10 flex items-center justify-center text-[#0a84ff]"><Plus className="w-5 h-5" /></button>
+                <button onClick={() => setIsBuilderOpen(true)} className="shrink-0 w-9 h-9 rounded-full bg-[#FFD600]/10 flex items-center justify-center text-[#FFD600]"><Plus className="w-5 h-5" /></button>
               </div>
               
               <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
@@ -367,7 +367,7 @@ export function ChordEditor({ onClose, onSubmit, initialContent = '', initialSon
                   <button
                     key={chord}
                     onClick={() => handleInsertQuickChord(chord)}
-                    className="flex-shrink-0 min-w-[56px] h-11 flex items-center justify-center bg-white/10 active:bg-[#0a84ff] active:text-white rounded-xl text-sm font-bold transition-all border border-white/5 shadow-lg shadow-black/20"
+                    className="flex-shrink-0 min-w-[56px] h-11 flex items-center justify-center bg-white/10 active:bg-[#FFD600] active:text-white rounded-xl text-sm font-bold transition-all border border-white/5 shadow-lg shadow-black/20"
                   >
                     {chord}
                   </button>
@@ -398,7 +398,7 @@ export function ChordEditor({ onClose, onSubmit, initialContent = '', initialSon
                   <div className="flex items-center bg-white/5 rounded-2xl p-1.5 border border-white/5">
                     <button onClick={() => setTranspose(t => t - 1)} className="p-2 rounded-xl hover:bg-white/5 transition-colors"><Minus className="w-4 h-4" /></button>
                     <div className="px-3 flex flex-col items-center min-w-[40px]">
-                      <span className="text-[10px] font-black text-[#0a84ff] uppercase leading-none mb-1">Key</span>
+                      <span className="text-[10px] font-black text-[#FFD600] uppercase leading-none mb-1">Key</span>
                       <span className="text-sm font-black tabular-nums">{transpose > 0 ? `+${transpose}` : transpose}</span>
                     </div>
                     <button onClick={() => setTranspose(t => t + 1)} className="p-2 rounded-xl hover:bg-white/5 transition-colors"><Plus className="w-4 h-4" /></button>
@@ -435,8 +435,8 @@ export function ChordEditor({ onClose, onSubmit, initialContent = '', initialSon
             exit={{ opacity: 0, y: -20, scale: 0.9 }}
             className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-[300] px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 backdrop-blur-xl border ${
               status.type === 'success' 
-                ? 'bg-emerald-500/90 border-emerald-400/50 text-white' 
-                : 'bg-red-500/90 border-red-400/50 text-white'
+                ? 'bg-yellow-500/90 border-yellow-400/50 text-white' 
+                : 'bg-yellow-500/90 border-yellow-400/50 text-white'
             }`}
           >
             <span className="font-semibold text-sm tracking-wide">{status.message}</span>

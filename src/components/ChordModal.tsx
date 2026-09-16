@@ -146,7 +146,7 @@ export function ChordModal({ song, onClose, isAdmin, user }: Props) {
           {chunks.map((c, i) => (
             <div key={i} className="flex flex-col justify-end min-w-0 mr-[0.3em] mb-1">
               {c.chord ? (
-                <span className="text-[#0a84ff] font-bold h-[1.5rem] mb-[0.1em] text-[12px] sm:text-[15px] whitespace-nowrap bg-white/[0.04] px-1.5 rounded-md w-fit">
+                <span className="text-[#FFD600] font-bold h-[1.5rem] mb-[0.1em] text-[12px] sm:text-[15px] whitespace-nowrap bg-white/[0.04] px-1.5 rounded-md w-fit">
                   {c.chord}
                 </span>
               ) : (
@@ -164,14 +164,14 @@ export function ChordModal({ song, onClose, isAdmin, user }: Props) {
     <>
       <div className="fixed inset-0 bg-black z-50 overflow-y-auto pb-safe">
         <div className="sticky top-0 bg-black/95 backdrop-blur-md z-10 px-4 pt-safe pb-3.5 flex items-center justify-between border-b border-white/10">
-          <button onClick={onClose} className="flex items-center gap-1 text-[#0a84ff] py-1 pr-2 active:opacity-70 transition-opacity">
+          <button onClick={onClose} className="flex items-center gap-1 text-[#FFD600] py-1 pr-2 active:opacity-70 transition-opacity">
             <ArrowLeft className="w-6 h-6" />
             <span className="text-[16px] font-medium">Back</span>
           </button>
           <div className="flex items-center gap-2 sm:gap-3">
             {isScreenAwake && (
               <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-white/50 bg-white/5 px-2.5 py-1 rounded-full border border-white/10" title="Screen keep-awake active">
-                <Sun className="w-3 h-3 text-[#0a84ff]" />
+                <Sun className="w-3 h-3 text-[#FFD600]" />
                 <span>Keep Awake</span>
               </span>
             )}
@@ -182,7 +182,7 @@ export function ChordModal({ song, onClose, isAdmin, user }: Props) {
               className="text-white p-2 rounded-full bg-white/10 active:bg-white/20 transition-all flex items-center gap-1.5 px-3 hover:bg-white/15"
               title="Save as Image"
             >
-              {isExporting ? <Check className="w-4 h-4 text-green-400" /> : <ImageIcon className="w-4 h-4" />}
+              {isExporting ? <Check className="w-4 h-4 text-yellow-400" /> : <ImageIcon className="w-4 h-4" />}
               <span className="text-xs font-medium hidden md:inline">{isExporting ? 'Saved' : 'Save Image'}</span>
             </button>
 
@@ -191,14 +191,14 @@ export function ChordModal({ song, onClose, isAdmin, user }: Props) {
               className="text-white p-2 rounded-full bg-white/10 active:bg-white/20 transition-all flex items-center gap-1.5 px-3"
               title="Share Song"
             >
-              {copied ? <Check className="w-4 h-4 text-green-400" /> : <Share2 className="w-4 h-4" />}
+              {copied ? <Check className="w-4 h-4 text-yellow-400" /> : <Share2 className="w-4 h-4" />}
               <span className="text-xs font-medium hidden md:inline">Share</span>
             </button>
 
             {isAdmin && (
               <button 
                 onClick={() => setIsEditing(true)}
-                className="text-white p-2 rounded-full bg-white/10 hover:bg-blue-600/20 hover:text-blue-400 active:bg-white/20 transition-all flex items-center gap-1.5 px-3 border border-white/5 hover:border-blue-500/30"
+                className="text-white p-2 rounded-full bg-white/10 hover:bg-yellow-500/20 hover:text-yellow-400 active:bg-white/20 transition-all flex items-center gap-1.5 px-3 border border-white/5 hover:border-yellow-400/30"
                 title="Edit Song"
               >
                 <Music className="w-4 h-4" />
@@ -215,7 +215,7 @@ export function ChordModal({ song, onClose, isAdmin, user }: Props) {
                 <Minus className="w-3.5 h-3.5" />
               </button>
               <div className="flex items-center gap-1 px-1.5 min-w-[2.5rem] justify-center">
-                <Music className="w-3 h-3 text-[#0a84ff]" />
+                <Music className="w-3 h-3 text-[#FFD600]" />
                 <span className="text-[12px] font-bold tabular-nums">
                   {transpose > 0 ? `+${transpose}` : transpose}
                 </span>
@@ -254,7 +254,7 @@ export function ChordModal({ song, onClose, isAdmin, user }: Props) {
                 href={song.tutorialURL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block w-full text-center bg-[#0a84ff] hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-xl transition-colors"
+                className="block w-full text-center bg-[#FFD600] hover:bg-yellow-500 text-white font-bold py-3 px-4 rounded-xl transition-colors"
               >
                 Watch Tutorial
               </a>
@@ -290,12 +290,12 @@ export function ChordModal({ song, onClose, isAdmin, user }: Props) {
           {uniqueChords.length > 0 && (
             <div className="mt-12">
               <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                <span className="w-8 h-8 rounded-lg bg-[#0a84ff]/10 flex items-center justify-center">
-                  <Guitar className="w-4 h-4 text-[#0a84ff]" />
+                <span className="w-8 h-8 rounded-lg bg-[#FFD600]/10 flex items-center justify-center">
+                  <Guitar className="w-4 h-4 text-[#FFD600]" />
                 </span>
                 Chord Diagrams
               </h3>
-              <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 sm:gap-4">
+              <div className="flex overflow-x-auto gap-3 sm:gap-4 pb-4 no-scrollbar -mx-3 sm:-mx-5 px-3 sm:px-5">
                 {uniqueChords.map(chord => {
                   let data = null;
                   const root = chord.charAt(0);
@@ -308,7 +308,7 @@ export function ChordModal({ song, onClose, isAdmin, user }: Props) {
                   if (!data) return null;
 
                   return (
-                    <div key={chord} className="flex flex-col items-center">
+                    <div key={chord} className="flex-shrink-0 flex flex-col items-center">
                       <ChordDiagram name={chord} data={data} isLight={false} />
                     </div>
                   );
@@ -319,7 +319,7 @@ export function ChordModal({ song, onClose, isAdmin, user }: Props) {
 
           <div className="mt-12 py-8 border-t border-white/5 flex flex-col items-center">
             <p className="text-white/20 text-xs font-mono tracking-widest uppercase">Watermark</p>
-            <p className="text-[#0a84ff]/30 text-lg font-bold tracking-tighter mt-1 hover:text-[#0a84ff]/50 transition-colors">
+            <p className="text-[#FFD600]/30 text-lg font-bold tracking-tighter mt-1 hover:text-[#FFD600]/50 transition-colors">
               guitarcordmm.com
             </p>
           </div>

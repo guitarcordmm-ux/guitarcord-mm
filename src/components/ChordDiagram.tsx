@@ -14,7 +14,7 @@ export function ChordDiagram({ name, data, isLight = false }: ChordDiagramProps)
     border: isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.05)',
     text: isLight ? '#000' : '#fff',
     subtext: isLight ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.4)',
-    active: isLight ? '#000' : '#3b82f6',
+    active: isLight ? '#000' : '#FFD600',
     string: isLight ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.2)',
   };
 

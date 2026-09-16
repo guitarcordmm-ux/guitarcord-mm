@@ -42,8 +42,8 @@ export function UserDashboard({ userId }: { userId: string }) {
   const getStatusColor = (status?: string) => {
     switch (status) {
       case 'approved': return 'text-green-500';
-      case 'rejected': return 'text-red-500';
-      case 'private':  return 'text-blue-500';
+      case 'rejected': return 'text-yellow-500';
+      case 'private':  return 'text-yellow-400';
       default: return 'text-yellow-500';
     }
   };
@@ -103,7 +103,7 @@ export function UserDashboard({ userId }: { userId: string }) {
         
         <button 
           onClick={handleLogout}
-          className="flex items-center gap-2 text-red-400/80 hover:text-red-400 transition-colors text-sm font-medium"
+          className="flex items-center gap-2 text-yellow-400/80 hover:text-yellow-400 transition-colors text-sm font-medium"
         >
           <LogOut className="w-4 h-4" />
           Logout
@@ -144,8 +144,8 @@ export function UserDashboard({ userId }: { userId: string }) {
                 onClick={() => setSelectedSong(song)}
               >
                 <div className="flex items-center gap-2">
-                  <h3 className="font-bold text-lg group-hover:text-[#0a84ff] transition-colors">{song.songTitle}</h3>
-                  <PlayCircle className="w-4 h-4 text-white/40 group-hover:text-[#0a84ff] transition-colors" />
+                  <h3 className="font-bold text-lg group-hover:text-[#FFD600] transition-colors">{song.songTitle}</h3>
+                  <PlayCircle className="w-4 h-4 text-white/40 group-hover:text-[#FFD600] transition-colors" />
                 </div>
                 <p className="text-sm text-gray-400">{song.artist}</p>
                 <p className="text-xs text-gray-500 mt-1">Uploaded: {formatDate(song.createdAt)}</p>
@@ -154,7 +154,7 @@ export function UserDashboard({ userId }: { userId: string }) {
                 {song.status === 'private' && (
                   <button 
                     onClick={(e) => handleUploadToPublic(e, song)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0a84ff] hover:bg-blue-500 text-white text-xs font-semibold rounded-full transition-colors whitespace-nowrap"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FFD600] hover:bg-yellow-400 text-white text-xs font-semibold rounded-full transition-colors whitespace-nowrap"
                   >
                     <UploadCloud className="w-3.5 h-3.5" />
                     Upload to Public
@@ -162,7 +162,7 @@ export function UserDashboard({ userId }: { userId: string }) {
                 )}
                 <button
                   onClick={(e) => handleDelete(e, song)}
-                  className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-full transition-colors"
+                  className="p-1.5 text-yellow-400 hover:text-white hover:bg-yellow-500/10 rounded-full transition-colors"
                   title="Delete"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -196,7 +196,7 @@ export function UserDashboard({ userId }: { userId: string }) {
               </button>
               <button 
                 onClick={confirmDelete}
-                className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-xl text-sm font-semibold text-white transition-colors"
+                className="px-4 py-2 bg-yellow-600 hover:bg-yellow-500 rounded-xl text-sm font-semibold text-white transition-colors"
               >
                 Delete
               </button>
@@ -208,8 +208,8 @@ export function UserDashboard({ userId }: { userId: string }) {
       {toast && (
         <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-2.5 rounded-full border shadow-xl flex items-center gap-2 text-sm font-medium ${
           toast.type === 'success' 
-            ? 'bg-[#1c1c1e] border-emerald-500/40 text-emerald-400' 
-            : 'bg-[#1c1c1e] border-red-500/40 text-red-400'
+            ? 'bg-[#1c1c1e] border-yellow-500/40 text-yellow-400' 
+            : 'bg-[#1c1c1e] border-yellow-500/40 text-yellow-400'
         }`}>
           {toast.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
           <span>{toast.message}</span>

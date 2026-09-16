@@ -181,7 +181,7 @@ function SimpleSongList({ user, isAdmin }: { user: UnifiedUser | null, isAdmin?:
   };
 
   return (
-    <div className="bg-black min-h-screen text-white font-sans selection:bg-blue-500/30 pb-32">
+    <div className="bg-black min-h-screen text-white font-sans selection:bg-yellow-400/30 pb-32">
       <Helmet>
         <title>{pageTitle}</title>
         <meta name="description" content={pageDescription} />
@@ -216,12 +216,12 @@ function SimpleSongList({ user, isAdmin }: { user: UnifiedUser | null, isAdmin?:
         )}
       </Helmet>
 
-      {/* Header */}
-      <header className="px-4 pt-safe pb-4 sticky top-0 bg-black/90 backdrop-blur-md z-10 border-b border-white/[0.08]">
-        <div className="flex items-center justify-between mb-6">
+      {/* Header & Search */}
+      <header className="px-4 pt-safe pb-3 sticky top-0 bg-black/90 backdrop-blur-xl z-10 border-b border-white/[0.08] shadow-lg shadow-black/20">
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-1 mb-0">
-            <ChevronLeft className="w-8 h-8 text-[#0a84ff] -ml-2 cursor-pointer" onClick={() => navigate('/')} />
-            <h1 className="text-3xl font-bold">Songs</h1>
+            <ChevronLeft className="w-8 h-8 text-[#FFD600] -ml-2 cursor-pointer active:opacity-70 transition-opacity" onClick={() => navigate('/')} />
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Songs</h1>
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
             {user && !user.isAnonymous && (
@@ -230,7 +230,7 @@ function SimpleSongList({ user, isAdmin }: { user: UnifiedUser | null, isAdmin?:
                   await signOutUser();
                   window.location.reload();
                 }}
-                className="p-2 sm:px-4 sm:py-2 text-white/60 hover:text-white hover:bg-white/5 rounded-full transition-colors flex items-center gap-2"
+                className="p-2 sm:px-4 sm:py-2 text-white/60 hover:text-white hover:bg-white/5 rounded-full transition-colors flex items-center gap-2 active:bg-white/10"
                 title="Logout"
               >
                 <LogOut className="w-5 h-5 sm:w-4 sm:h-4 text-white/60" />
@@ -239,7 +239,7 @@ function SimpleSongList({ user, isAdmin }: { user: UnifiedUser | null, isAdmin?:
             )}
             <button 
               onClick={() => navigate('/create')}
-              className="flex items-center justify-center bg-[#0a84ff]/20 text-[#0a84ff] p-2.5 rounded-full hover:bg-[#0a84ff]/30 transition-colors"
+              className="flex items-center justify-center bg-[#FFD600]/20 text-[#FFD600] p-2.5 rounded-full hover:bg-[#FFD600]/30 active:bg-[#FFD600]/40 transition-colors"
               title="Create new song"
             >
               <Plus className="w-5 h-5" />
@@ -247,16 +247,28 @@ function SimpleSongList({ user, isAdmin }: { user: UnifiedUser | null, isAdmin?:
           </div>
         </div>
 
+        {/* Search Input Box */}
+        <div className="bg-[#1c1c1e] rounded-[12px] flex items-center px-3.5 py-2.5 border drop-shadow-sm border-white/[0.08] focus-within:border-[#FFD600]/50 transition-colors mb-4">
+          <Search className="w-[18px] h-[18px] text-[#8e8e93] mr-2.5" />
+          <input
+            type="text"
+            placeholder="Search songs, artists, or lyrics..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="bg-transparent border-none focus:outline-none text-[16px] w-full text-white placeholder-[#8e8e93]"
+          />
+        </div>
+
         {/* Sort Tabs */}
-        <div className="flex gap-3 mb-2">
+        <div className="flex gap-2 sm:gap-3 overflow-x-auto no-scrollbar pb-1">
           {(['Last update', 'Name'] as SortOption[]).map((opt) => (
             <button
               key={opt}
               onClick={() => setSortOption(opt)}
-              className={`px-6 py-1.5 rounded-full text-[15px] transition-colors ${
+              className={`px-5 py-2 rounded-full text-[14px] font-medium transition-colors whitespace-nowrap active:scale-95 ${
                 sortOption === opt 
-                  ? 'border border-[#0a84ff] text-white' 
-                  : 'bg-[#1c1c1e] text-white hover:bg-white/20 border border-transparent'
+                  ? 'border border-[#FFD600] bg-[#FFD600]/10 text-[#FFD600]' 
+                  : 'bg-[#1c1c1e] text-white/80 hover:bg-white/10 border border-transparent'
               }`}
             >
               {opt}
@@ -266,11 +278,11 @@ function SimpleSongList({ user, isAdmin }: { user: UnifiedUser | null, isAdmin?:
       </header>
 
       {/* List */}
-      <main className="px-4 mt-2">
+      <main className="px-2 sm:px-4 mt-2">
         {loading ? (
           <div className="py-10 text-center text-white/50">Loading songs from database...</div>
         ) : error ? (
-          <div className="py-10 text-center text-red-400">
+          <div className="py-10 text-center text-yellow-400">
             <p className="mb-2">{error}</p>
             <p className="text-xs text-white/50">Please verify your Supabase connection settings above.</p>
           </div>
@@ -279,7 +291,7 @@ function SimpleSongList({ user, isAdmin }: { user: UnifiedUser | null, isAdmin?:
             <p>No songs found in the library yet.</p>
             <button
               onClick={() => navigate('/create')}
-              className="mt-4 px-4 py-2 bg-[#0a84ff] text-white text-sm font-medium rounded-full hover:bg-blue-600 transition-colors"
+              className="mt-4 px-4 py-2 bg-[#FFD600] text-white text-sm font-medium rounded-full hover:bg-yellow-500 transition-colors"
             >
               Add the first song
             </button>
@@ -290,19 +302,19 @@ function SimpleSongList({ user, isAdmin }: { user: UnifiedUser | null, isAdmin?:
               <div 
                 key={song.id || idx}
                 onClick={() => handleSongClick(song)}
-                className="flex items-center gap-4 py-3 border-b border-white/[0.08] cursor-pointer active:bg-[#1c1c1e] transition-colors"
+                className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 mx-2 sm:mx-0 mb-2 bg-[#121214] sm:bg-transparent rounded-2xl sm:rounded-none sm:border-b sm:border-white/[0.08] cursor-pointer active:scale-[0.98] sm:active:scale-100 sm:active:bg-[#1c1c1e] transition-all touch-manipulation"
               >
-                <div className="text-[#0a84ff] flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/-2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#FFD600]/20 to-[#FFD600]/5 flex items-center justify-center text-[#FFD600] flex-shrink-0 shadow-inner shadow-white/5">
+                  <svg xmlns="http://www.w3.org/-2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 opacity-90">
                     <path fillRule="evenodd" d="M19.36 3.637a1.5 1.5 0 0 1 .536 1.884l-3 7.5a1.5 1.5 0 0 1-1.357.943H12V18a4 4 0 1 1-2-3.464V4.5A1.5 1.5 0 0 1 11.5 3h7a1.5 1.5 0 0 1 .86.637ZM10.5 18a2.5 2.5 0 1 0-5 0 2.5 2.5 0 0 0 5 0ZM13 12.5h2.243l2.4-6H13v6Z" clipRule="evenodd" />
                   </svg>
                 </div>
-                <div className="flex flex-col flex-1 min-w-0">
-                  <span className="text-white text-[17px] font-normal truncate tracking-wide">{song.songTitle}</span>
-                  <span className="text-[#8e8e93] text-[15px] truncate tracking-wide">{song.artist}</span>
+                <div className="flex flex-col flex-1 min-w-0 justify-center">
+                  <span className="text-white text-[16px] sm:text-[17px] font-semibold truncate tracking-wide">{song.songTitle}</span>
+                  <span className="text-[#8e8e93] text-[14px] sm:text-[15px] truncate tracking-wide mt-0.5">{song.artist}</span>
                   {searchTerm && song.lyrics && song.lyrics.toLowerCase().includes(searchTerm.toLowerCase()) && !song.songTitle.toLowerCase().includes(searchTerm.toLowerCase()) && !song.artist.toLowerCase().includes(searchTerm.toLowerCase()) && (
-                    <span className="text-[#0a84ff]/60 text-[12px] truncate mt-1 italic">
-                      Matched in lyrics: ...{song.lyrics.split('\n').find(l => l.toLowerCase().includes(searchTerm.toLowerCase()))?.replace(/\[[^\]]+\]/g, '').trim()}...
+                    <span className="text-[#FFD600]/80 text-[12px] truncate mt-1.5 italic bg-[#FFD600]/10 px-2 py-0.5 rounded-full inline-block w-fit max-w-full">
+                      ...{song.lyrics.split('\n').find(l => l.toLowerCase().includes(searchTerm.toLowerCase()))?.replace(/\[[^\]]+\]/g, '').trim()}...
                     </span>
                   )}
                 </div>
@@ -310,13 +322,13 @@ function SimpleSongList({ user, isAdmin }: { user: UnifiedUser | null, isAdmin?:
                   <div className="flex gap-2 ml-auto" onClick={(e) => e.stopPropagation()}>
                     <button
                       onClick={() => setEditingSong(song)}
-                      className="px-3 py-1 bg-blue-600/20 hover:bg-blue-600/40 text-blue-500 rounded-lg text-sm transition-colors"
+                      className="px-3 py-1.5 sm:py-1 bg-yellow-500/20 hover:bg-yellow-500/40 active:bg-yellow-500/50 text-yellow-400 rounded-xl sm:rounded-lg text-sm font-medium transition-colors"
                     >
                       Edit
                     </button>
                     <button
                       onClick={(e) => handleDeleteSong(song, e)}
-                      className="px-3 py-1 bg-red-600/20 hover:bg-red-600/40 text-red-500 rounded-lg text-sm transition-colors"
+                      className="px-3 py-1.5 sm:py-1 bg-yellow-600/20 hover:bg-yellow-600/40 active:bg-yellow-600/50 text-yellow-500 rounded-xl sm:rounded-lg text-sm font-medium transition-colors"
                     >
                       Delete
                     </button>
@@ -328,28 +340,14 @@ function SimpleSongList({ user, isAdmin }: { user: UnifiedUser | null, isAdmin?:
         )}
         
         {/* List Watermark */}
-        <div className="py-20 flex flex-col items-center select-none pointer-events-none">
+        <div className="py-12 sm:py-20 flex flex-col items-center select-none pointer-events-none pb-safe-nav">
           <p className="text-[#8e8e93] text-[9px] font-bold tracking-[0.3em] mb-1 uppercase opacity-20">Proudly hosted at</p>
           <p className="text-white/10 text-xl font-black tracking-tighter uppercase">guitarcordmm.com</p>
         </div>
       </main>
 
-      {/* Search Input Box */}
-      <div className="fixed bottom-0 pb-[max(1.5rem,calc(0.75rem+env(safe-area-inset-bottom)))] pt-3 bg-black/90 backdrop-blur-md left-0 right-0 z-10 border-t border-white/[0.08]">
-        <div className="bg-[#1c1c1e] rounded-[12px] flex items-center px-3.5 py-2.5 mx-4 border drop-shadow-sm border-white/[0.08] focus-within:border-[#0a84ff]/50 transition-colors">
-          <Search className="w-[18px] h-[18px] text-[#8e8e93] mr-2.5" />
-          <input
-            type="text"
-            placeholder="Search songs, artists, or lyrics..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="bg-transparent border-none focus:outline-none text-[16px] w-full text-white placeholder-[#8e8e93]"
-          />
-        </div>
-      </div>
-
       {actionError && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-[#1c1c1e] border border-red-500/40 text-red-400 px-4 py-2 rounded-full text-xs font-semibold shadow-2xl">
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-[#1c1c1e] border border-yellow-500/40 text-yellow-400 px-4 py-2 rounded-full text-xs font-semibold shadow-2xl">
           {actionError}
         </div>
       )}
@@ -386,7 +384,7 @@ function SimpleSongList({ user, isAdmin }: { user: UnifiedUser | null, isAdmin?:
               </button>
               <button 
                 onClick={confirmDelete}
-                className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded font-semibold transition-colors text-sm"
+                className="px-4 py-2 bg-yellow-600 hover:bg-yellow-500 rounded font-semibold transition-colors text-sm"
               >
                 Delete
               </button>

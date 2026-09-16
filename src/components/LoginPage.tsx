@@ -67,7 +67,7 @@ export function LoginPage() {
         <p className="text-white/50 mb-8">{isLogin ? 'Sign in to access your saved chords.' : 'Sign up to manage and submit chord sheets.'}</p>
 
         {error && (
-          <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-lg text-sm mb-6 flex items-center gap-2">
+          <div className="bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 p-3 rounded-lg text-sm mb-6 flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" /> 
             <span>{error}</span>
           </div>
@@ -81,7 +81,7 @@ export function LoginPage() {
               placeholder={isLogin ? "Email or username" : "Email address"}
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
-              className="w-full bg-black/50 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-[#0a84ff] transition-colors"
+              className="w-full bg-black/50 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-[#FFD600] transition-colors"
               required
             />
           </div>
@@ -94,7 +94,7 @@ export function LoginPage() {
                 placeholder="Username (optional)"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full bg-black/50 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-[#0a84ff] transition-colors"
+                className="w-full bg-black/50 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-[#FFD600] transition-colors"
               />
             </div>
           )}
@@ -106,7 +106,7 @@ export function LoginPage() {
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-black/50 border border-white/10 rounded-xl py-3 pl-10 pr-10 text-white focus:outline-none focus:border-[#0a84ff] transition-colors"
+              className="w-full bg-black/50 border border-white/10 rounded-xl py-3 pl-10 pr-10 text-white focus:outline-none focus:border-[#FFD600] transition-colors"
               required
             />
             <button
@@ -121,7 +121,7 @@ export function LoginPage() {
           <button 
             type="submit"
             disabled={loading}
-            className="w-full bg-[#0a84ff] hover:bg-blue-600 text-white font-semibold py-3 rounded-xl transition-colors disabled:opacity-50 mt-2"
+            className="w-full bg-[#FFD600] hover:bg-yellow-500 text-white font-semibold py-3 rounded-xl transition-colors disabled:opacity-50 mt-2"
           >
             {loading ? 'Connecting...' : (isLogin ? 'Login' : 'Sign Up')}
           </button>
@@ -140,7 +140,7 @@ export function LoginPage() {
           {isLogin ? "Don't have an account? " : "Already have an account? "}
           <button 
             onClick={() => setIsLogin(!isLogin)}
-            className="text-[#0a84ff] hover:underline"
+            className="text-[#FFD600] hover:underline"
           >
             {isLogin ? 'Sign up' : 'Login'}
           </button>

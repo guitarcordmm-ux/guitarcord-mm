@@ -93,7 +93,7 @@ export async function exportSongAsJpg(song: Song, transpose: number = 0) {
       if (part.startsWith('[') && part.endsWith(']')) {
         const chordName = part.slice(1, -1);
         ctx.font = chordFont;
-        ctx.fillStyle = '#0a84ff';
+        ctx.fillStyle = '#FFD600';
         
         // Ensure chords don't overlap by checking the last chord's end position
         const chordWidth = ctx.measureText(chordName).width;

@@ -9,7 +9,7 @@ export function LandingPage({ user, isAdmin }: { user?: UnifiedUser | null, isAd
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-black text-white overflow-hidden relative selection:bg-[#0a84ff]/30">
+    <div className="min-h-screen bg-black text-white overflow-hidden relative selection:bg-[#FFD600]/30">
       <Helmet>
         <title>GuitarCordMM - မြန်မာသီချင်းဂီတာချော့များနှင့် သီချင်းစာသားများ</title>
         <meta name="description" content="မြန်မာသီချင်းများနှင့် နိုင်ငံတကာသီချင်းများ၏ တိကျသောဂီတာချော့များကို ရှာဖွေပါ။ သင့်ကိုယ်ပိုင်ချော့စာရွက်များကို ဖန်တီးပြီး သူငယ်ချင်းများနှင့် မျှဝေပါ။" />
@@ -19,13 +19,13 @@ export function LandingPage({ user, isAdmin }: { user?: UnifiedUser | null, isAd
       </Helmet>
       {/* Background glowing effects */}
       <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[1000px] h-[600px] opacity-[0.15] pointer-events-none">
-        <div className="absolute inset-0 bg-[#0a84ff] rounded-full blur-[120px] mix-blend-screen" />
+        <div className="absolute inset-0 bg-[#FFD600] rounded-full blur-[120px] mix-blend-screen" />
       </div>
 
       {/* Navbar */}
-      <nav className="relative z-10 flex items-center justify-between px-4 sm:px-6 py-4 sm:py-6 max-w-7xl mx-auto">
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-[#0a84ff] to-blue-700 rounded-[10px] sm:rounded-[12px] flex items-center justify-center shadow-lg shadow-blue-500/20">
+      <nav className="relative z-10 flex items-center justify-between px-4 sm:px-6 pt-safe pb-4 sm:py-6 max-w-7xl mx-auto">
+        <div className="flex items-center gap-2 sm:gap-3 pt-2">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-[#FFD600] to-yellow-600 rounded-[10px] sm:rounded-[12px] flex items-center justify-center shadow-lg shadow-yellow-400/20">
             <Music className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
           </div>
           <span className="font-bold text-lg sm:text-xl tracking-tight text-white/90">ChordStream</span>
@@ -36,7 +36,7 @@ export function LandingPage({ user, isAdmin }: { user?: UnifiedUser | null, isAd
               {isAdmin && (
                 <button 
                   onClick={() => navigate('/admin-panel')}
-                  className="text-amber-500/80 hover:text-amber-400 transition-colors text-[13px] sm:text-[15px] p-2 sm:px-4 sm:py-2 hover:bg-white/5 rounded-full flex items-center gap-2"
+                  className="text-yellow-500/80 hover:text-yellow-400 transition-colors text-[13px] sm:text-[15px] p-2 sm:px-4 sm:py-2 hover:bg-white/5 rounded-full flex items-center gap-2"
                   title="Admin Panel"
                 >
                   <Star className="w-4 h-4" />
@@ -94,7 +94,7 @@ export function LandingPage({ user, isAdmin }: { user?: UnifiedUser | null, isAd
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0a84ff]/10 text-[#0a84ff] text-[11px] sm:text-[13px] font-bold tracking-wider uppercase mb-6 sm:mb-8 border border-[#0a84ff]/20"
+          className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFD600]/10 text-[#FFD600] text-[11px] sm:text-[13px] font-bold tracking-wider uppercase mb-6 sm:mb-8 border border-[#FFD600]/20"
         >
           <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
           <span>The Ultimate Chords App</span>
@@ -107,7 +107,7 @@ export function LandingPage({ user, isAdmin }: { user?: UnifiedUser | null, isAd
           className="text-4xl sm:text-6xl md:text-7xl lg:text-[84px] font-black tracking-tighter mb-6 sm:mb-8 leading-[0.95] sm:leading-[1.1] text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60"
         >
           Master every chord. <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0a84ff] to-cyan-400">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FFD600] to-yellow-200">
             Play every song.
           </span>
         </motion.h1>
@@ -130,7 +130,7 @@ export function LandingPage({ user, isAdmin }: { user?: UnifiedUser | null, isAd
         >
           <button 
             onClick={() => navigate('/songs')}
-            className="w-full sm:w-auto px-8 py-4 bg-[#0a84ff] hover:bg-blue-500 text-white rounded-full font-medium transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-95 flex items-center justify-center gap-2 shadow-[0_0_40px_-10px_rgba(10,132,255,0.5)]"
+            className="w-full sm:w-auto px-8 py-4 bg-[#FFD600] hover:bg-yellow-400 text-white rounded-full font-medium transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-95 flex items-center justify-center gap-2 shadow-[0_0_40px_-10px_rgba(255,214,0,0.5)]"
           >
             Start Playing
             <ArrowRight className="w-5 h-5" />
@@ -155,7 +155,7 @@ export function LandingPage({ user, isAdmin }: { user?: UnifiedUser | null, isAd
       >
         <div className="bg-[#1c1c1e]/50 backdrop-blur-xl border border-white/[0.05] p-6 sm:p-8 rounded-3xl transition-transform hover:scale-[1.02] duration-300">
           <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center mb-5 sm:mb-6">
-            <Guitar className="w-6 h-6 text-[#0a84ff]" />
+            <Guitar className="w-6 h-6 text-[#FFD600]" />
           </div>
           <h3 className="text-xl font-bold mb-3">Accurate Chords</h3>
           <p className="text-[#8e8e93] text-[15px] leading-relaxed font-normal">
@@ -165,7 +165,7 @@ export function LandingPage({ user, isAdmin }: { user?: UnifiedUser | null, isAd
 
         <div className="bg-[#1c1c1e]/50 backdrop-blur-xl border border-white/[0.05] p-6 sm:p-8 rounded-3xl transition-transform hover:scale-[1.02] duration-300">
           <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center mb-5 sm:mb-6">
-            <Music className="w-6 h-6 text-emerald-400" />
+            <Music className="w-6 h-6 text-yellow-400" />
           </div>
           <h3 className="text-xl font-bold mb-3">Vast Library</h3>
           <p className="text-[#8e8e93] text-[15px] leading-relaxed font-normal">
@@ -175,7 +175,7 @@ export function LandingPage({ user, isAdmin }: { user?: UnifiedUser | null, isAd
 
         <div className="bg-[#1c1c1e]/50 backdrop-blur-xl border border-white/[0.05] p-6 sm:p-8 rounded-3xl transition-transform hover:scale-[1.02] duration-300">
           <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center mb-5 sm:mb-6">
-            <Star className="w-6 h-6 text-amber-400" />
+            <Star className="w-6 h-6 text-yellow-400" />
           </div>
           <h3 className="text-xl font-bold mb-3">Original Sheets</h3>
           <p className="text-[#8e8e93] text-[15px] leading-relaxed font-normal">
@@ -185,7 +185,7 @@ export function LandingPage({ user, isAdmin }: { user?: UnifiedUser | null, isAd
       </motion.div>
 
       {/* Footer / Watermark */}
-      <footer className="relative z-10 pb-16 pt-10 text-center border-t border-white/[0.03] px-6 select-none pointer-events-none">
+      <footer className="relative z-10 pb-safe pt-10 text-center border-t border-white/[0.03] px-6 select-none pointer-events-none mb-6">
         <div className="flex flex-col items-center gap-2">
           <p className="text-[#8e8e93] text-[10px] font-bold tracking-[0.3em] opacity-20 uppercase">CHORDSTREAM BY</p>
           <p className="text-white/10 text-2xl font-black tracking-tighter uppercase">

@@ -16,16 +16,16 @@ export function SupabaseBanner() {
   };
 
   return (
-    <div className="bg-[#121214] border-b border-emerald-500/30 text-white px-4 py-3 text-sm">
+    <div className="bg-[#121214] border-b border-yellow-500/30 text-white px-4 py-3 text-sm">
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400">
+          <div className="p-1.5 rounded-lg bg-yellow-500/20 text-yellow-400">
             <Database className="w-4 h-4" />
           </div>
           <div>
-            <span className="font-semibold text-emerald-400 mr-2">Supabase Ready:</span>
+            <span className="font-semibold text-yellow-400 mr-2">Supabase Ready:</span>
             <span className="text-white/80 text-xs sm:text-sm">
-              Add <code className="text-emerald-300 bg-white/5 px-1 py-0.5 rounded">VITE_SUPABASE_URL</code> and <code className="text-emerald-300 bg-white/5 px-1 py-0.5 rounded">VITE_SUPABASE_ANON_KEY</code> in project settings to connect your live Supabase project.
+              Add <code className="text-yellow-300 bg-white/5 px-1 py-0.5 rounded">VITE_SUPABASE_URL</code> and <code className="text-yellow-300 bg-white/5 px-1 py-0.5 rounded">VITE_SUPABASE_ANON_KEY</code> in project settings to connect your live Supabase project.
             </span>
           </div>
         </div>
@@ -42,7 +42,7 @@ export function SupabaseBanner() {
             href="https://supabase.com/dashboard"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1 text-xs bg-emerald-600 hover:bg-emerald-500 px-2.5 py-1.5 rounded-lg font-medium text-white transition-colors"
+            className="flex items-center gap-1 text-xs bg-yellow-600 hover:bg-yellow-500 px-2.5 py-1.5 rounded-lg font-medium text-white transition-colors"
           >
             Open Supabase
             <ExternalLink className="w-3 h-3" />
@@ -63,13 +63,13 @@ export function SupabaseBanner() {
             <span className="text-white/60">Run this in your Supabase SQL Editor:</span>
             <button
               onClick={handleCopy}
-              className="flex items-center gap-1 text-emerald-400 hover:text-emerald-300 transition-colors"
+              className="flex items-center gap-1 text-yellow-400 hover:text-yellow-300 transition-colors"
             >
               {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
               {copied ? 'Copied!' : 'Copy SQL'}
             </button>
           </div>
-          <pre className="overflow-x-auto text-emerald-200/90 max-h-48 text-[11px] leading-relaxed p-1">
+          <pre className="overflow-x-auto text-yellow-200/90 max-h-48 text-[11px] leading-relaxed p-1">
             {SUPABASE_SQL_SETUP}
           </pre>
         </div>
