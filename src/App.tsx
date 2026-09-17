@@ -9,25 +9,38 @@ import { AdminSongImport } from './components/AdminSongImport';
 import { ChordEditor } from './components/ChordEditor';
 import { LoginPage } from './components/LoginPage';
 import { UserDashboard } from './components/UserDashboard';
-import { GuitarCordHome, GuitarCordLibrary, ChordLibrary, GuitarCordPlayer, GuitarCordProfile, FALLBACK_SONGS } from './components/GuitarCordUI';
+import { GuitarCordHome, GuitarCordLibrary, ChordLibrary, GuitarCordPlayer, GuitarCordProfile } from './components/GuitarCordUI';
 import { Song } from './types';
 import { fetchApprovedSongs, UnifiedUser } from './lib/supabase';
 import { isUserAdmin, subscribeToAuthChanges } from './lib/supabaseAuth';
 
 function Player({ songs }: { songs: Song[] }) {
   const { chordId } = useParams();
-  const song = songs.find(s => s.id === chordId) || FALLBACK_SONGS.find(s => s.id === chordId);
+  const song = songs.find(s => s.id === chordId);
   return song ? <GuitarCordPlayer song={song}/> : <Navigate to="/app" replace/>;
 }
 
 function Screens({ user }: { user: UnifiedUser | null }) {
   const [songs, setSongs] = useState<Song[]>([]);
-  useEffect(() => { fetchApprovedSongs().then(setSongs).catch(console.error); }, []);
+  const [songsError, setSongsError] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    fetchApprovedSongs()
+      .then(data => { if (active) setSongs(data); })
+      .catch(error => {
+        console.error(error);
+        if (active) setSongsError(error instanceof Error ? error.message : 'Could not load songs from Supabase.');
+      });
+    return () => { active = false; };
+  }, []);
+
   const admin = isUserAdmin(user);
 
   return <>
     <Helmet><title>GuitarCord — Chords · Lyrics · Play</title><meta name="theme-color" content="#000000"/></Helmet>
     <SupabaseBanner/>
+    {songsError && <div className="fixed top-0 left-0 right-0 z-[60] bg-red-950/95 border-b border-red-400/20 px-4 py-2 text-center text-xs text-red-200">Supabase song data could not be loaded: {songsError}</div>}
     <Routes>
       <Route path="/" element={<OnboardingPage/>}/>
       <Route path="/app" element={<GuitarCordHome songs={songs} user={user}/>}/>
@@ -35,7 +48,7 @@ function Screens({ user }: { user: UnifiedUser | null }) {
       <Route path="/library" element={<GuitarCordLibrary songs={songs} user={user}/>}/>
       <Route path="/chords" element={<ChordLibrary/>}/>
       <Route path="/chord/:chordId" element={<Player songs={songs}/>}/>
-      <Route path="/profile" element={<GuitarCordProfile/>}/>
+      <Route path="/profile" element={<GuitarCordProfile user={user}/>}/>
       <Route path="/learn" element={<OnboardingPage/>}/>
       <Route path="/create" element={<ChordEditor onClose={() => window.history.back()} user={user} isAdmin={admin}/>}/>
       <Route path="/login" element={<LoginPage/>}/>
