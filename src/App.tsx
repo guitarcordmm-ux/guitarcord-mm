@@ -12,13 +12,36 @@ import { UserDashboard } from './components/UserDashboard';
 import { GuitarCordHome, GuitarCordLibrary, ChordLibrary, GuitarCordProfile } from './components/GuitarCordUI';
 import { GuitarCordPlayer } from './components/GuitarCordPlayer';
 import { Song } from './types';
-import { fetchApprovedSongs, UnifiedUser } from './lib/supabase';
+import { fetchApprovedSong, fetchApprovedSongs, UnifiedUser } from './lib/supabase';
 import { isUserAdmin, subscribeToAuthChanges } from './lib/supabaseAuth';
 
-function Player({ songs }: { songs: Song[] }) {
-  const { chordId } = useParams();
-  const song = songs.find(s => s.id === chordId);
-  return song ? <GuitarCordPlayer song={song}/> : <Navigate to="/app" replace/>;
+function Player() {
+  const { chordId = '' } = useParams();
+  const [song, setSong] = useState<Song | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setError('');
+    fetchApprovedSong(chordId)
+      .then(data => {
+        if (!active) return;
+        if (!data) setError('Song not found.');
+        setSong(data);
+      })
+      .catch(err => {
+        console.error('Could not load song:', err);
+        if (active) setError(err instanceof Error ? err.message : 'Could not load song.');
+      })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [chordId]);
+
+  if (loading) return <div className="min-h-screen bg-black text-white grid place-items-center">Loading song…</div>;
+  if (error || !song) return <div className="min-h-screen bg-black text-white grid place-items-center px-6 text-center"><div><p className="text-white/70 mb-4">{error || 'Song not found.'}</p><button onClick={() => window.history.back()} className="px-4 py-2 rounded-xl bg-white/10">Go back</button></div></div>;
+  return <GuitarCordPlayer song={song}/>;
 }
 
 function Screens({ user }: { user: UnifiedUser | null }) {
@@ -48,7 +71,7 @@ function Screens({ user }: { user: UnifiedUser | null }) {
       <Route path="/songs" element={<GuitarCordHome songs={songs} user={user}/>}/>
       <Route path="/library" element={<GuitarCordLibrary songs={songs} user={user}/>}/>
       <Route path="/chords" element={<ChordLibrary/>}/>
-      <Route path="/chord/:chordId" element={<Player songs={songs}/>}/>
+      <Route path="/chord/:chordId" element={<Player/>}/>
       <Route path="/profile" element={<GuitarCordProfile user={user}/>}/>
       <Route path="/learn" element={<OnboardingPage/>}/>
       <Route path="/create" element={<ChordEditor onClose={() => window.history.back()} user={user} isAdmin={admin}/>}/>
