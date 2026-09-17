@@ -108,7 +108,7 @@ export function GuitarCordPlayer({ song }: { song: Song }) {
         </button>
 
         {showKeyControls && (
-          <div className="fixed right-4 bottom-41 z-50 w-[150px] rounded-2xl border border-white/10 bg-[#151517]/95 backdrop-blur-xl p-2 shadow-2xl">
+          <div className="fixed right-4 bottom-[10.25rem] z-50 w-[150px] rounded-2xl border border-white/10 bg-[#151517]/95 backdrop-blur-xl p-2 shadow-2xl">
             <div className="flex items-center justify-between px-1 pb-2">
               <span className="text-[9px] uppercase tracking-[0.12em] text-white/40">Key</span>
               <span className="text-sm font-black text-[#FFD600]">{currentKey}</span>
@@ -128,15 +128,15 @@ export function GuitarCordPlayer({ song }: { song: Song }) {
           {parsed.length ? parsed.map((line, i) => {
             const width = Math.max(line.lyrics.length, 1);
             return (
-              <div key={i} className="relative min-w-max font-mono text-sm mb-3">
-                <div className="relative h-5 leading-5">
+              <div key={i} className="relative w-full font-mono text-sm mb-3 overflow-hidden">
+                <div className="relative min-h-5 leading-5 overflow-hidden">
                   {line.chords.map((item, j) => (
-                    <span key={`${item.index}-${j}`} className="absolute top-0 text-[#FFD600] font-bold whitespace-nowrap" style={{ left: `${item.index}ch` }}>
+                    <span key={`${item.index}-${j}`} className="absolute top-0 text-[#FFD600] font-bold whitespace-nowrap max-w-full overflow-hidden" style={{ left: `${Math.min(item.index, Math.max(width - 1, 0))}ch` }}>
                       {transposeChord(item.chord, transpose)}
                     </span>
                   ))}
                 </div>
-                <div className="whitespace-pre leading-6 min-h-6 text-white">{line.lyrics || '\u00A0'.repeat(width)}</div>
+                <div className="whitespace-pre-wrap break-words leading-6 min-h-6 text-white">{line.lyrics || '\u00A0'.repeat(width)}</div>
               </div>
             );
           }) : <div className="py-10 text-center text-sm text-white/35">No lyrics have been published for this song yet.</div>}
