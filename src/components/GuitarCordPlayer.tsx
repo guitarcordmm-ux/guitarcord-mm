@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Heart, MoreHorizontal, Pause, Play, SkipBack, SkipForward, Repeat2, ListMusic, Minus, Plus } from 'lucide-react';
+import { ChevronLeft, Heart, MoreHorizontal, Pause, Play, SkipBack, SkipForward, Repeat2, ListMusic, Minus, Plus, Music2 } from 'lucide-react';
 import { Song } from '../types';
 
 type ParsedLine = { lyrics: string; chords: { chord: string; index: number }[] };
@@ -54,6 +54,7 @@ export function GuitarCordPlayer({ song }: { song: Song }) {
   const [playing, setPlaying] = useState(false);
   const [transpose, setTranspose] = useState(0);
   const [speed, setSpeed] = useState(1);
+  const [showKeyControls, setShowKeyControls] = useState(false);
   const parsed = useMemo(() => (song.lyrics || '').split('\n').map(parseLyricsLine), [song.lyrics]);
   const baseKey = useMemo(() => detectBaseKey(parsed), [parsed]);
   const currentKey = useMemo(() => (baseKey ? transposeChord(baseKey, transpose) : '—'), [baseKey, transpose]);
@@ -96,28 +97,34 @@ export function GuitarCordPlayer({ song }: { song: Song }) {
         <div className="text-lg font-semibold">{song.songTitle}</div>
         <div className="text-xs text-white/45">{song.artist}</div>
 
-        <section className="mt-3 rounded-xl border border-white/10 bg-[#111113] px-2.5 py-2">
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 shrink-0">
-              <span className="text-[9px] uppercase tracking-[0.12em] text-white/40">Key</span>
-              <span className="text-base font-black leading-none text-[#FFD600] min-w-7">{currentKey}</span>
-            </div>
-            <div className="ml-auto flex items-center gap-1">
-              <button onClick={decreaseKey} className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 grid place-items-center" aria-label="Lower key"><Minus size={14}/></button>
-              <button onClick={resetTranspose} className="h-8 min-w-12 rounded-lg bg-[#FFD600] text-black px-2 text-[10px] font-black">Original</button>
-              <button onClick={increaseKey} className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 grid place-items-center" aria-label="Raise key"><Plus size={14}/></button>
-            </div>
-          </div>
-          <div className="mt-1.5 flex items-center justify-between text-[9px] text-white/35">
-            <span>{transpose === 0 ? 'Original key' : `${transpose > 0 ? '+' : ''}${transpose} semitone${Math.abs(transpose) === 1 ? '' : 's'}`}</span>
-            <span>−11 / +11</span>
-          </div>
-          <div className="mt-1 h-1 rounded-full bg-white/5 overflow-hidden">
-            <div className="h-full bg-[#FFD600] rounded-full transition-all" style={{ width: `${((transpose + 11) / 22) * 100}%` }}/>
-          </div>
-        </section>
+        <button
+          type="button"
+          onClick={() => setShowKeyControls(v => !v)}
+          aria-label="Change key"
+          aria-expanded={showKeyControls}
+          className={`fixed right-4 bottom-28 z-50 w-11 h-11 rounded-full border grid place-items-center shadow-lg backdrop-blur-xl transition-all active:scale-95 ${showKeyControls ? 'bg-[#FFD600] text-black border-[#FFD600]' : 'bg-[#171719]/90 text-[#FFD600] border-white/15'}`}
+        >
+          <Music2 size={18} />
+        </button>
 
-        <div ref={scrollRef} className="mt-3 max-h-[calc(100vh-300px)] min-h-[52vh] overflow-y-auto rounded-2xl bg-[#0b0b0c] border border-white/5 px-4 py-5">
+        {showKeyControls && (
+          <div className="fixed right-4 bottom-41 z-50 w-[150px] rounded-2xl border border-white/10 bg-[#151517]/95 backdrop-blur-xl p-2 shadow-2xl">
+            <div className="flex items-center justify-between px-1 pb-2">
+              <span className="text-[9px] uppercase tracking-[0.12em] text-white/40">Key</span>
+              <span className="text-sm font-black text-[#FFD600]">{currentKey}</span>
+            </div>
+            <div className="flex items-center justify-between gap-1">
+              <button onClick={decreaseKey} className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 grid place-items-center" aria-label="Lower key"><Minus size={14}/></button>
+              <button onClick={resetTranspose} className="h-9 flex-1 rounded-xl bg-[#FFD600] text-black px-1 text-[9px] font-black">Original</button>
+              <button onClick={increaseKey} className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 grid place-items-center" aria-label="Raise key"><Plus size={14}/></button>
+            </div>
+            <div className="mt-1.5 text-center text-[8px] text-white/35">
+              {transpose === 0 ? 'Original key' : `${transpose > 0 ? '+' : ''}${transpose} semitone${Math.abs(transpose) === 1 ? '' : 's'}`}
+            </div>
+          </div>
+        )}
+
+        <div ref={scrollRef} className="mt-4 max-h-[calc(100vh-285px)] min-h-[52vh] overflow-y-auto rounded-2xl bg-[#0b0b0c] border border-white/5 px-4 py-5">
           {parsed.length ? parsed.map((line, i) => {
             const width = Math.max(line.lyrics.length, 1);
             return (
