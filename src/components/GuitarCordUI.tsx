@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Home, Library, UserCircle2, Heart, Play, ChevronLeft, MoreHorizontal, Pause, SkipBack, SkipForward, Repeat2, ListMusic, Settings, Download, CircleHelp, X, Guitar } from 'lucide-react';
 import { Song } from '../types';
@@ -65,7 +65,6 @@ function renderChordLine(line: string) {
     removed += match[0].length;
     return { chord: match[1], index };
   });
-
   return { lyrics, chords };
 }
 
@@ -73,8 +72,57 @@ export function GuitarCordPlayer({ song }: { song: Song }) {
   const navigate = useNavigate();
   const [playing, setPlaying] = useState(false);
   const [transpose, setTranspose] = useState(0);
+  const [autoScroll, setAutoScroll] = useState(false);
+  const [scrollSpeed, setScrollSpeed] = useState(1);
+  const scrollFrameRef = useRef<number | null>(null);
+  const lastFrameRef = useRef<number | null>(null);
+  const remainderRef = useRef(0);
+
+  useEffect(() => {
+    if (!autoScroll) {
+      if (scrollFrameRef.current !== null) cancelAnimationFrame(scrollFrameRef.current);
+      scrollFrameRef.current = null;
+      lastFrameRef.current = null;
+      remainderRef.current = 0;
+      return;
+    }
+
+    const tick = (time: number) => {
+      const last = lastFrameRef.current ?? time;
+      const delta = Math.min((time - last) / 1000, 0.08);
+      lastFrameRef.current = time;
+      remainderRef.current += scrollSpeed * 24 * delta;
+      const pixels = Math.floor(remainderRef.current);
+
+      if (pixels > 0) {
+        window.scrollBy(0, pixels);
+        remainderRef.current -= pixels;
+      }
+
+      const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 16;
+      if (atBottom) {
+        setAutoScroll(false);
+        return;
+      }
+
+      scrollFrameRef.current = requestAnimationFrame(tick);
+    };
+
+    scrollFrameRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (scrollFrameRef.current !== null) cancelAnimationFrame(scrollFrameRef.current);
+      scrollFrameRef.current = null;
+      lastFrameRef.current = null;
+      remainderRef.current = 0;
+    };
+  }, [autoScroll, scrollSpeed]);
+
+  useEffect(() => () => {
+    if (scrollFrameRef.current !== null) cancelAnimationFrame(scrollFrameRef.current);
+  }, []);
+
   const parsed = useMemo(() => (song.lyrics || '').split('\n'), [song.lyrics]);
-  return <Shell><header className="sticky top-0 z-30 px-5 pt-safe pt-3 pb-3 bg-black/92 backdrop-blur-xl border-b border-white/10"><div className="flex items-center justify-between"><button onClick={()=>navigate('/app')}><ChevronLeft size={22}/></button><div className="text-xs font-medium">{song.songTitle}</div><div className="flex gap-3 text-white/60"><Heart size={18}/><MoreHorizontal size={18}/></div></div></header><main className="px-5 pt-4"><div className="text-lg font-semibold">{song.songTitle}</div><div className="text-xs text-white/45">{song.artist}</div>{song.imageURL && <img src={song.imageURL} alt="" className="mt-4 w-full h-28 rounded-2xl object-cover"/>}<div className="mt-4 flex gap-2 overflow-x-auto no-scrollbar">{['G','D','Em','C'].map((c,i)=><button key={c} onClick={()=>setTranspose(i-2)} className={`px-4 py-2 rounded-full text-xs ${transpose===i-2?'bg-[#FFD600] text-black font-semibold':'bg-[#151517] text-white/60'}`}>{c}</button>)}</div><div className="mt-4 rounded-2xl bg-[#0b0b0c] border border-white/5 p-4 overflow-x-auto">{parsed.length ? parsed.map((line,i)=>{const { lyrics, chords } = renderChordLine(line); const contentWidth = Math.max(lyrics.length, 1); return <div key={i} className="relative min-w-max font-mono text-sm mb-3"><div className="relative h-5 leading-5">{chords.map((item,j)=><span key={`${item.index}-${j}`} className="absolute top-0 text-[#FFD600] font-bold whitespace-nowrap" style={{ left: `${item.index}ch` }}>{item.chord}</span>)}</div><div className="whitespace-pre leading-6 min-h-6 text-white">{lyrics || '\u00A0'.repeat(contentWidth)}</div></div>}) : <div className="py-10 text-center text-sm text-white/35">No lyrics have been published for this song yet.</div>}</div></main><div className="fixed bottom-0 inset-x-0 z-40 border-t border-white/10 bg-black/95 backdrop-blur-xl"><div className="mx-auto max-w-xl px-5 pt-3 pb-safe-nav"><div className="flex items-center gap-4 text-white/60"><ListMusic size={18}/><SkipBack size={18}/><button onClick={()=>setPlaying(v=>!v)} className="w-12 h-12 rounded-full bg-[#FFD600] text-black flex items-center justify-center">{playing?<Pause size={20}/>:<Play size={20} className="fill-black"/>}</button><SkipForward size={18}/><Repeat2 size={18}/><div className="ml-auto flex items-center gap-2 text-[10px]"><span>Auto Scroll</span><span className="w-9 h-5 rounded-full bg-[#FFD600] inline-block relative"><span className="absolute right-1 top-1 w-3 h-3 bg-black rounded-full"/></span></div></div><div className="mt-2 h-1 bg-white/10 rounded-full"><div className="w-1/3 h-full bg-[#FFD600] rounded-full"/></div></div></div></Shell>;
+  return <Shell><header className="sticky top-0 z-30 px-5 pt-safe pt-3 pb-3 bg-black/92 backdrop-blur-xl border-b border-white/10"><div className="flex items-center justify-between"><button onClick={()=>navigate('/app')}><ChevronLeft size={22}/></button><div className="text-xs font-medium">{song.songTitle}</div><div className="flex gap-3 text-white/60"><Heart size={18}/><MoreHorizontal size={18}/></div></div></header><main className="px-5 pt-4 pb-40"><div className="text-lg font-semibold">{song.songTitle}</div><div className="text-xs text-white/45">{song.artist}</div>{song.imageURL && <img src={song.imageURL} alt="" className="mt-4 w-full h-28 rounded-2xl object-cover"/>}<div className="mt-4 flex gap-2 overflow-x-auto no-scrollbar">{['G','D','Em','C'].map((c,i)=><button key={c} onClick={()=>setTranspose(i-2)} className={`px-4 py-2 rounded-full text-xs ${transpose===i-2?'bg-[#FFD600] text-black font-semibold':'bg-[#151517] text-white/60'}`}>{c}</button>)}</div><div className="mt-4 rounded-2xl bg-[#0b0b0c] border border-white/5 p-4 overflow-x-auto">{parsed.length ? parsed.map((line,i)=>{const { lyrics, chords } = renderChordLine(line); const contentWidth = Math.max(lyrics.length, 1); return <div key={i} className="relative min-w-max font-mono text-sm mb-3"><div className="relative h-5 leading-5">{chords.map((item,j)=><span key={`${item.index}-${j}`} className="absolute top-0 text-[#FFD600] font-bold whitespace-nowrap" style={{ left: `${item.index}ch` }}>{item.chord}</span>)}</div><div className="whitespace-pre leading-6 min-h-6 text-white">{lyrics || '\u00A0'.repeat(contentWidth)}</div></div>}) : <div className="py-10 text-center text-sm text-white/35">No lyrics have been published for this song yet.</div>}</div></main><div className="fixed bottom-0 inset-x-0 z-40 border-t border-white/10 bg-black/95 backdrop-blur-xl"><div className="mx-auto max-w-xl px-5 pt-3 pb-safe-nav"><div className="flex items-center gap-3 text-white/60"><ListMusic size={18}/><SkipBack size={18}/><button onClick={()=>setPlaying(v=>!v)} className="w-12 h-12 rounded-full bg-[#FFD600] text-black flex items-center justify-center">{playing?<Pause size={20}/>:<Play size={20} className="fill-black"/>}</button><SkipForward size={18}/><Repeat2 size={18}/><button aria-label="Toggle auto scroll" onClick={()=>setAutoScroll(v=>!v)} className={`ml-auto flex items-center gap-2 text-[10px] px-2 py-1 rounded-full ${autoScroll?'bg-[#FFD600] text-black font-semibold':'text-white/55'}`}><span>Auto Scroll</span><span className={`w-9 h-5 rounded-full inline-block relative ${autoScroll?'bg-black/80':'bg-white/15'}`}><span className={`absolute top-1 w-3 h-3 rounded-full ${autoScroll?'right-1 bg-[#FFD600]':'left-1 bg-white/50'}`}/></span></button></div><div className="mt-2 flex items-center gap-2"><span className="text-[9px] text-white/35">Slow</span><input aria-label="Auto scroll speed" type="range" min="0.4" max="2.5" step="0.1" value={scrollSpeed} onChange={e=>setScrollSpeed(Number(e.target.value))} className="w-full accent-yellow-400"/><span className="text-[9px] text-white/35">Fast</span></div></div></div></Shell>;
 }
 
 export function GuitarCordProfile({ user }: { user?: any }) {
