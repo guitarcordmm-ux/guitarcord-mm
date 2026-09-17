@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signInWithGoogleOAuth, signInWithEmail, isUserAdmin } from '../lib/supabaseAuth';
-import { ShieldCheck, Mail, Lock } from 'lucide-react';
+import { ShieldCheck, UserRound, Lock } from 'lucide-react';
 
 export function AdminLogin() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('guitarcordmm@gmail.com');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -20,19 +20,19 @@ export function AdminLogin() {
     }
   };
 
-  const handleEmailLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     try {
-      const user = await signInWithEmail(email, password);
+      const user = await signInWithEmail(username, password);
       if (isUserAdmin(user)) {
         navigate('/admin-panel');
       } else {
-        setError('This email is not authorized as an administrator.');
+        setError('This account is not authorized as an administrator.');
       }
     } catch (err: any) {
-      setError(err.message || 'Invalid credentials');
+      setError(err.message || 'Invalid username or password');
     } finally {
       setLoading(false);
     }
@@ -47,9 +47,9 @@ export function AdminLogin() {
           </div>
         </div>
 
-        <h2 className="text-2xl font-bold mb-2 text-center">Admin Access</h2>
+        <h2 className="text-2xl font-bold mb-2 text-center">Admin Login</h2>
         <p className="text-gray-400 mb-6 text-center text-sm">
-          Sign in with authorized administrator credentials (e.g. guitarcordmm@gmail.com).
+          Sign in with your GuitarCord administrator username and password.
         </p>
 
         {error && (
@@ -58,14 +58,15 @@ export function AdminLogin() {
           </div>
         )}
 
-        <form onSubmit={handleEmailLogin} className="space-y-4 mb-4">
+        <form onSubmit={handleLogin} className="space-y-4 mb-4">
           <div className="relative">
-            <Mail className="absolute left-3 top-3.5 w-4 h-4 text-white/30" />
+            <UserRound className="absolute left-3 top-3.5 w-4 h-4 text-white/30" />
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Admin Email"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Admin Username"
+              autoComplete="username"
               className="w-full bg-black/60 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-yellow-500"
               required
             />
@@ -77,7 +78,8 @@ export function AdminLogin() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Password"
+              placeholder="Admin Password"
+              autoComplete="current-password"
               className="w-full bg-black/60 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-yellow-500"
               required
             />
@@ -88,7 +90,7 @@ export function AdminLogin() {
             disabled={loading}
             className="w-full py-2.5 bg-yellow-600 hover:bg-yellow-500 text-white font-semibold rounded-xl text-sm transition-colors disabled:opacity-50"
           >
-            {loading ? 'Authenticating...' : 'Sign In as Admin'}
+            {loading ? 'Signing in...' : 'Sign In as Admin'}
           </button>
         </form>
 
