@@ -100,7 +100,6 @@ CREATE POLICY "Admins have full access"
   WITH CHECK (auth.jwt() ->> 'email' = 'guitarcordmm@gmail.com');
 `;
 
-// Helper: Convert row to Song
 export function mapRowToSong(row: any): Song {
   return {
     id: row.id,
@@ -122,33 +121,93 @@ export function mapRowToSong(row: any): Song {
   };
 }
 
+const PUBLIC_SONGS_CACHE_KEY = 'guitarcord_public_songs_cache_v2';
+const PUBLIC_SONGS_CACHE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+
+type PublicSongsCache = {
+  savedAt: number;
+  songs: Song[];
+};
+
+function readPublicSongsCache(): Song[] | null {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const raw = window.localStorage.getItem(PUBLIC_SONGS_CACHE_KEY);
+    if (!raw) return null;
+
+    const cached = JSON.parse(raw) as PublicSongsCache;
+    if (!cached || !Array.isArray(cached.songs) || !Number.isFinite(cached.savedAt)) return null;
+    if (Date.now() - cached.savedAt > PUBLIC_SONGS_CACHE_MAX_AGE_MS) return null;
+
+    return cached.songs;
+  } catch (error) {
+    console.warn('Unable to read cached public songs:', error);
+    return null;
+  }
+}
+
+function writePublicSongsCache(songs: Song[]): void {
+  if (typeof window === 'undefined' || !songs.length) return;
+
+  try {
+    const cache: PublicSongsCache = { savedAt: Date.now(), songs };
+    window.localStorage.setItem(PUBLIC_SONGS_CACHE_KEY, JSON.stringify(cache));
+  } catch (error) {
+    // Storage can be unavailable/full in private browsing or restricted browsers.
+    console.warn('Unable to cache public songs:', error);
+  }
+}
+
 /**
  * Public song reads go through the same-origin Pages Function instead of
- * connecting the browser directly to Supabase. This keeps Myanmar users on
- * the Cloudflare edge path while the Function talks to Supabase server-side.
+ * connecting the browser directly to Supabase. A successful response is also
+ * cached locally so a temporary ISP/VPN/network problem does not make lyrics
+ * disappear for users who already loaded the catalogue once.
  */
 export async function fetchApprovedSongs(): Promise<Song[]> {
-  const response = await fetch('/api/songs', {
-    method: 'GET',
-    headers: { Accept: 'application/json' },
-    cache: 'no-store',
-  });
+  try {
+    const response = await fetch('/api/songs', {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+      // Let the browser/Cloudflare use normal HTTP caching. The endpoint is
+      // public approved-song data and contains no user session information.
+      cache: 'default',
+    });
 
-  if (!response.ok) {
-    let details = '';
-    try {
-      const body = await response.json();
-      details = typeof body?.error === 'string' ? `: ${body.error}` : '';
-    } catch {
-      // Ignore non-JSON error bodies.
+    if (!response.ok) {
+      let details = '';
+      try {
+        const body = await response.json();
+        details = typeof body?.error === 'string' ? `: ${body.error}` : '';
+      } catch {
+        // Ignore non-JSON error bodies.
+      }
+
+      throw new Error(`Song API request failed (${response.status})${details}`);
     }
 
-    throw new Error(`Song API request failed (${response.status})${details}`);
-  }
+    const payload = await response.json();
+    const rows = Array.isArray(payload) ? payload : Array.isArray(payload?.songs) ? payload.songs : [];
+    const songs = rows.map(mapRowToSong);
 
-  const payload = await response.json();
-  const rows = Array.isArray(payload) ? payload : Array.isArray(payload?.songs) ? payload.songs : [];
-  return rows.map(mapRowToSong);
+    if (!songs.length) {
+      const cachedSongs = readPublicSongsCache();
+      if (cachedSongs?.length) return cachedSongs;
+    } else {
+      writePublicSongsCache(songs);
+    }
+
+    return songs;
+  } catch (error) {
+    const cachedSongs = readPublicSongsCache();
+    if (cachedSongs?.length) {
+      console.warn('Song API unavailable; using cached catalogue and lyrics.', error);
+      return cachedSongs;
+    }
+
+    throw error;
+  }
 }
 
 export async function fetchUserSongs(userId: string): Promise<Song[]> {
@@ -302,7 +361,7 @@ export async function deleteSongPermanent(id: string): Promise<void> {
     .eq('id', id);
 
   if (error) {
-    console.error('Error deleting song permanently in Supabase:', error);
+    console.error('Error deleting song permanently from Supabase:', error);
     throw error;
   }
 }
