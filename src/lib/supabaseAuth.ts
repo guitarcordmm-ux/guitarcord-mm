@@ -1,18 +1,22 @@
 import { getSupabase, formatSupabaseUser, UnifiedUser } from './supabase';
 
-export const ADMIN_EMAIL = 'guitarcordmm@gmail.com';
-export const ADMIN_USERNAME = 'Cordmmadmin';
+const ADMIN_USERNAME = import.meta.env.VITE_ADMIN_USERNAME?.trim() || '';
+const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL?.trim().toLowerCase() || '';
 
 export function isUserAdmin(user: UnifiedUser | null): boolean {
-  if (!user || !user.email) return false;
-  return user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+  return user?.role === 'admin';
 }
 
 export async function getCurrentUser(): Promise<UnifiedUser | null> {
   const client = getSupabase();
   if (!client) {
-    const local = localStorage.getItem('supabase_fallback_user');
-    return local ? JSON.parse(local) : null;
+    try {
+      const raw = localStorage.getItem('supabase_fallback_user');
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      localStorage.removeItem('supabase_fallback_user');
+      return null;
+    }
   }
 
   const { data: { user } } = await client.auth.getUser();
@@ -22,8 +26,13 @@ export async function getCurrentUser(): Promise<UnifiedUser | null> {
 export function subscribeToAuthChanges(callback: (user: UnifiedUser | null) => void) {
   const client = getSupabase();
   if (!client) {
-    const local = localStorage.getItem('supabase_fallback_user');
-    callback(local ? JSON.parse(local) : null);
+    try {
+      const raw = localStorage.getItem('supabase_fallback_user');
+      callback(raw ? JSON.parse(raw) : null);
+    } catch {
+      localStorage.removeItem('supabase_fallback_user');
+      callback(null);
+    }
     return () => {};
   }
 
@@ -40,44 +49,24 @@ export function subscribeToAuthChanges(callback: (user: UnifiedUser | null) => v
 
 export async function signInWithEmail(emailOrUsername: string, password: string): Promise<UnifiedUser> {
   const client = getSupabase();
-  const normalized = emailOrUsername.trim();
-  const isAdminUsername = normalized.toLowerCase() === ADMIN_USERNAME.toLowerCase();
-  const loginEmail = isAdminUsername ? ADMIN_EMAIL : normalized;
+  if (!client) throw new Error('Authentication service is not configured.');
 
-  if (!client) {
-    if (isAdminUsername) {
-      const localUser: UnifiedUser = {
-        uid: 'admin_demo_id',
-        id: 'admin_demo_id',
-        email: ADMIN_EMAIL,
-        displayName: ADMIN_USERNAME,
-        isAnonymous: false,
-      };
-      localStorage.setItem('supabase_fallback_user', JSON.stringify(localUser));
-      return localUser;
-    }
-    throw new Error('Invalid administrator credentials');
-  }
+  const normalized = emailOrUsername.trim();
+  const isConfiguredAdminUsername = ADMIN_USERNAME && normalized.toLowerCase() === ADMIN_USERNAME.toLowerCase();
+  const loginEmail = isConfiguredAdminUsername ? ADMIN_EMAIL : normalized;
+
+  if (!loginEmail) throw new Error('Admin email is not configured.');
 
   const { data, error } = await client.auth.signInWithPassword({ email: loginEmail, password });
   if (error) throw error;
   if (!data.user) throw new Error('No user returned after login');
+
   return formatSupabaseUser(data.user)!;
 }
 
 export async function signUpWithEmail(email: string, password: string, username?: string): Promise<UnifiedUser> {
   const client = getSupabase();
-  if (!client) {
-    const localUser: UnifiedUser = {
-      uid: 'usr_' + Date.now(),
-      id: 'usr_' + Date.now(),
-      email: email.toLowerCase(),
-      displayName: username || email.split('@')[0],
-      isAnonymous: false,
-    };
-    localStorage.setItem('supabase_fallback_user', JSON.stringify(localUser));
-    return localUser;
-  }
+  if (!client) throw new Error('Authentication service is not configured.');
 
   const { data, error } = await client.auth.signUp({
     email,
@@ -91,18 +80,7 @@ export async function signUpWithEmail(email: string, password: string, username?
 
 export async function signInWithGoogleOAuth(): Promise<void> {
   const client = getSupabase();
-  if (!client) {
-    const localUser: UnifiedUser = {
-      uid: 'admin_demo_id',
-      id: 'admin_demo_id',
-      email: ADMIN_EMAIL,
-      displayName: ADMIN_USERNAME,
-      isAnonymous: false,
-    };
-    localStorage.setItem('supabase_fallback_user', JSON.stringify(localUser));
-    window.location.reload();
-    return;
-  }
+  if (!client) throw new Error('Authentication service is not configured.');
 
   const { error } = await client.auth.signInWithOAuth({
     provider: 'google',
