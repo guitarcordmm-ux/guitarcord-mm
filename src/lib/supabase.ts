@@ -5,9 +5,9 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim() || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim() || '';
 
 export const isSupabaseConfigured = Boolean(
-  supabaseUrl && 
-  supabaseAnonKey && 
-  !supabaseUrl.includes('YOUR_') && 
+  supabaseUrl &&
+  supabaseAnonKey &&
+  !supabaseUrl.includes('YOUR_') &&
   !supabaseAnonKey.includes('YOUR_')
 );
 
@@ -38,6 +38,7 @@ export interface UnifiedUser {
   id: string;
   email?: string;
   displayName?: string;
+  role?: string;
   isAnonymous?: boolean;
 }
 
@@ -48,13 +49,14 @@ export function formatSupabaseUser(user: SupabaseUser | null): UnifiedUser | nul
     id: user.id,
     email: user.email,
     displayName: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'User',
+    role: typeof user.app_metadata?.role === 'string' ? user.app_metadata.role : undefined,
     isAnonymous: false,
   };
 }
 
-export const SUPABASE_SQL_SETUP = `-- Copy and run this in your Supabase SQL Editor (https://supabase.com/dashboard/project/_/sql)
+export const SUPABASE_SQL_SETUP = `-- Run this in the Supabase SQL Editor.
+-- The admin role is stored in app_metadata so normal users cannot grant it to themselves.
 
--- 1. Create songs table
 CREATE TABLE IF NOT EXISTS public.songs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   song_title TEXT NOT NULL,
@@ -67,7 +69,7 @@ CREATE TABLE IF NOT EXISTS public.songs (
   tutorial_url TEXT DEFAULT '',
   lyrics TEXT DEFAULT '',
   tags TEXT[] DEFAULT ARRAY[]::TEXT[],
-  status TEXT DEFAULT 'pending', -- 'approved', 'pending', 'rejected', 'private', 'deleted'
+  status TEXT DEFAULT 'pending',
   is_watermarked BOOLEAN DEFAULT true,
   user_id TEXT,
   user_email TEXT,
@@ -76,31 +78,64 @@ CREATE TABLE IF NOT EXISTS public.songs (
   deleted_at TIMESTAMPTZ
 );
 
--- 2. Enable Row Level Security (RLS)
 ALTER TABLE public.songs ENABLE ROW LEVEL SECURITY;
 
--- 3. Public policy: Anyone can read approved songs
-CREATE POLICY "Public can view approved songs" 
-  ON public.songs 
-  FOR SELECT 
+DROP POLICY IF EXISTS "Public can view approved songs" ON public.songs;
+CREATE POLICY "Public can view approved songs"
+  ON public.songs FOR SELECT
   USING (status = 'approved');
 
--- 4. User policy: Users can manage their own songs
-CREATE POLICY "Users can manage own songs" 
-  ON public.songs 
-  FOR ALL 
+DROP POLICY IF EXISTS "Users can manage own songs" ON public.songs;
+CREATE POLICY "Users can manage own songs"
+  ON public.songs FOR ALL
   USING (auth.uid()::text = user_id)
   WITH CHECK (auth.uid()::text = user_id);
 
--- 5. Admin policy: guitarcordmm@gmail.com can manage all songs
-CREATE POLICY "Admins have full access" 
-  ON public.songs 
-  FOR ALL 
-  USING (auth.jwt() ->> 'email' = 'guitarcordmm@gmail.com')
-  WITH CHECK (auth.jwt() ->> 'email' = 'guitarcordmm@gmail.com');
+DROP POLICY IF EXISTS "Admins have full access" ON public.songs;
+CREATE POLICY "Admins have full access"
+  ON public.songs FOR ALL
+  USING ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin')
+  WITH CHECK ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+
+-- After creating/finding the administrator's Supabase Auth user ID, run once:
+-- UPDATE auth.users
+-- SET raw_app_meta_data = COALESCE(raw_app_meta_data, '{}'::jsonb) || '{"role":"admin"}'::jsonb
+-- WHERE id = 'YOUR_ADMIN_USER_ID';
+-- Sign out/in after changing app_metadata so the new JWT contains the role.
 `;
 
-export function mapRowToSong(row: any): Song {
+type SongRow = {
+  id: string;
+  song_title?: string | null;
+  title?: string | null;
+  artist?: string | null;
+  composer?: string | null;
+  album?: string | null;
+  genre?: string | null;
+  image_url?: string | null;
+  tutorial_url?: string | null;
+  lyrics?: string | null;
+  tags?: unknown;
+  status?: Song['status'] | null;
+  is_watermarked?: boolean | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  user_id?: string | null;
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function isSongRow(value: unknown): value is SongRow {
+  if (!isRecord(value) || typeof value.id !== 'string') return false;
+  if (value.tags !== undefined && value.tags !== null && !Array.isArray(value.tags)) return false;
+  return true;
+}
+
+export function mapRowToSong(row: unknown): Song {
+  if (!isSongRow(row)) throw new Error('Invalid song data received from Supabase.');
+
   return {
     id: row.id,
     songTitle: row.song_title || row.title || 'Untitled',
@@ -112,7 +147,7 @@ export function mapRowToSong(row: any): Song {
     imageURL: row.image_url || '',
     tutorialURL: row.tutorial_url || '',
     lyrics: row.lyrics || '',
-    tags: Array.isArray(row.tags) ? row.tags : [],
+    tags: Array.isArray(row.tags) ? row.tags.filter((tag): tag is string => typeof tag === 'string') : [],
     status: row.status || 'approved',
     isWatermarked: row.is_watermarked ?? true,
     createdAt: row.created_at,
@@ -136,11 +171,12 @@ function readPublicSongsCache(): Song[] | null {
     const raw = window.localStorage.getItem(PUBLIC_SONGS_CACHE_KEY);
     if (!raw) return null;
 
-    const cached = JSON.parse(raw) as PublicSongsCache;
-    if (!cached || !Array.isArray(cached.songs) || !Number.isFinite(cached.savedAt)) return null;
-    if (Date.now() - cached.savedAt > PUBLIC_SONGS_CACHE_MAX_AGE_MS) return null;
+    const cached: unknown = JSON.parse(raw);
+    if (!isRecord(cached) || !Array.isArray(cached.songs) || !Number.isFinite(cached.savedAt)) return null;
+    if (Date.now() - Number(cached.savedAt) > PUBLIC_SONGS_CACHE_MAX_AGE_MS) return null;
 
-    return cached.songs;
+    const songs = cached.songs.filter((song): song is Song => isRecord(song) && typeof song.id === 'string' && typeof song.songTitle === 'string' && typeof song.artist === 'string');
+    return songs.length ? songs : null;
   } catch (error) {
     console.warn('Unable to read cached public songs:', error);
     return null;
@@ -154,42 +190,32 @@ function writePublicSongsCache(songs: Song[]): void {
     const cache: PublicSongsCache = { savedAt: Date.now(), songs };
     window.localStorage.setItem(PUBLIC_SONGS_CACHE_KEY, JSON.stringify(cache));
   } catch (error) {
-    // Storage can be unavailable/full in private browsing or restricted browsers.
     console.warn('Unable to cache public songs:', error);
   }
 }
 
-/**
- * Public song reads go through the same-origin Pages Function instead of
- * connecting the browser directly to Supabase. A successful response is also
- * cached locally so a temporary ISP/VPN/network problem does not make lyrics
- * disappear for users who already loaded the catalogue once.
- */
 export async function fetchApprovedSongs(): Promise<Song[]> {
   try {
     const response = await fetch('/api/songs', {
       method: 'GET',
       headers: { Accept: 'application/json' },
-      // Let the browser/Cloudflare use normal HTTP caching. The endpoint is
-      // public approved-song data and contains no user session information.
       cache: 'default',
     });
 
     if (!response.ok) {
       let details = '';
       try {
-        const body = await response.json();
-        details = typeof body?.error === 'string' ? `: ${body.error}` : '';
+        const body: unknown = await response.json();
+        details = isRecord(body) && typeof body.error === 'string' ? `: ${body.error}` : '';
       } catch {
         // Ignore non-JSON error bodies.
       }
-
       throw new Error(`Song API request failed (${response.status})${details}`);
     }
 
-    const payload = await response.json();
-    const rows = Array.isArray(payload) ? payload : Array.isArray(payload?.songs) ? payload.songs : [];
-    const songs = rows.map(mapRowToSong);
+    const payload: unknown = await response.json();
+    const rows = Array.isArray(payload) ? payload : isRecord(payload) && Array.isArray(payload.songs) ? payload.songs : [];
+    const songs = rows.filter(isSongRow).map(mapRowToSong);
 
     if (!songs.length) {
       const cachedSongs = readPublicSongsCache();
@@ -205,7 +231,6 @@ export async function fetchApprovedSongs(): Promise<Song[]> {
       console.warn('Song API unavailable; using cached catalogue and lyrics.', error);
       return cachedSongs;
     }
-
     throw error;
   }
 }
@@ -225,7 +250,7 @@ export async function fetchUserSongs(userId: string): Promise<Song[]> {
     throw error;
   }
 
-  return (data || []).map(mapRowToSong);
+  return (Array.isArray(data) ? data : []).filter(isSongRow).map(mapRowToSong);
 }
 
 export async function fetchAdminSongs(status: string): Promise<Song[]> {
@@ -233,12 +258,9 @@ export async function fetchAdminSongs(status: string): Promise<Song[]> {
   if (!client) return [];
 
   let query = client.from('songs').select('*').eq('status', status);
-
-  if (status === 'deleted') {
-    query = query.order('deleted_at', { ascending: false });
-  } else {
-    query = query.order('created_at', { ascending: false });
-  }
+  query = status === 'deleted'
+    ? query.order('deleted_at', { ascending: false })
+    : query.order('created_at', { ascending: false });
 
   const { data, error } = await query;
   if (error) {
@@ -246,18 +268,18 @@ export async function fetchAdminSongs(status: string): Promise<Song[]> {
     throw error;
   }
 
-  return (data || []).map(mapRowToSong);
+  return (Array.isArray(data) ? data : []).filter(isSongRow).map(mapRowToSong);
 }
 
 export async function insertSong(songData: Partial<Song> & { userId?: string; userEmail?: string }): Promise<Song> {
   const client = getSupabase();
   const title = songData.songTitle || songData.title || 'Untitled';
-  
+
   if (!client) {
     const newSong: Song = {
       id: 'local_' + Date.now(),
       songTitle: title,
-      title: title,
+      title,
       artist: songData.artist || '',
       composer: songData.composer || '',
       genre: songData.genre || '',
@@ -267,16 +289,21 @@ export async function insertSong(songData: Partial<Song> & { userId?: string; us
       isWatermarked: songData.isWatermarked ?? true,
       createdAt: new Date().toISOString(),
     };
-    const local = localStorage.getItem('supabase_fallback_songs');
-    const list = local ? JSON.parse(local) : [];
-    list.unshift(newSong);
-    localStorage.setItem('supabase_fallback_songs', JSON.stringify(list));
+    try {
+      const raw = localStorage.getItem('supabase_fallback_songs');
+      const parsed: unknown = raw ? JSON.parse(raw) : [];
+      const list = Array.isArray(parsed) ? parsed : [];
+      list.unshift(newSong);
+      localStorage.setItem('supabase_fallback_songs', JSON.stringify(list));
+    } catch (error) {
+      console.warn('Unable to write local fallback songs:', error);
+    }
     return newSong;
   }
 
   const payload = {
     song_title: title,
-    title: title,
+    title,
     artist: songData.artist || '',
     composer: songData.composer || '',
     genre: songData.genre || '',
@@ -290,12 +317,7 @@ export async function insertSong(songData: Partial<Song> & { userId?: string; us
     updated_at: new Date().toISOString(),
   };
 
-  const { data, error } = await client
-    .from('songs')
-    .insert([payload])
-    .select()
-    .single();
-
+  const { data, error } = await client.from('songs').insert([payload]).select().single();
   if (error) {
     console.error('Error inserting song to Supabase:', error);
     throw error;
@@ -307,22 +329,24 @@ export async function insertSong(songData: Partial<Song> & { userId?: string; us
 export async function updateSong(id: string, updates: Partial<Song>): Promise<void> {
   const client = getSupabase();
   if (!client) {
-    const local = localStorage.getItem('supabase_fallback_songs');
-    if (local) {
-      const list: Song[] = JSON.parse(local);
-      const updatedList = list.map(s => s.id === id ? { ...s, ...updates } : s);
+    try {
+      const raw = localStorage.getItem('supabase_fallback_songs');
+      const parsed: unknown = raw ? JSON.parse(raw) : [];
+      const list = Array.isArray(parsed) ? parsed : [];
+      const updatedList = list.map(song => isRecord(song) && song.id === id ? { ...song, ...updates } : song);
       localStorage.setItem('supabase_fallback_songs', JSON.stringify(updatedList));
+    } catch (error) {
+      console.warn('Unable to update local fallback song:', error);
     }
     return;
   }
 
-  const payload: any = {
-    updated_at: new Date().toISOString(),
-  };
+  const payload: Record<string, unknown> = { updated_at: new Date().toISOString() };
 
   if (updates.songTitle !== undefined || updates.title !== undefined) {
-    payload.song_title = updates.songTitle || updates.title;
-    payload.title = updates.songTitle || updates.title;
+    const title = updates.songTitle || updates.title || 'Untitled';
+    payload.song_title = title;
+    payload.title = title;
   }
   if (updates.artist !== undefined) payload.artist = updates.artist;
   if (updates.composer !== undefined) payload.composer = updates.composer;
@@ -333,11 +357,7 @@ export async function updateSong(id: string, updates: Partial<Song>): Promise<vo
   if (updates.isWatermarked !== undefined) payload.is_watermarked = updates.isWatermarked;
   if (updates.status === 'deleted') payload.deleted_at = new Date().toISOString();
 
-  const { error } = await client
-    .from('songs')
-    .update(payload)
-    .eq('id', id);
-
+  const { error } = await client.from('songs').update(payload).eq('id', id);
   if (error) {
     console.error('Error updating song in Supabase:', error);
     throw error;
@@ -347,19 +367,18 @@ export async function updateSong(id: string, updates: Partial<Song>): Promise<vo
 export async function deleteSongPermanent(id: string): Promise<void> {
   const client = getSupabase();
   if (!client) {
-    const local = localStorage.getItem('supabase_fallback_songs');
-    if (local) {
-      const list: Song[] = JSON.parse(local);
-      localStorage.setItem('supabase_fallback_songs', JSON.stringify(list.filter(s => s.id !== id)));
+    try {
+      const raw = localStorage.getItem('supabase_fallback_songs');
+      const parsed: unknown = raw ? JSON.parse(raw) : [];
+      const list = Array.isArray(parsed) ? parsed : [];
+      localStorage.setItem('supabase_fallback_songs', JSON.stringify(list.filter(song => !isRecord(song) || song.id !== id)));
+    } catch (error) {
+      console.warn('Unable to delete local fallback song:', error);
     }
     return;
   }
 
-  const { error } = await client
-    .from('songs')
-    .delete()
-    .eq('id', id);
-
+  const { error } = await client.from('songs').delete().eq('id', id);
   if (error) {
     console.error('Error deleting song permanently from Supabase:', error);
     throw error;
