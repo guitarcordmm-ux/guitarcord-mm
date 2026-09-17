@@ -1,7 +1,15 @@
 interface Env {
-  SUPABASE_URL: string;
-  SUPABASE_ANON_KEY: string;
+  SUPABASE_URL?: string;
+  SUPABASE_ANON_KEY?: string;
+  VITE_SUPABASE_URL?: string;
+  VITE_SUPABASE_ANON_KEY?: string;
 }
+
+// The publishable/anon key is safe for public clients. RLS remains the security boundary.
+// These fallbacks keep the public song endpoint working on Cloudflare Pages even when
+// the Pages Function environment variables have not been added yet.
+const DEFAULT_SUPABASE_URL = 'https://lykthvekdiccrktepwrv.supabase.co';
+const DEFAULT_SUPABASE_KEY = 'sb_publishable_t0lJCV914jnCXMG_IRXl2A_cv-nc8gS';
 
 const PUBLIC_FIELDS = [
   'id',
@@ -22,14 +30,21 @@ const PUBLIC_FIELDS = [
 ].join(',');
 
 export async function onRequestGet({ env }: { env: Env }): Promise<Response> {
-  if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) {
+  const supabaseUrl =
+    env.SUPABASE_URL?.trim() || env.VITE_SUPABASE_URL?.trim() || DEFAULT_SUPABASE_URL;
+  const supabaseKey =
+    env.SUPABASE_ANON_KEY?.trim() ||
+    env.VITE_SUPABASE_ANON_KEY?.trim() ||
+    DEFAULT_SUPABASE_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
     return Response.json(
       { error: 'Supabase proxy is not configured on Cloudflare.' },
       { status: 500 },
     );
   }
 
-  const upstreamUrl = new URL('/rest/v1/songs', env.SUPABASE_URL);
+  const upstreamUrl = new URL('/rest/v1/songs', supabaseUrl);
   upstreamUrl.searchParams.set('select', PUBLIC_FIELDS);
   upstreamUrl.searchParams.set('status', 'eq.approved');
   upstreamUrl.searchParams.set('order', 'created_at.desc');
@@ -38,8 +53,8 @@ export async function onRequestGet({ env }: { env: Env }): Promise<Response> {
     const upstream = await fetch(upstreamUrl.toString(), {
       method: 'GET',
       headers: {
-        apikey: env.SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${env.SUPABASE_ANON_KEY}`,
+        apikey: supabaseKey,
+        Authorization: `Bearer ${supabaseKey}`,
         Accept: 'application/json',
       },
     });
