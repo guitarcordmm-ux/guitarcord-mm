@@ -122,30 +122,33 @@ export function mapRowToSong(row: any): Song {
   };
 }
 
-// Database helper functions with graceful fallbacks
+/**
+ * Public song reads go through the same-origin Pages Function instead of
+ * connecting the browser directly to Supabase. This keeps Myanmar users on
+ * the Cloudflare edge path while the Function talks to Supabase server-side.
+ */
 export async function fetchApprovedSongs(): Promise<Song[]> {
-  const client = getSupabase();
-  if (!client) {
-    // Fallback to local storage if Supabase is not yet configured
-    const local = localStorage.getItem('supabase_fallback_songs');
-    if (local) {
-      try { return JSON.parse(local); } catch (e) {}
+  const response = await fetch('/api/songs', {
+    method: 'GET',
+    headers: { Accept: 'application/json' },
+    cache: 'no-store',
+  });
+
+  if (!response.ok) {
+    let details = '';
+    try {
+      const body = await response.json();
+      details = typeof body?.error === 'string' ? `: ${body.error}` : '';
+    } catch {
+      // Ignore non-JSON error bodies.
     }
-    return [];
+
+    throw new Error(`Song API request failed (${response.status})${details}`);
   }
 
-  const { data, error } = await client
-    .from('songs')
-    .select('*')
-    .eq('status', 'approved')
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    console.error('Error fetching approved songs from Supabase:', error);
-    throw error;
-  }
-
-  return (data || []).map(mapRowToSong);
+  const payload = await response.json();
+  const rows = Array.isArray(payload) ? payload : Array.isArray(payload?.songs) ? payload.songs : [];
+  return rows.map(mapRowToSong);
 }
 
 export async function fetchUserSongs(userId: string): Promise<Song[]> {
