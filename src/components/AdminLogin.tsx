@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { signInWithGoogleOAuth, signInWithEmail, isUserAdmin } from '../lib/supabaseAuth';
+import { signInWithGoogleOAuth, signInWithEmail, isUserAdmin } from '../services/auth/authService';
 import { ShieldCheck, UserRound, Lock } from 'lucide-react';
 
 export function AdminLogin() {
@@ -14,9 +14,9 @@ export function AdminLogin() {
     try {
       await signInWithGoogleOAuth();
       navigate('/admin-panel');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Login error:', error);
-      setError(error.message || 'Login failed');
+      setError(error instanceof Error ? error.message : 'Authentication failed' || 'Login failed');
     }
   };
 
