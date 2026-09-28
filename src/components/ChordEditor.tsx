@@ -309,6 +309,22 @@ export function ChordEditor({ onClose, onSubmit, initialContent = '', initialSon
                   </div>
                 </div>
 
+                <div>
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 mb-2 block ml-1">
+                    Search Aliases
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. ming ko chit tal, Ming Ko Chit Tal"
+                    value={searchAliases}
+                    onChange={(e) => setSearchAliases(e.target.value)}
+                    className="w-full bg-white/5 border border-white/5 rounded-2xl px-4 py-3.5 text-[15px] font-medium text-white/80 placeholder-white/10 focus:outline-none focus:border-[#FFD600]/30 focus:bg-white/[0.07] transition-all"
+                  />
+                  <p className="mt-1.5 text-[10px] text-white/25">
+                    Comma-separated Burmese/English spellings used by search.
+                  </p>
+                </div>
+
                 {isAdmin && (
                    <div className="group">
                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 mb-2 block ml-1">Image URL (Optional)</label>
