@@ -1,0 +1,1 @@
+export { GuitarCordPlayer as default, GuitarCordPlayer } from '../../../components/GuitarCordPlayer';
