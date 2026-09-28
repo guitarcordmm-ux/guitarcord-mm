@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Heart, MoreHorizontal, Pause, Play, SkipBack, SkipForward, Repeat2, ListMusic, Minus, Plus, Music2 } from 'lucide-react';
-import { Song } from '../../../types';
+import type { Song } from '../../../types';
 
 type ParsedLine = { lyrics: string; chords: { chord: string; index: number }[] };
 
