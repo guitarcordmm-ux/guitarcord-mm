@@ -1,1 +1,1 @@
-export { GuitarCordHome as default, GuitarCordHome } from '../../../components/GuitarCordUI';
+export { GuitarCordHome as default, GuitarCordHome } from '../components/GuitarCordUI';
