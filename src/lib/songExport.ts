@@ -33,7 +33,7 @@ export async function exportSongAsJpg(song: Song, transpose: number = 0) {
 
   // Wait for fonts (simple delay to ensure Inter is loaded)
   if ('fonts' in document) {
-    await (document as any).fonts.ready;
+    await document.fonts.ready;
   }
 
   // 2. Title
