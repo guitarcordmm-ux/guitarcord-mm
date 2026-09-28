@@ -267,6 +267,9 @@ export function GuitarCordLibrary({ songs }: Props) {
   const [search, setSearch] = useState('');
   const [tab, setTab] = useState<'songs' | 'favorites' | 'downloads'>('songs');
   const { results, loading: searchLoading, error: searchError } = useSongSearch(search);
+  const visibleSongs = search.trim()
+    ? results
+    : songs.map(song => ({ song, lyricMatch: '', score: 0 }));
 
   return (
     <Shell>
@@ -311,8 +314,8 @@ export function GuitarCordLibrary({ songs }: Props) {
       <main className="px-5 pt-3 divide-y divide-white/10">
         {searchLoading ? (
           <div className="py-10 text-center text-sm text-white/35">Searching songs…</div>
-        ) : results.length ? (
-          results.map(({ song, lyricMatch }, i) => (
+        ) : visibleSongs.length ? (
+          visibleSongs.map(({ song, lyricMatch }, i) => (
             <SongRow key={song.id || i} song={song} showHeart={tab === 'favorites'} lyricMatch={lyricMatch} />
           ))
         ) : (
