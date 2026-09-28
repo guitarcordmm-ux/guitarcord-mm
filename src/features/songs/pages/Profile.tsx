@@ -1,1 +1,1 @@
-export { GuitarCordProfile as default, GuitarCordProfile } from '../../../components/GuitarCordUI';
+export { GuitarCordProfile as default, GuitarCordProfile } from '../components/GuitarCordUI';
