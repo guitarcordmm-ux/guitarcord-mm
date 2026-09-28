@@ -10,4 +10,4 @@ export {
   signOutUser,
 } from '../../lib/supabaseAuth';
 
-export type { UnifiedUser } from '../../lib/supabase';
+export type { User as UnifiedUser } from '../../types';
