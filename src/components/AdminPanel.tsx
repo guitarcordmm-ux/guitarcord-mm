@@ -82,7 +82,7 @@ export function AdminPanel() {
         setSubmissions(prev => prev.filter(s => s.id !== id));
         showStatus(`Song marked as ${action}`);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error updating song:', err);
       showStatus('Action failed: ' + (err instanceof Error ? err.message : 'Error'), 'error');
     }
