@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Song } from '../types';
+import type { Song } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, PlayCircle, Trash2, LogOut, UploadCloud, CheckCircle2, AlertCircle } from 'lucide-react';
 import { ChordModal } from './ChordModal';
-import { fetchUserSongs, deleteSongPermanent, updateSong } from '../lib/supabase';
-import { signOutUser } from '../lib/supabaseAuth';
+import { fetchUserSongs, deleteSongPermanent, updateSong } from '../services/songs/songService';
+import { signOutUser } from '../services/auth/authService';
 
 export function UserDashboard({ userId }: { userId: string }) {
   const [songs, setSongs] = useState<Song[]>([]);
