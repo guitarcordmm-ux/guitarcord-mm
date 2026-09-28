@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Lock, AlertCircle, ArrowLeft, User } from 'lucide-react';
-import { signInWithEmail, signUpWithEmail, signInWithGoogleOAuth, isUserAdmin } from '../lib/supabaseAuth';
+import { signInWithEmail, signUpWithEmail, signInWithGoogleOAuth, isUserAdmin } from '../services/auth/authService';
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -37,8 +37,8 @@ export function LoginPage() {
       } else {
         navigate('/');
       }
-    } catch (err: any) {
-      setError(err.message || 'Authentication error occurred');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Authentication error occurred');
     } finally {
       setLoading(false);
     }
@@ -49,7 +49,7 @@ export function LoginPage() {
     try {
       await signInWithGoogleOAuth();
     } catch (err: any) {
-      setError(err.message || 'Google sign-in error');
+      setError(err instanceof Error ? err.message : 'Google sign-in error');
     }
   };
 
