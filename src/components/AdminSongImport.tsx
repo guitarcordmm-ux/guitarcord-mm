@@ -4,7 +4,7 @@ import * as XLSX from '@e965/xlsx';
 import { ArrowLeft, CheckCircle2, FileSpreadsheet, Upload, XCircle } from 'lucide-react';
 import { insertSongs } from '../services/songs/songService';
 import type { UnifiedUser } from '../services/auth/authService';
-import { subscribeToAuthChanges, isUserAdmin } from '../lib/supabaseAuth';
+import { subscribeToAuthChanges, isUserAdmin } from '../services/auth/authService';
 
 type ImportRow = {
   song_title: string;
@@ -101,20 +101,20 @@ export function AdminSongImport() {
         setImporting(true); setParseError('');
     try {
       const payload = validRows.map(row => ({
-        song_title: row.song_title,
+        songTitle: row.song_title,
         title: row.song_title,
         artist: row.artist,
         composer: row.composer,
         album: row.album,
         genre: row.genre,
-        image_url: row.image_url,
-        tutorial_url: row.tutorial_url,
+        imageURL: row.image_url,
+        tutorialURL: row.tutorial_url,
         lyrics: row.lyrics,
         tags: row.tags,
-        status: publishImmediately ? 'approved' : row.status,
-        is_watermarked: row.is_watermarked,
-        user_id: currentUser?.uid || null,
-        user_email: currentUser?.email || null,
+        status: publishImmediately ? 'approved' as const : (row.status === 'approved' ? 'approved' as const : 'pending' as const),
+        isWatermarked: row.is_watermarked,
+        userId: currentUser?.uid,
+        userEmail: currentUser?.email,
       }));
       await insertSongs(payload);
       setStatus(`Imported ${validRows.length} song${validRows.length === 1 ? '' : 's'} successfully. ${publishImmediately ? 'They are now visible in the public library.' : 'They are saved as draft/pending status.'}`);
