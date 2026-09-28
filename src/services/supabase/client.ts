@@ -32,17 +32,3 @@ export function formatSupabaseUser(user: SupabaseUser | null): UnifiedUser | nul
     isAnonymous: false,
   };
 }
-
-export type UnifiedUser = User;
-export function formatSupabaseUser(user: SupabaseUser | null): UnifiedUser | null {
-  if (!user) return null;
-  return {
-    uid: user.id,
-    id: user.id,
-    email: user.email,
-    displayName: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'User',
-    role: typeof user.app_metadata?.role === 'string' ? user.app_metadata.role : undefined,
-    isAnonymous: false,
-  };
-}
-
