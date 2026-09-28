@@ -1,7 +1,4 @@
-export {
-  GuitarCordHome,
-  GuitarCordLibrary,
-  GuitarCordProfile,
-} from '../../components/GuitarCordUI';
-
-export { GuitarCordPlayer } from '../../components/GuitarCordPlayer';
+export { GuitarCordHome } from './pages/Home';
+export { GuitarCordLibrary } from './pages/Library';
+export { GuitarCordProfile } from './pages/Profile';
+export { GuitarCordPlayer } from './pages/SongPlayer';
