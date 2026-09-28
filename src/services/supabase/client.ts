@@ -1,4 +1,5 @@
-import { createClient, SupabaseClient, User as SupabaseUser } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
+import type { SupabaseClient, User as SupabaseUser } from '@supabase/supabase-js';
 import type { User } from '../../types';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim() || '';
@@ -28,7 +29,7 @@ export function formatSupabaseUser(user: SupabaseUser | null): UnifiedUser | nul
     id: user.id,
     email: user.email,
     displayName: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'User',
-    role: typeof user.app_metadata?.role === 'string' ? user.app_metadata.role : undefined,
+    role: user.app_metadata?.role === 'admin' ? 'admin' : undefined,
     isAnonymous: false,
   };
 }
