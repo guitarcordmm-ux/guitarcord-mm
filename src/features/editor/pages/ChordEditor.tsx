@@ -1,0 +1,1 @@
+export { ChordEditor as default, ChordEditor } from '../../../components/ChordEditor';
