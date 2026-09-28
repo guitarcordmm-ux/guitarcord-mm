@@ -2,7 +2,8 @@ import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as XLSX from '@e965/xlsx';
 import { ArrowLeft, CheckCircle2, FileSpreadsheet, Upload, XCircle } from 'lucide-react';
-import { getSupabase, UnifiedUser } from '../lib/supabase';
+import { insertSongs } from '../services/songs/songService';
+import type { UnifiedUser } from '../services/auth/authService';
 import { subscribeToAuthChanges, isUserAdmin } from '../lib/supabaseAuth';
 
 type ImportRow = {
@@ -97,11 +98,8 @@ export function AdminSongImport() {
 
   const handleImport = async () => {
     if (!validRows.length || errors.length) return;
-    const client = getSupabase();
-    if (!client) { setParseError('Supabase is not configured. Check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.'); return; }
-    setImporting(true); setParseError('');
+        setImporting(true); setParseError('');
     try {
-      const now = new Date().toISOString();
       const payload = validRows.map(row => ({
         song_title: row.song_title,
         title: row.song_title,
@@ -117,11 +115,8 @@ export function AdminSongImport() {
         is_watermarked: row.is_watermarked,
         user_id: currentUser?.uid || null,
         user_email: currentUser?.email || null,
-        created_at: now,
-        updated_at: now,
       }));
-      const { error } = await client.from('songs').insert(payload);
-      if (error) throw error;
+      await insertSongs(payload);
       setStatus(`Imported ${validRows.length} song${validRows.length === 1 ? '' : 's'} successfully. ${publishImmediately ? 'They are now visible in the public library.' : 'They are saved as draft/pending status.'}`);
       setRows([]); setFileName('');
     } catch (error) {
