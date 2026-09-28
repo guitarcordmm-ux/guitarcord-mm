@@ -18,6 +18,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import type { Song, User } from '../../../types';
+import { searchSongs, type SongSearchResult } from '../../../services/songs/songService';
 
 type Props = { songs: Song[]; user?: User | null };
 
@@ -65,82 +66,6 @@ function EmptySongs({ message = 'No songs available yet.' }: { message?: string 
       {message}
     </div>
   );
-}
-
-function normalizeSearchText(value: string) {
-  return value
-    .normalize('NFC')
-    .toLocaleLowerCase('my-MM')
-    .replace(/[၊။]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-function songSearchText(song: Song) {
-  const fields = [
-    song.songTitle,
-    song.title,
-    song.artist,
-    song.composer,
-    song.album,
-    song.genre,
-    ...(song.tags ?? []),
-    song.lyrics,
-  ];
-  return fields.filter(Boolean).map(value => normalizeSearchText(value ?? '')).join(' ');
-}
-
-function getLyricMatch(song: Song, normalizedQuery: string) {
-  if (!normalizedQuery || !song.lyrics) return '';
-  const exactLine = song.lyrics
-    .split('\n')
-    .map(line => line.replace(/\[([^\]]+)\]/g, '').trim())
-    .find(line => normalizeSearchText(line).includes(normalizedQuery));
-  return exactLine ?? '';
-}
-
-type SongSearchResult = { song: Song; lyricMatch: string; score: number };
-
-function searchSongs(songs: Song[], query: string): SongSearchResult[] {
-  const normalizedQuery = normalizeSearchText(query);
-  if (!normalizedQuery) return songs;
-
-  const terms = normalizedQuery.split(' ').filter(Boolean);
-
-  return songs
-    .map(song => {
-      const text = songSearchText(song);
-      const lyricMatch = getLyricMatch(song, normalizedQuery);
-      const phraseMatch = text.includes(normalizedQuery);
-      const termMatches = terms.filter(term => text.includes(term)).length;
-      const score = (phraseMatch ? 100 : 0) + (lyricMatch ? 30 : 0) + termMatches;
-      return { song, lyricMatch, score };
-    })
-    .filter(result => result.score > 0)
-    .sort((a, b) => b.score - a.score);
-}
-
-function sortRecent(songs: Song[]) {
-  return [...songs].sort((a, b) => {
-    const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-    const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-    return bTime - aTime;
-  });
-}
-
-function isMyanmarSong(song: Song) {
-  const text = normalizeSearchText([
-    song.songTitle,
-    song.artist,
-    song.genre,
-    ...(song.tags ?? []),
-  ].filter(Boolean).join(' '));
-  return text.includes('မြန်မာ') || text.includes('myanmar') || text.includes('burmese');
-}
-
-function isEasySong(song: Song) {
-  const text = normalizeSearchText([song.genre, ...(song.tags ?? [])].filter(Boolean).join(' '));
-  return text.includes('easy') || text.includes('beginner') || text.includes('လွယ်');
 }
 
 type Category = 'popular' | 'recent' | 'myanmar' | 'easy';
