@@ -11,4 +11,4 @@ export {
   formatSupabaseUser,
 } from '../../lib/supabase';
 
-export type { UnifiedUser } from '../../lib/supabase';
+export type { User as UnifiedUser } from '../../types';
