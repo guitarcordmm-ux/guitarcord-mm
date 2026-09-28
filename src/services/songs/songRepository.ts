@@ -1,5 +1,6 @@
 import type { Song } from '../../types';
 import { getSupabase } from '../supabase/client';
+import { slugifyText } from '../../lib/seo';
 
 type SongRow = {
   id: string; song_title?: string | null; title?: string | null; artist?: string | null;
@@ -21,7 +22,8 @@ export function mapRowToSong(row: unknown): Song {
     tags: Array.isArray(row.tags) ? row.tags.filter((tag): tag is string => typeof tag === 'string') : [],
     searchAliases: Array.isArray(row.search_aliases) ? row.search_aliases.filter((alias): alias is string => typeof alias === 'string') : [],
     status: row.status || 'approved', isWatermarked: row.is_watermarked ?? true,
-    artistSlug: row.artist_slug || undefined, songSlug: row.song_slug || undefined,
+    artistSlug: row.artist_slug || slugifyText(row.artist || '') || undefined,
+    songSlug: row.song_slug || slugifyText(row.song_title || row.title || '') || undefined,
     language: row.language || 'my', difficulty: row.difficulty || 'intermediate', playCount: row.play_count ?? 0,
     createdAt: row.created_at, updatedAt: row.updated_at, userId: row.user_id,
   };
@@ -154,7 +156,10 @@ export async function insertSong(songData: Partial<Song> & { userId?: string; us
     try { const parsed: unknown = JSON.parse(localStorage.getItem('supabase_fallback_songs') || '[]'); const list = Array.isArray(parsed) ? parsed : []; list.unshift(newSong); localStorage.setItem('supabase_fallback_songs', JSON.stringify(list)); } catch (error) { console.warn('Unable to write local fallback songs:', error); }
     return newSong;
   }
-  const payload = { song_title: title, title, artist: songData.artist || '', composer: songData.composer || '', genre: songData.genre || '', image_url: songData.imageURL || '', lyrics: songData.lyrics || '', search_aliases: songData.searchAliases || [], status: songData.status || 'pending', is_watermarked: songData.isWatermarked ?? true, user_id: songData.userId || null, user_email: songData.userEmail || null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
+  const artist = songData.artist || '';
+  const artistSlug = songData.artistSlug || slugifyText(artist);
+  const songSlug = songData.songSlug || slugifyText(title);
+  const payload = { song_title: title, title, artist, composer: songData.composer || '', genre: songData.genre || '', image_url: songData.imageURL || '', lyrics: songData.lyrics || '', search_aliases: songData.searchAliases || [], artist_slug: artistSlug, song_slug: songSlug, language: songData.language || 'my', difficulty: songData.difficulty || 'intermediate', play_count: songData.playCount ?? 0, status: songData.status || 'pending', is_watermarked: songData.isWatermarked ?? true, user_id: songData.userId || null, user_email: songData.userEmail || null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
   const { data, error } = await client.from('songs').insert([payload]).select().single();
   if (error) { console.error('Error inserting song to Supabase:', error); throw error; }
   return mapRowToSong(data);
@@ -177,10 +182,13 @@ export async function insertSongs(
   const now = new Date().toISOString();
   const payload = songs.map(song => {
     const title = song.songTitle || song.title || 'Untitled';
+    const artist = song.artist || '';
+    const artistSlug = song.artistSlug || slugifyText(artist);
+    const songSlug = song.songSlug || slugifyText(title);
     return {
       song_title: title,
       title,
-      artist: song.artist || '',
+      artist,
       composer: song.composer || '',
       album: song.album || '',
       genre: song.genre || '',
@@ -189,6 +197,11 @@ export async function insertSongs(
       lyrics: song.lyrics || '',
       tags: song.tags || [],
       search_aliases: song.searchAliases || [],
+      artist_slug: artistSlug,
+      song_slug: songSlug,
+      language: song.language || 'my',
+      difficulty: song.difficulty || 'intermediate',
+      play_count: song.playCount ?? 0,
       status: song.status || 'pending',
       is_watermarked: song.isWatermarked ?? true,
       artist_slug: song.artistSlug || undefined,
@@ -230,6 +243,12 @@ export async function updateSong(id: string, updates: Partial<Song>): Promise<vo
   if (updates.searchAliases !== undefined) payload.search_aliases = updates.searchAliases;
   if (updates.artistSlug !== undefined) payload.artist_slug = updates.artistSlug;
   if (updates.songSlug !== undefined) payload.song_slug = updates.songSlug;
+  if (updates.artist !== undefined || updates.songTitle !== undefined || updates.title !== undefined) {
+    const nextArtist = updates.artist ?? '';
+    const nextTitle = updates.songTitle || updates.title || 'Untitled';
+    payload.artist_slug = updates.artistSlug ?? slugifyText(nextArtist);
+    payload.song_slug = updates.songSlug ?? slugifyText(nextTitle);
+  }
   if (updates.language !== undefined) payload.language = updates.language;
   if (updates.difficulty !== undefined) payload.difficulty = updates.difficulty;
   if (updates.status === 'deleted') payload.deleted_at = new Date().toISOString();
