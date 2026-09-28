@@ -1,1 +1,1 @@
-export { GuitarCordPlayer as default, GuitarCordPlayer } from '../../../components/GuitarCordPlayer';
+export { GuitarCordPlayer as default, GuitarCordPlayer } from '../components/GuitarCordPlayer';
