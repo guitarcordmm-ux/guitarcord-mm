@@ -48,7 +48,7 @@ export function UserDashboard({ userId }: { userId: string }) {
     }
   };
 
-  const formatDate = (date: any) => {
+  const formatDate = (date?: string | Date | null) => {
     if (!date) return 'N/A';
     return new Date(date).toLocaleDateString();
   };
