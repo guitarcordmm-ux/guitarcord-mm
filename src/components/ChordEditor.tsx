@@ -23,6 +23,12 @@ export function ChordEditor({ onClose, onSubmit, initialContent = '', initialSon
   const [composer, setComposer] = useState(initialSongData?.composer || '');
   const [genre, setGenre] = useState(initialSongData?.genre || '');
   const [searchAliases, setSearchAliases] = useState((initialSongData?.searchAliases || []).join(', '));
+  const [language, setLanguage] = useState(initialSongData?.language || 'my');
+  const [difficulty, setDifficulty] = useState<'easy' | 'intermediate' | 'advanced'>(
+    initialSongData?.difficulty === 'easy' || initialSongData?.difficulty === 'advanced'
+      ? initialSongData.difficulty
+      : 'intermediate'
+  );
   const [imageURL, setImageURL] = useState(initialSongData?.imageURL || '');
   const [keyType, setKeyType] = useState<'Major' | 'Minor'>('Major');
   const [enforceWatermark, setEnforceWatermark] = useState(initialSongData?.isWatermarked ?? true);
@@ -79,6 +85,8 @@ export function ChordEditor({ onClose, onSubmit, initialContent = '', initialSon
         lyrics: content,
         isWatermarked: enforceWatermark,
         searchAliases: searchAliases.split(',').map(value => value.trim()).filter(Boolean),
+        language,
+        difficulty,
       });
       showStatus('Updated successfully!');
       setTimeout(onClose, 1000);
@@ -104,6 +112,8 @@ export function ChordEditor({ onClose, onSubmit, initialContent = '', initialSon
         lyrics: content,
         isWatermarked: enforceWatermark,
         searchAliases: searchAliases.split(',').map(value => value.trim()).filter(Boolean),
+        language,
+        difficulty,
         userId: user?.uid,
         userEmail: user?.email,
         status: 'private',
@@ -132,6 +142,8 @@ export function ChordEditor({ onClose, onSubmit, initialContent = '', initialSon
         lyrics: content,
         isWatermarked: enforceWatermark,
         searchAliases: searchAliases.split(',').map(value => value.trim()).filter(Boolean),
+        language,
+        difficulty,
         userId: user?.uid,
         userEmail: user?.email,
         status: isAdmin ? 'approved' : 'pending',
@@ -323,6 +335,37 @@ export function ChordEditor({ onClose, onSubmit, initialContent = '', initialSon
                   <p className="mt-1.5 text-[10px] text-white/25">
                     Comma-separated Burmese/English spellings used by search.
                   </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 mb-2 block ml-1">
+                      Language
+                    </label>
+                    <select
+                      value={language}
+                      onChange={(e) => setLanguage(e.target.value)}
+                      className="w-full bg-white/5 border border-white/5 rounded-2xl px-4 py-3.5 text-[15px] font-medium text-white/80 focus:outline-none focus:border-[#FFD600]/30"
+                    >
+                      <option value="my">Myanmar</option>
+                      <option value="en">English</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 mb-2 block ml-1">
+                      Difficulty
+                    </label>
+                    <select
+                      value={difficulty}
+                      onChange={(e) => setDifficulty(e.target.value as 'easy' | 'intermediate' | 'advanced')}
+                      className="w-full bg-white/5 border border-white/5 rounded-2xl px-4 py-3.5 text-[15px] font-medium text-white/80 focus:outline-none focus:border-[#FFD600]/30"
+                    >
+                      <option value="easy">Easy</option>
+                      <option value="intermediate">Intermediate</option>
+                      <option value="advanced">Advanced</option>
+                    </select>
+                  </div>
                 </div>
 
                 {isAdmin && (
