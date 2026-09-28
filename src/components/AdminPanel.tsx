@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Song } from '../types';
+import type { Song } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { ChordModal } from './ChordModal';
 import { ChordEditor } from './ChordEditor';
 import { motion, AnimatePresence } from 'motion/react';
-import { fetchAdminSongs, updateSong, deleteSongPermanent, UnifiedUser } from '../lib/supabase';
+import { fetchAdminSongs, updateSong, deleteSongPermanent } from '../services/songs/songService';
+import type { UnifiedUser } from '../services/auth/authService';
 import { subscribeToAuthChanges, isUserAdmin, signOutUser } from '../lib/supabaseAuth';
 
 export function AdminPanel() {
@@ -51,9 +52,9 @@ export function AdminPanel() {
       setLoading(true);
       const data = await fetchAdminSongs(tab);
       setSubmissions(data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error fetching admin submissions:', err);
-      showStatus('Failed to load songs: ' + (err.message || 'Error'), 'error');
+      showStatus('Failed to load songs: ' + (err instanceof Error ? err.message : 'Error'), 'error');
     } finally {
       setLoading(false);
     }
@@ -83,7 +84,7 @@ export function AdminPanel() {
       }
     } catch (err: any) {
       console.error('Error updating song:', err);
-      showStatus('Action failed: ' + err.message, 'error');
+      showStatus('Action failed: ' + (err instanceof Error ? err.message : 'Error'), 'error');
     }
   };
 
@@ -96,7 +97,7 @@ export function AdminPanel() {
       showStatus('Song permanently deleted');
     } catch (err: any) {
       console.error('Error deleting song:', err);
-      showStatus('Delete failed: ' + err.message, 'error');
+      showStatus('Delete failed: ' + (err instanceof Error ? err.message : 'Error'), 'error');
     }
   };
 
