@@ -1,19 +1,19 @@
 import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { ArrowLeft, Minus, Plus, Music, Share2, Check, Guitar, Download, Image as ImageIcon, Sun, SunMedium } from 'lucide-react';
-import { Song } from '../types';
+import type { Song, User } from '../types';
 import { transposeLyrics } from '../lib/transpose';
 import { ChordDiagram } from './ChordDiagram';
 import { CHORD_DATABASE } from '../lib/chords';
 import { exportSongAsJpg } from '../lib/songExport';
 import { ChordEditor } from './ChordEditor';
-import { UnifiedUser } from '../lib/supabase';
+
 
 interface Props {
   song: Song;
   onClose: () => void;
   isAdmin?: boolean;
-  user?: UnifiedUser | null;
+  user?: User | null;
 }
 
 export function ChordModal({ song, onClose, isAdmin, user }: Props) {
