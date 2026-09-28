@@ -4,7 +4,7 @@ import { getSongUrl } from '../../../lib/seo';
 
 export function SongSeo({ song }: { song: Song }) {
   const canonicalUrl = getSongUrl(song.artist, song.songTitle);
-  const title = `${song.songTitle} Guitar Chords & Lyrics | GuitarCord`;
+  const title = `Myanmar Guitar Chords - ${song.songTitle} | GuitarCord`;
   const description = `Learn ${song.songTitle} guitar chords and lyrics by ${song.artist} on GuitarCord. Transpose the key and use auto-scroll while playing.`;
 
   const structuredData = {
