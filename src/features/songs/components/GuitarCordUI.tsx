@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
+import type { LucideIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import {
   Search,
@@ -167,7 +168,7 @@ export function GuitarCordHome({ songs }: Props) {
     return categorySongs(songs, category).map(song => ({ song, lyricMatch: '', score: 0 }));
   }, [songs, search, results, category]);
 
-  const categoryItems: Array<{ key: Category; label: string; Icon: typeof Clock3 }> = [
+  const categoryItems: Array<{ key: Category; label: string; Icon: LucideIcon }> = [
     { key: 'popular', label: 'Popular', Icon: Sparkles },
     { key: 'recent', label: 'Recent', Icon: Clock3 },
     { key: 'myanmar', label: 'Myanmar Songs', Icon: Guitar },
