@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Home, Library, UserCircle2, Heart, Play, ChevronLeft, MoreHorizontal, Settings, Download, CircleHelp, X, Guitar } from 'lucide-react';
-import { Song, User } from '../../../types';
+import type { Song, User } from '../../../types';
 
 type Props = { songs: Song[]; user?: User | null };
 
