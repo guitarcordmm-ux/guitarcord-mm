@@ -48,7 +48,7 @@ export function LoginPage() {
     setError('');
     try {
       await signInWithGoogleOAuth();
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Google sign-in error');
     }
   };
