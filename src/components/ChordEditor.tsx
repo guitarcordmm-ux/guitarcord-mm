@@ -22,6 +22,7 @@ export function ChordEditor({ onClose, onSubmit, initialContent = '', initialSon
   const [artist, setArtist] = useState(initialSongData?.artist || '');
   const [composer, setComposer] = useState(initialSongData?.composer || '');
   const [genre, setGenre] = useState(initialSongData?.genre || '');
+  const [searchAliases, setSearchAliases] = useState((initialSongData?.searchAliases || []).join(', '));
   const [imageURL, setImageURL] = useState(initialSongData?.imageURL || '');
   const [keyType, setKeyType] = useState<'Major' | 'Minor'>('Major');
   const [enforceWatermark, setEnforceWatermark] = useState(initialSongData?.isWatermarked ?? true);
@@ -77,6 +78,7 @@ export function ChordEditor({ onClose, onSubmit, initialContent = '', initialSon
         imageURL: imageURL.trim(),
         lyrics: content,
         isWatermarked: enforceWatermark,
+        searchAliases: searchAliases.split(',').map(value => value.trim()).filter(Boolean),
       });
       showStatus('Updated successfully!');
       setTimeout(onClose, 1000);
@@ -101,6 +103,7 @@ export function ChordEditor({ onClose, onSubmit, initialContent = '', initialSon
         imageURL: imageURL.trim(),
         lyrics: content,
         isWatermarked: enforceWatermark,
+        searchAliases: searchAliases.split(',').map(value => value.trim()).filter(Boolean),
         userId: user?.uid,
         userEmail: user?.email,
         status: 'private',
@@ -128,6 +131,7 @@ export function ChordEditor({ onClose, onSubmit, initialContent = '', initialSon
         imageURL: imageURL.trim(),
         lyrics: content,
         isWatermarked: enforceWatermark,
+        searchAliases: searchAliases.split(',').map(value => value.trim()).filter(Boolean),
         userId: user?.uid,
         userEmail: user?.email,
         status: isAdmin ? 'approved' : 'pending',
