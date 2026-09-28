@@ -40,6 +40,12 @@ export async function onRequestGet({ request, env }: { request: Request; env: En
   const params = new URL(request.url).searchParams;
   const id = params.get('id')?.trim();
   const searchQuery = params.get('q')?.trim();
+  const requestedLimit = Number.parseInt(params.get('limit') || `${DEFAULT_PAGE_SIZE}`, 10);
+  const limit = Number.isFinite(requestedLimit)
+    ? Math.min(Math.max(requestedLimit, 1), MAX_PAGE_SIZE)
+    : DEFAULT_PAGE_SIZE;
+  const offset = Math.max(Number.parseInt(params.get('offset') || '0', 10) || 0, 0);
+
   if (searchQuery) {
     const searchUrl = new URL('/rest/v1/rpc/search_public_songs', supabaseUrl);
     const searchResponse = await fetch(searchUrl.toString(), {
@@ -76,12 +82,6 @@ export async function onRequestGet({ request, env }: { request: Request; env: En
       headers: searchHeaders,
     });
   }
-
-  const requestedLimit = Number.parseInt(params.get('limit') || `${DEFAULT_PAGE_SIZE}`, 10);
-  const limit = Number.isFinite(requestedLimit)
-    ? Math.min(Math.max(requestedLimit, 1), MAX_PAGE_SIZE)
-    : DEFAULT_PAGE_SIZE;
-  const offset = Math.max(Number.parseInt(params.get('offset') || '0', 10) || 0, 0);
 
   const upstreamUrl = new URL('/rest/v1/songs', supabaseUrl);
   upstreamUrl.searchParams.set('select', id ? PUBLIC_SONG_FIELDS : PUBLIC_LIST_FIELDS);
