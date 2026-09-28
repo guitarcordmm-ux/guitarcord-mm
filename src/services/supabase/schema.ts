@@ -32,6 +32,14 @@ CREATE TABLE IF NOT EXISTS public.songs (
 
 ALTER TABLE public.songs ENABLE ROW LEVEL SECURITY;
 
+ALTER TABLE public.songs
+  ADD COLUMN IF NOT EXISTS search_aliases TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
+  ADD COLUMN IF NOT EXISTS artist_slug TEXT,
+  ADD COLUMN IF NOT EXISTS song_slug TEXT,
+  ADD COLUMN IF NOT EXISTS language TEXT NOT NULL DEFAULT 'my',
+  ADD COLUMN IF NOT EXISTS difficulty TEXT NOT NULL DEFAULT 'intermediate',
+  ADD COLUMN IF NOT EXISTS play_count BIGINT NOT NULL DEFAULT 0;
+
 DROP POLICY IF EXISTS "Public can view approved songs" ON public.songs;
 CREATE POLICY "Public can view approved songs"
   ON public.songs
