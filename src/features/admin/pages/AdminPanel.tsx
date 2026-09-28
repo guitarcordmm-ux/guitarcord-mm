@@ -1,0 +1,1 @@
+export { AdminPanel as default, AdminPanel } from '../../../components/AdminPanel';
