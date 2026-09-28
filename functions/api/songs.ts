@@ -20,6 +20,11 @@ const PUBLIC_LIST_FIELDS = [
   'is_watermarked',
   'created_at',
   'updated_at',
+  'artist_slug',
+  'song_slug',
+  'language',
+  'difficulty',
+  'play_count',
 ].join(',');
 
 const PUBLIC_SONG_FIELDS = `${PUBLIC_LIST_FIELDS},lyrics`;
@@ -40,11 +45,51 @@ export async function onRequestGet({ request, env }: { request: Request; env: En
   const params = new URL(request.url).searchParams;
   const id = params.get('id')?.trim();
   const searchQuery = params.get('q')?.trim();
+  const artistSlug = params.get('artist_slug')?.trim();
+  const songSlug = params.get('song_slug')?.trim();
+  const category = params.get('category')?.trim();
   const requestedLimit = Number.parseInt(params.get('limit') || `${DEFAULT_PAGE_SIZE}`, 10);
   const limit = Number.isFinite(requestedLimit)
     ? Math.min(Math.max(requestedLimit, 1), MAX_PAGE_SIZE)
     : DEFAULT_PAGE_SIZE;
   const offset = Math.max(Number.parseInt(params.get('offset') || '0', 10) || 0, 0);
+
+  if (category && !searchQuery && !id && !artistSlug && !songSlug) {
+    const categoryUrl = new URL('/rest/v1/rpc/get_home_songs', supabaseUrl);
+    const categoryResponse = await fetch(categoryUrl.toString(), {
+      method: 'POST',
+      headers: {
+        apikey: supabaseKey,
+        Authorization: `Bearer ${supabaseKey}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({
+        category,
+        result_limit: limit,
+        result_offset: offset,
+      }),
+    });
+
+    const categoryBody = await categoryResponse.text();
+    const categoryHeaders = new Headers({
+      'Content-Type': 'application/json; charset=utf-8',
+      'Cache-Control': 'public, max-age=30, s-maxage=120',
+    });
+
+    if (!categoryResponse.ok) {
+      console.error('Supabase home category upstream error:', categoryResponse.status, categoryBody.slice(0, 500));
+      return new Response(JSON.stringify({ error: 'Supabase home category request failed.' }), {
+        status: categoryResponse.status,
+        headers: categoryHeaders,
+      });
+    }
+
+    return new Response(JSON.stringify({ songs: JSON.parse(categoryBody) }), {
+      status: 200,
+      headers: categoryHeaders,
+    });
+  }
 
   if (searchQuery) {
     const searchUrl = new URL('/rest/v1/rpc/search_public_songs', supabaseUrl);
@@ -87,9 +132,13 @@ export async function onRequestGet({ request, env }: { request: Request; env: En
   upstreamUrl.searchParams.set('select', id ? PUBLIC_SONG_FIELDS : PUBLIC_LIST_FIELDS);
   upstreamUrl.searchParams.set('status', 'eq.approved');
   upstreamUrl.searchParams.set('order', 'created_at.desc');
-  upstreamUrl.searchParams.set('limit', String(id ? 1 : limit));
-  if (!id) upstreamUrl.searchParams.set('offset', String(offset));
+  upstreamUrl.searchParams.set('limit', String(id || (artistSlug && songSlug) ? 1 : limit));
+  if (!id && !(artistSlug && songSlug)) upstreamUrl.searchParams.set('offset', String(offset));
   if (id) upstreamUrl.searchParams.set('id', `eq.${id}`);
+  if (artistSlug && songSlug) {
+    upstreamUrl.searchParams.set('artist_slug', `eq.${artistSlug}`);
+    upstreamUrl.searchParams.set('song_slug', `eq.${songSlug}`);
+  }
 
   try {
     const upstream = await fetch(upstreamUrl.toString(), {
