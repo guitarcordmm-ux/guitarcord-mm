@@ -39,6 +39,44 @@ export async function onRequestGet({ request, env }: { request: Request; env: En
 
   const params = new URL(request.url).searchParams;
   const id = params.get('id')?.trim();
+  const searchQuery = params.get('q')?.trim();
+  if (searchQuery) {
+    const searchUrl = new URL('/rest/v1/rpc/search_public_songs', supabaseUrl);
+    const searchResponse = await fetch(searchUrl.toString(), {
+      method: 'POST',
+      headers: {
+        apikey: supabaseKey,
+        Authorization: `Bearer ${supabaseKey}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({
+        search_query: searchQuery,
+        result_limit: limit,
+        result_offset: offset,
+      }),
+    });
+
+    const searchBody = await searchResponse.text();
+    const searchHeaders = new Headers({
+      'Content-Type': 'application/json; charset=utf-8',
+      'Cache-Control': 'public, max-age=20, s-maxage=60',
+    });
+
+    if (!searchResponse.ok) {
+      console.error('Supabase song search upstream error:', searchResponse.status, searchBody.slice(0, 500));
+      return new Response(JSON.stringify({ error: 'Supabase song search failed.' }), {
+        status: searchResponse.status,
+        headers: searchHeaders,
+      });
+    }
+
+    return new Response(JSON.stringify({ songs: JSON.parse(searchBody) }), {
+      status: 200,
+      headers: searchHeaders,
+    });
+  }
+
   const requestedLimit = Number.parseInt(params.get('limit') || `${DEFAULT_PAGE_SIZE}`, 10);
   const limit = Number.isFinite(requestedLimit)
     ? Math.min(Math.max(requestedLimit, 1), MAX_PAGE_SIZE)
