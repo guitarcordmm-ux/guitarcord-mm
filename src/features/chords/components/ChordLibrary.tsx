@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Search, X } from 'lucide-react';
 import { ChordDiagram } from '../../../components/ChordDiagram';
 import { CHORD_DATABASE, CHORD_LABELS, CHORD_ROOTS, CHORD_SUFFIXES } from '../../../lib/chords';
 
-function Shell({ children }: { children: React.ReactNode }) {
+function Shell({ children }: { children: ReactNode }) {
   return <div className="min-h-screen bg-black text-white selection:bg-[#FFD600]/30"><div className="mx-auto min-h-screen w-full max-w-xl bg-[radial-gradient(circle_at_top,rgba(255,214,0,0.05),transparent_35%)] pb-20">{children}</div></div>;
 }
 
