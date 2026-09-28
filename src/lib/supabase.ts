@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient, User as SupabaseUser } from '@supabase/supabase-js';
-import { Song, User } from '../types';
+import type { Song, User } from '../types';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim() || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim() || '';
