@@ -70,6 +70,33 @@ function EmptySongs({ message = 'No songs available yet.' }: { message?: string 
 
 type Category = 'popular' | 'recent' | 'myanmar' | 'easy';
 
+function sortRecent(songs: Song[]) {
+  return [...songs].sort((a, b) => {
+    const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    return bTime - aTime;
+  });
+}
+
+function isMyanmarSong(song: Song) {
+  const text = normalizeSearchText([
+    song.songTitle,
+    song.artist,
+    song.genre,
+    ...(song.tags ?? []),
+  ].filter(Boolean).join(' '));
+
+  return text.includes('မြန်မာ') || text.includes('myanmar') || text.includes('burmese');
+}
+
+function isEasySong(song: Song) {
+  const text = normalizeSearchText(
+    [song.genre, ...(song.tags ?? [])].filter(Boolean).join(' ')
+  );
+
+  return text.includes('easy') || text.includes('beginner') || text.includes('လွယ်');
+}
+
 function categorySongs(songs: Song[], category: Category) {
   if (category === 'popular') return songs.slice(0, 8);
   if (category === 'recent') return sortRecent(songs).slice(0, 8);
