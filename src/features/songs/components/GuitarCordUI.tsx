@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -19,7 +19,8 @@ import {
   Sparkles,
 } from 'lucide-react';
 import type { Song, User } from '../../../types';
-import { normalizeSearchText, searchSongs, type SongSearchResult } from '../../../services/songs/songService';
+import { normalizeSearchText, type SongSearchResult } from '../../../services/songs/songService';
+import { useSongSearch } from '../hooks/useSongSearch';
 
 type Props = { songs: Song[]; user?: User | null };
 
@@ -162,7 +163,7 @@ export function GuitarCordHome({ songs }: Props) {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState<Category>('popular');
 
-  const results = useMemo(() => searchSongs(songs, search), [songs, search]);
+  const { results, loading: searchLoading, error: searchError } = useSongSearch(search);
   const visibleResults = useMemo<SongSearchResult[]>(() => {
     if (search.trim()) return results.slice(0, 10);
     return categorySongs(songs, category).map(song => ({ song, lyricMatch: '', score: 0 }));
@@ -235,11 +236,15 @@ export function GuitarCordHome({ songs }: Props) {
           <div className="flex items-center justify-between mb-2">
             <div>
               <h2 className="font-semibold">
-                {search.trim() ? `Search Results · ${results.length}` : categoryItems.find(item => item.key === category)?.label}
+                {search.trim()
+                ? searchLoading
+                  ? 'Searching…'
+                  : `Search Results · ${results.length}`
+                : categoryItems.find(item => item.key === category)?.label}
               </h2>
               {search.trim() && (
                 <p className="mt-0.5 text-[10px] text-white/35">
-                  Matches song name, artist, lyrics, chords and tags.
+                  {searchError || 'Song, artist, lyrics, chords, Burmese and English search aliases.'}
                 </p>
               )}
             </div>
@@ -251,7 +256,9 @@ export function GuitarCordHome({ songs }: Props) {
           </div>
 
           <div className="divide-y divide-white/10">
-            {visibleResults.length ? (
+            {searchLoading ? (
+              <div className="py-10 text-center text-sm text-white/35">Searching songs…</div>
+            ) : visibleResults.length ? (
               visibleResults.map(({ song, lyricMatch }, i) => (
                 <SongRow
                   key={song.id || i}
@@ -280,7 +287,7 @@ export function GuitarCordHome({ songs }: Props) {
 export function GuitarCordLibrary({ songs }: Props) {
   const [search, setSearch] = useState('');
   const [tab, setTab] = useState<'songs' | 'favorites' | 'downloads'>('songs');
-  const results = useMemo(() => searchSongs(songs, search), [songs, search]);
+  const { results, loading: searchLoading, error: searchError } = useSongSearch(search);
 
   return (
     <Shell>
@@ -323,12 +330,14 @@ export function GuitarCordLibrary({ songs }: Props) {
       </header>
 
       <main className="px-5 pt-3 divide-y divide-white/10">
-        {results.length ? (
+        {searchLoading ? (
+          <div className="py-10 text-center text-sm text-white/35">Searching songs…</div>
+        ) : results.length ? (
           results.map(({ song, lyricMatch }, i) => (
             <SongRow key={song.id || i} song={song} showHeart={tab === 'favorites'} lyricMatch={lyricMatch} />
           ))
         ) : (
-          <EmptySongs message="No songs match your search or library is empty." />
+          <EmptySongs message={searchError || "No songs match your search or library is empty."} />
         )}
       </main>
 
