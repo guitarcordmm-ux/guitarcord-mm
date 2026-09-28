@@ -7,6 +7,7 @@ type ParsedLine = { lyrics: string; chords: { chord: string; index: number }[] }
 
 const CHROMATIC_SHARPS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 const CHROMATIC_FLATS = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+const BASE_SCROLL_SPEED = 18;
 
 function parseChord(raw: string) {
   const match = raw.trim().match(/^([A-G](?:#|b)?)(.*)$/);
@@ -60,21 +61,28 @@ export function GuitarCordPlayer({ song }: { song: Song }) {
   const currentKey = useMemo(() => (baseKey ? transposeChord(baseKey, transpose) : '—'), [baseKey, transpose]);
 
   useEffect(() => {
-    if (!playing || !scrollRef.current) return;
+    if (!playing) return;
+
     let frame = 0;
     let last = performance.now();
+
     const tick = (now: number) => {
       const el = scrollRef.current;
       if (!el) return;
-      const delta = now - last;
+
+      const deltaSeconds = Math.max(0, Math.min(now - last, 100)) / 1000;
       last = now;
-      el.scrollTop += (delta / 1000) * (speed * 7.5);
-      if (el.scrollTop + el.clientHeight >= el.scrollHeight - 4) {
+      el.scrollTop += deltaSeconds * BASE_SCROLL_SPEED * speed;
+
+      const reachedBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 2;
+      if (reachedBottom) {
         setPlaying(false);
         return;
       }
+
       frame = requestAnimationFrame(tick);
     };
+
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
   }, [playing, speed]);
@@ -82,6 +90,17 @@ export function GuitarCordPlayer({ song }: { song: Song }) {
   const resetTranspose = () => setTranspose(0);
   const decreaseKey = () => setTranspose(v => Math.max(-11, v - 1));
   const increaseKey = () => setTranspose(v => Math.min(11, v + 1));
+
+  const toggleAutoScroll = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    if (!playing && el.scrollTop + el.clientHeight >= el.scrollHeight - 4) {
+      el.scrollTop = 0;
+    }
+
+    setPlaying(v => !v);
+  };
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -148,7 +167,12 @@ export function GuitarCordPlayer({ song }: { song: Song }) {
           <div className="flex items-center gap-4 text-white/60">
             <ListMusic size={18}/>
             <SkipBack size={18}/>
-            <button onClick={() => setPlaying(v => !v)} className="w-12 h-12 rounded-full bg-[#FFD600] text-black flex items-center justify-center" aria-label={playing ? 'Pause auto scroll' : 'Start auto scroll'}>
+            <button
+              onClick={toggleAutoScroll}
+              className="w-12 h-12 rounded-full bg-[#FFD600] text-black flex items-center justify-center active:scale-95 transition-transform"
+              aria-label={playing ? 'Pause auto scroll' : 'Start auto scroll'}
+              title={playing ? 'Pause auto scroll' : 'Start auto scroll'}
+            >
               {playing ? <Pause size={20}/> : <Play size={20} className="fill-black"/>}
             </button>
             <SkipForward size={18}/>
