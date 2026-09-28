@@ -1,3 +1,3 @@
-export { AdminLogin } from '../../components/AdminLogin';
-export { AdminPanel } from '../../components/AdminPanel';
-export { AdminSongImport } from '../../components/AdminSongImport';
+export { AdminLogin } from './pages/AdminLogin';
+export { AdminPanel } from './pages/AdminPanel';
+export { AdminSongImport } from './pages/AdminSongImport';
