@@ -2,10 +2,10 @@ import React, { useState, useMemo, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'motion/react';
 import { Edit3, Eye, Type, Music, List, ChevronLeft, Plus, Minus, Guitar, Lock, Globe, Save } from 'lucide-react';
-import { Song } from '../types';
+import type { Song, User } from '../types';
 import { ChordBuilderModal } from './ChordBuilderModal';
 import { ChordFingerings } from '../lib/chords';
-import { insertSong, updateSong, UnifiedUser } from '../lib/supabase';
+import { insertSong, updateSong } from '../services/songs/songService';
 import { transposeLyrics } from '../lib/transpose';
 
 interface ChordEditorProps {
@@ -13,7 +13,7 @@ interface ChordEditorProps {
   onSubmit?: (data: { title: string, artist: string, imageURL: string, lyrics: string }) => Promise<void>;
   initialContent?: string;
   initialSongData?: Partial<Song>;
-  user?: UnifiedUser | null;
+  user?: User | null;
   isAdmin?: boolean;
 }
 
