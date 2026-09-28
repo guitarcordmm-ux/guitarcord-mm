@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Minus, Plus, Music2, Pause, Play } from 'lucide-react';
 import type { Song } from '../../../types';
+import { ChordLyricsLine } from './ChordLyricsLine';
 
 type ParsedLine = {
   lyrics: string;
@@ -220,29 +221,14 @@ export function GuitarCordPlayer({ song }: { song: Song }) {
           className="mt-3 max-h-[calc(100vh-255px)] min-h-[58vh] overflow-y-auto rounded-2xl bg-[#080809] border border-white/5 px-4 py-6 overscroll-contain"
         >
           {parsed.length ? (
-            parsed.map((line, i) => {
-              const width = Math.max(line.lyrics.length, 1);
-
-              return (
-                <div key={i} className="relative w-full mb-5">
-                  <div className="relative min-h-7 leading-7 font-mono overflow-hidden">
-                    {line.chords.map((item, j) => (
-                      <span
-                        key={`${item.index}-${j}`}
-                        className="absolute top-0 z-10 text-[#FFD600] font-black text-[15px] whitespace-nowrap max-w-full overflow-hidden drop-shadow-[0_0_6px_rgba(255,214,0,.18)]"
-                        style={{ left: `${Math.min(item.index, Math.max(width - 1, 0))}ch` }}
-                      >
-                        {transposeChord(item.chord, transpose)}
-                      </span>
-                    ))}
-                  </div>
-
-                  <div className="whitespace-pre-wrap break-words leading-8 min-h-8 text-[18px] font-medium tracking-[0.01em] text-white">
-                    {line.lyrics || '\u00A0'.repeat(width)}
-                  </div>
-                </div>
-              );
-            })
+            parsed.map((line, i) => (
+              <ChordLyricsLine
+                key={i}
+                line={line.lyrics}
+                transpose={chord => transposeChord(chord, transpose)}
+                className="mb-5 last:mb-0"
+              />
+            ))
           ) : (
             <div className="py-10 text-center text-sm text-white/35">
               No lyrics have been published for this song yet.
