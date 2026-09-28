@@ -16,12 +16,13 @@ type ImportRow = {
   tutorial_url: string;
   lyrics: string;
   tags: string[];
+  search_aliases: string[];
   status: 'draft' | 'approved';
   is_watermarked: boolean;
 };
 
 const requiredHeaders = ['song_title', 'artist', 'lyrics'];
-const allowedHeaders = new Set(['song_title','artist','composer','album','genre','image_url','tutorial_url','lyrics','tags','status','is_watermarked']);
+const allowedHeaders = new Set(['song_title','artist','composer','album','genre','image_url','tutorial_url','lyrics','tags','search_aliases','status','is_watermarked']);
 
 function text(value: unknown): string { return value == null ? '' : String(value).trim(); }
 function toBoolean(value: unknown): boolean {
@@ -40,6 +41,7 @@ function normalizeRow(row: Record<string, unknown>): ImportRow {
     tutorial_url: text(row.tutorial_url),
     lyrics: text(row.lyrics),
     tags: text(row.tags).split(',').map(t => t.trim()).filter(Boolean),
+    search_aliases: text(row.search_aliases).split(',').map(t => t.trim()).filter(Boolean),
     status,
     is_watermarked: toBoolean(row.is_watermarked),
   };
@@ -111,6 +113,7 @@ export function AdminSongImport() {
         tutorialURL: row.tutorial_url,
         lyrics: row.lyrics,
         tags: row.tags,
+        searchAliases: row.search_aliases,
         status: publishImmediately ? 'approved' as const : (row.status === 'approved' ? 'approved' as const : 'pending' as const),
         isWatermarked: row.is_watermarked,
         userId: currentUser?.uid,
@@ -145,7 +148,7 @@ export function AdminSongImport() {
               <Upload className="text-[#FFD600]" size={28}/><span className="mt-3 font-semibold">Choose spreadsheet</span><span className="mt-1 text-xs text-white/40">.xlsx / .xls / .csv</span>
             </label>
             {fileName && <div className="mt-3 text-sm flex items-center gap-2"><FileSpreadsheet size={16} className="text-[#FFD600]"/><span className="truncate">{fileName}</span></div>}
-            <div className="mt-5 rounded-xl bg-[#FFD600]/10 border border-[#FFD600]/20 p-4 text-xs text-white/75 space-y-2"><div className="font-semibold text-[#FFD600]">Required columns</div><div>song_title, artist, lyrics</div><div className="pt-1">Lyrics format: <code>[G] text [Em] text [C] text</code></div></div>
+            <div className="mt-5 rounded-xl bg-[#FFD600]/10 border border-[#FFD600]/20 p-4 text-xs text-white/75 space-y-2"><div className="font-semibold text-[#FFD600]">Required columns</div><div>song_title, artist, lyrics</div><div>Optional: search_aliases</div><div className="pt-1">Lyrics format: <code>[G] text [Em] text [C] text</code></div></div>
             <label className="mt-5 flex items-start gap-3 cursor-pointer"><input type="checkbox" checked={publishImmediately} onChange={e => setPublishImmediately(e.target.checked)} className="mt-1 accent-yellow-400"/><span><span className="font-semibold text-sm">Publish imported songs immediately</span><span className="block text-xs text-white/40 mt-1">Off = keep the status from Excel.</span></span></label>
           </section>
 
