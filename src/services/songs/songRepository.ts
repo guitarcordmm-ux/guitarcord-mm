@@ -5,7 +5,7 @@ type SongRow = {
   id: string; song_title?: string | null; title?: string | null; artist?: string | null;
   composer?: string | null; album?: string | null; genre?: string | null; image_url?: string | null; search_aliases?: unknown;
   tutorial_url?: string | null; lyrics?: string | null; tags?: unknown;
-  status?: Song['status'] | null; is_watermarked?: boolean | null;
+  status?: Song['status'] | null; is_watermarked?: boolean | null; artist_slug?: string | null; song_slug?: string | null; language?: string | null; difficulty?: string | null; play_count?: number | null;
   created_at?: string | null; updated_at?: string | null; user_id?: string | null;
 };
 function isRecord(value: unknown): value is Record<string, unknown> { return typeof value === 'object' && value !== null; }
@@ -21,6 +21,8 @@ export function mapRowToSong(row: unknown): Song {
     tags: Array.isArray(row.tags) ? row.tags.filter((tag): tag is string => typeof tag === 'string') : [],
     searchAliases: Array.isArray(row.search_aliases) ? row.search_aliases.filter((alias): alias is string => typeof alias === 'string') : [],
     status: row.status || 'approved', isWatermarked: row.is_watermarked ?? true,
+    artistSlug: row.artist_slug || undefined, songSlug: row.song_slug || undefined,
+    language: row.language || 'my', difficulty: row.difficulty || 'intermediate', playCount: row.play_count ?? 0,
     createdAt: row.created_at, updatedAt: row.updated_at, userId: row.user_id,
   };
 }
@@ -73,6 +75,48 @@ export async function fetchApprovedSongs(): Promise<Song[]> {
     if (cachedSongs?.length) { console.warn('Song API unavailable; using cached catalogue.', error); return cachedSongs; }
     throw error;
   }
+}
+
+export async function fetchApprovedSongBySlug(artistSlug: string, songSlug: string): Promise<Song | null> {
+  const cleanArtistSlug = artistSlug.trim();
+  const cleanSongSlug = songSlug.trim();
+  if (!cleanArtistSlug || !cleanSongSlug) return null;
+
+  const params = new URLSearchParams({
+    artist_slug: cleanArtistSlug,
+    song_slug: cleanSongSlug,
+  });
+  const response = await fetch(`/api/songs?${params.toString()}`, {
+    headers: { Accept: 'application/json' },
+    cache: 'default',
+  });
+
+  if (response.status === 404) return null;
+  if (!response.ok) throw new Error(`Song API request failed (${response.status})`);
+
+  const payload: unknown = await response.json();
+  const rows = Array.isArray(payload)
+    ? payload
+    : isRecord(payload) && Array.isArray(payload.songs)
+      ? payload.songs
+      : [];
+  const row = rows.find(isSongRow);
+  return row ? mapRowToSong(row) : null;
+}
+
+export async function fetchHomeSongs(
+  category: 'popular' | 'recent' | 'myanmar' | 'easy',
+  limit = 8,
+): Promise<Song[]> {
+  const params = new URLSearchParams({ category, limit: String(Math.min(Math.max(limit, 1), 20)) });
+  const response = await fetch(`/api/songs?${params.toString()}`, {
+    headers: { Accept: 'application/json' },
+    cache: 'default',
+  });
+  if (!response.ok) throw new Error(`Home category request failed (${response.status})`);
+  const payload: unknown = await response.json();
+  const rows = isRecord(payload) && Array.isArray(payload.songs) ? payload.songs : Array.isArray(payload) ? payload : [];
+  return rows.filter(isSongRow).map(mapRowToSong);
 }
 
 export async function fetchApprovedSong(id: string): Promise<Song | null> {
@@ -147,6 +191,11 @@ export async function insertSongs(
       search_aliases: song.searchAliases || [],
       status: song.status || 'pending',
       is_watermarked: song.isWatermarked ?? true,
+      artist_slug: song.artistSlug || undefined,
+      song_slug: song.songSlug || undefined,
+      language: song.language || 'my',
+      difficulty: song.difficulty || 'intermediate',
+      play_count: song.playCount ?? 0,
       user_id: song.userId || null,
       user_email: song.userEmail || null,
       created_at: now,
@@ -179,6 +228,10 @@ export async function updateSong(id: string, updates: Partial<Song>): Promise<vo
   if (updates.status !== undefined) payload.status = updates.status;
   if (updates.isWatermarked !== undefined) payload.is_watermarked = updates.isWatermarked;
   if (updates.searchAliases !== undefined) payload.search_aliases = updates.searchAliases;
+  if (updates.artistSlug !== undefined) payload.artist_slug = updates.artistSlug;
+  if (updates.songSlug !== undefined) payload.song_slug = updates.songSlug;
+  if (updates.language !== undefined) payload.language = updates.language;
+  if (updates.difficulty !== undefined) payload.difficulty = updates.difficulty;
   if (updates.status === 'deleted') payload.deleted_at = new Date().toISOString();
   const { error } = await client.from('songs').update(payload).eq('id', id);
   if (error) { console.error('Error updating song in Supabase:', error); throw error; }
