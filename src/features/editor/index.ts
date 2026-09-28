@@ -1,1 +1,1 @@
-export { ChordEditor } from '../../components/ChordEditor';
+export { ChordEditor } from './pages/ChordEditor';
