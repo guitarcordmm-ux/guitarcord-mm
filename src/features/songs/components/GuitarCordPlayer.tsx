@@ -77,10 +77,8 @@ export function GuitarCordPlayer({ song }: { song: Song }) {
   const [transpose, setTranspose] = useState(0);
   const [speed, setSpeed] = useState(1);
 
-  const parsed = useMemo(
-    () => (song.lyrics || '').split('\n').map(parseLyricsLine),
-    [song.lyrics],
-  );
+  const rawLines = useMemo(() => (song.lyrics || '').split('\n'), [song.lyrics]);
+  const parsed = useMemo(() => rawLines.map(parseLyricsLine), [rawLines]);
   const baseKey = useMemo(() => detectBaseKey(parsed), [parsed]);
   const currentKey = useMemo(
     () => (baseKey ? transposeChord(baseKey, transpose) : '—'),
@@ -220,15 +218,19 @@ export function GuitarCordPlayer({ song }: { song: Song }) {
           ref={scrollRef}
           className="mt-3 max-h-[calc(100vh-255px)] min-h-[58vh] overflow-y-auto rounded-2xl bg-[#080809] border border-white/5 px-4 py-6 overscroll-contain"
         >
-          {parsed.length ? (
-            parsed.map((line, i) => (
-              <ChordLyricsLine
-                key={i}
-                line={line.lyrics}
-                transpose={chord => transposeChord(chord, transpose)}
-                className="mb-5 last:mb-0"
-              />
-            ))
+          {rawLines.length ? (
+            rawLines.map((line, i) =>
+              line.trim() === '' ? (
+                <div key={i} className="h-5" aria-hidden="true" />
+              ) : (
+                <ChordLyricsLine
+                  key={i}
+                  line={line}
+                  transpose={chord => transposeChord(chord, transpose)}
+                  className="mb-5 last:mb-0"
+                />
+              ),
+            )
           ) : (
             <div className="py-10 text-center text-sm text-white/35">
               No lyrics have been published for this song yet.
