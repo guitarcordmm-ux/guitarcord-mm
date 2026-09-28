@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Home, Library, UserCircle2, Heart, Play, ChevronLeft, MoreHorizontal, Settings, Download, CircleHelp, X, Guitar } from 'lucide-react';
-import { Song } from '../../../types';
+import { Song, User } from '../../../types';
 
-type Props = { songs: Song[]; user?: any };
+type Props = { songs: Song[]; user?: User | null };
 
 function AppLogo({ compact = false }: { compact?: boolean }) {
   return <div className="flex items-center gap-1.5 font-bold tracking-tight"><Guitar className="text-[#FFD600]" size={compact ? 17 : 20} /><span className={compact ? 'text-sm' : 'text-base'}>Guitar<span className="text-[#FFD600]">Cord</span></span></div>;
@@ -44,7 +44,7 @@ export function GuitarCordLibrary({ songs }: Props) {
   return <Shell><header className="px-5 pt-safe pt-5"><div className="flex items-center justify-between"><AppLogo compact/><button className="text-white/45"><MoreHorizontal size={20}/></button></div><div className="mt-5 text-xl font-semibold">My Library</div><div className="mt-3 flex gap-2 overflow-x-auto no-scrollbar">{(['songs','favorites','downloads'] as const).map(t => <button key={t} onClick={() => setTab(t)} className={`px-4 py-2 rounded-full text-xs ${tab === t ? 'bg-[#FFD600] text-black font-semibold' : 'bg-[#1a1a1c] text-white/60'}`}>{t[0].toUpperCase()+t.slice(1)}</button>)}</div><div className="mt-3 rounded-2xl bg-[#151517] px-3.5 py-3 flex items-center gap-2"><Search size={16} className="text-white/45"/><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search..." className="bg-transparent outline-none w-full text-sm"/><X size={15} className="text-white/30"/></div></header><main className="px-5 pt-3 divide-y divide-white/10">{filtered.length ? filtered.map((s,i)=><SongRow key={s.id||i} song={s} showHeart={tab === 'favorites'}/>) : <EmptySongs message="No songs match your search or library is empty."/>}</main><BottomNav active="library"/></Shell>;
 }
 
-export function GuitarCordProfile({ user }: { user?: any }) {
+export function GuitarCordProfile({ user }: { user?: User | null }) {
   const navigate = useNavigate();
   const items = [[Heart,'Favorites'],[Download,'Downloads'],[Settings,'Settings'],[CircleHelp,'Help & Support']] as const;
   const displayName = user?.displayName || 'Guitar Player';
