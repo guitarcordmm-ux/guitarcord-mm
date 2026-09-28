@@ -3,7 +3,7 @@ import { getSupabase } from '../supabase/client';
 
 type SongRow = {
   id: string; song_title?: string | null; title?: string | null; artist?: string | null;
-  composer?: string | null; album?: string | null; genre?: string | null; image_url?: string | null;
+  composer?: string | null; album?: string | null; genre?: string | null; image_url?: string | null; search_aliases?: unknown;
   tutorial_url?: string | null; lyrics?: string | null; tags?: unknown;
   status?: Song['status'] | null; is_watermarked?: boolean | null;
   created_at?: string | null; updated_at?: string | null; user_id?: string | null;
@@ -19,6 +19,7 @@ export function mapRowToSong(row: unknown): Song {
     artist: row.artist || 'Unknown Artist', composer: row.composer || '', album: row.album || '', genre: row.genre || 'Pop',
     imageURL: row.image_url || '', tutorialURL: row.tutorial_url || '', lyrics: row.lyrics || '',
     tags: Array.isArray(row.tags) ? row.tags.filter((tag): tag is string => typeof tag === 'string') : [],
+    searchAliases: Array.isArray(row.search_aliases) ? row.search_aliases.filter((alias): alias is string => typeof alias === 'string') : [],
     status: row.status || 'approved', isWatermarked: row.is_watermarked ?? true,
     createdAt: row.created_at, updatedAt: row.updated_at, userId: row.user_id,
   };
@@ -109,7 +110,7 @@ export async function insertSong(songData: Partial<Song> & { userId?: string; us
     try { const parsed: unknown = JSON.parse(localStorage.getItem('supabase_fallback_songs') || '[]'); const list = Array.isArray(parsed) ? parsed : []; list.unshift(newSong); localStorage.setItem('supabase_fallback_songs', JSON.stringify(list)); } catch (error) { console.warn('Unable to write local fallback songs:', error); }
     return newSong;
   }
-  const payload = { song_title: title, title, artist: songData.artist || '', composer: songData.composer || '', genre: songData.genre || '', image_url: songData.imageURL || '', lyrics: songData.lyrics || '', status: songData.status || 'pending', is_watermarked: songData.isWatermarked ?? true, user_id: songData.userId || null, user_email: songData.userEmail || null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
+  const payload = { song_title: title, title, artist: songData.artist || '', composer: songData.composer || '', genre: songData.genre || '', image_url: songData.imageURL || '', lyrics: songData.lyrics || '', search_aliases: songData.searchAliases || [], status: songData.status || 'pending', is_watermarked: songData.isWatermarked ?? true, user_id: songData.userId || null, user_email: songData.userEmail || null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
   const { data, error } = await client.from('songs').insert([payload]).select().single();
   if (error) { console.error('Error inserting song to Supabase:', error); throw error; }
   return mapRowToSong(data);
@@ -143,6 +144,7 @@ export async function insertSongs(
       tutorial_url: song.tutorialURL || '',
       lyrics: song.lyrics || '',
       tags: song.tags || [],
+      search_aliases: song.searchAliases || [],
       status: song.status || 'pending',
       is_watermarked: song.isWatermarked ?? true,
       user_id: song.userId || null,
@@ -176,6 +178,7 @@ export async function updateSong(id: string, updates: Partial<Song>): Promise<vo
   if (updates.lyrics !== undefined) payload.lyrics = updates.lyrics;
   if (updates.status !== undefined) payload.status = updates.status;
   if (updates.isWatermarked !== undefined) payload.is_watermarked = updates.isWatermarked;
+  if (updates.searchAliases !== undefined) payload.search_aliases = updates.searchAliases;
   if (updates.status === 'deleted') payload.deleted_at = new Date().toISOString();
   const { error } = await client.from('songs').update(payload).eq('id', id);
   if (error) { console.error('Error updating song in Supabase:', error); throw error; }
