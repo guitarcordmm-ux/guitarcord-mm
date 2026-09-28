@@ -19,8 +19,10 @@ import {
   Sparkles,
 } from 'lucide-react';
 import type { Song, User } from '../../../types';
-import { normalizeSearchText, type SongSearchResult } from '../../../services/songs/songService';
+import { type SongSearchResult } from '../../../services/songs/songService';
+import { getSongPath } from '../../../lib/seo';
 import { useSongSearch } from '../hooks/useSongSearch';
+import { useHomeCategories, type HomeCategory } from '../hooks/useHomeCategories';
 
 type Props = { songs: Song[]; user?: User | null };
 
@@ -38,7 +40,7 @@ function AppLogo({ compact = false }: { compact?: boolean }) {
 function BottomNav({ active }: { active: 'home' | 'library' | 'profile' }) {
   const navigate = useNavigate();
   const items = [
-    ['home', Home, 'Home', '/app'],
+    ['home', Home, 'Home', '/'],
     ['library', Library, 'Library', '/library'],
     ['profile', UserCircle2, 'Profile', '/profile'],
   ] as const;
@@ -70,43 +72,6 @@ function EmptySongs({ message = 'No songs available yet.' }: { message?: string 
   );
 }
 
-type Category = 'popular' | 'recent' | 'myanmar' | 'easy';
-
-function sortRecent(songs: Song[]) {
-  return [...songs].sort((a, b) => {
-    const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-    const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-    return bTime - aTime;
-  });
-}
-
-function isMyanmarSong(song: Song) {
-  const text = normalizeSearchText([
-    song.songTitle,
-    song.artist,
-    song.genre,
-    ...(song.tags ?? []),
-  ].filter(Boolean).join(' '));
-
-  return text.includes('မြန်မာ') || text.includes('myanmar') || text.includes('burmese');
-}
-
-function isEasySong(song: Song) {
-  const text = normalizeSearchText(
-    [song.genre, ...(song.tags ?? [])].filter(Boolean).join(' ')
-  );
-
-  return text.includes('easy') || text.includes('beginner') || text.includes('လွယ်');
-}
-
-function categorySongs(songs: Song[], category: Category) {
-  if (category === 'popular') return songs.slice(0, 8);
-  if (category === 'recent') return sortRecent(songs).slice(0, 8);
-
-  const filtered = songs.filter(category === 'myanmar' ? isMyanmarSong : isEasySong);
-  return filtered.length ? filtered.slice(0, 8) : songs.slice(0, 8);
-}
-
 function SongRow({
   song,
   showHeart = false,
@@ -120,7 +85,7 @@ function SongRow({
 
   return (
     <button
-      onClick={() => navigate(`/chord/${song.id}`)}
+      onClick={() => navigate(getSongPath(song.artist, song.songTitle))}
       className="w-full flex items-center gap-3 py-3 text-left active:scale-[0.99] transition-transform"
     >
       <div className="w-11 h-11 rounded-xl bg-white/10 overflow-hidden flex-shrink-0 flex items-center justify-center">
@@ -161,20 +126,30 @@ function Shell({ children }: { children: ReactNode }) {
 export function GuitarCordHome({ songs }: Props) {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
-  const [category, setCategory] = useState<Category>('popular');
+  const [category, setCategory] = useState<HomeCategory>('popular');
+  const { categories, loading: categoryLoading, error: categoryError } = useHomeCategories();
 
   const { results, loading: searchLoading, error: searchError } = useSongSearch(search);
-  const visibleResults = useMemo<SongSearchResult[]>(() => {
-    if (search.trim()) return results.slice(0, 10);
-    return categorySongs(songs, category).map(song => ({ song, lyricMatch: '', score: 0 }));
-  }, [songs, search, results, category]);
 
-  const categoryItems: Array<{ key: Category; label: string; Icon: LucideIcon }> = [
+  const categoryItems: Array<{ key: HomeCategory; label: string; Icon: LucideIcon }> = [
     { key: 'popular', label: 'Popular', Icon: Sparkles },
     { key: 'recent', label: 'Recent', Icon: Clock3 },
     { key: 'myanmar', label: 'Myanmar Songs', Icon: Guitar },
     { key: 'easy', label: 'Easy Songs', Icon: Play },
   ];
+
+  const visibleResults = useMemo<SongSearchResult[]>(() => {
+    if (search.trim()) return results.slice(0, 10);
+
+    const selected = categories[category];
+    if (selected.length || !categoryError) {
+      return selected.map(song => ({ song, lyricMatch: '', score: 0 }));
+    }
+
+    return songs.slice(0, 8).map(song => ({ song, lyricMatch: '', score: 0 }));
+  }, [search, results, categories, category, categoryError, songs]);
+
+  const displayedCategory = categoryItems.find(item => item.key === category)?.label || 'Songs';
 
   return (
     <Shell>
@@ -191,7 +166,7 @@ export function GuitarCordHome({ songs }: Props) {
             🎸 Myanmar Guitar Chords
           </div>
           <p className="mt-2 text-sm text-white/45">
-            Find the song, chords and lyrics you need to play.
+            Find a song. See the chords. Start playing.
           </p>
 
           <div className="mt-5 rounded-2xl bg-[#151517] border border-white/10 px-4 py-4 flex items-center gap-3 focus-within:border-[#FFD600]/60 focus-within:ring-2 focus-within:ring-[#FFD600]/10">
@@ -223,7 +198,9 @@ export function GuitarCordHome({ songs }: Props) {
                   setCategory(key);
                   setSearch('');
                 }}
-                className={`flex items-center gap-1.5 px-3.5 py-2.5 rounded-full text-xs whitespace-nowrap ${category === key && !search ? 'bg-[#FFD600] text-black font-semibold' : 'bg-[#1a1a1c] text-white/60'}`}
+                className={`flex items-center gap-1.5 px-3.5 py-2.5 rounded-full text-xs whitespace-nowrap ${
+                  category === key && !search ? 'bg-[#FFD600] text-black font-semibold' : 'bg-[#1a1a1c] text-white/60'
+                }`}
               >
                 <Icon size={13} />
                 {label}
@@ -237,27 +214,31 @@ export function GuitarCordHome({ songs }: Props) {
             <div>
               <h2 className="font-semibold">
                 {search.trim()
-                ? searchLoading
-                  ? 'Searching…'
-                  : `Search Results · ${results.length}`
-                : categoryItems.find(item => item.key === category)?.label}
+                  ? searchLoading
+                    ? 'Searching…'
+                    : `Search Results · ${results.length}`
+                  : displayedCategory}
               </h2>
-              {search.trim() && (
+              {search.trim() ? (
                 <p className="mt-0.5 text-[10px] text-white/35">
                   {searchError || 'Song, artist, lyrics, chords, Burmese and English search aliases.'}
                 </p>
+              ) : categoryError ? (
+                <p className="mt-0.5 text-[10px] text-white/35">Using cached song list.</p>
+              ) : (
+                <p className="mt-0.5 text-[10px] text-white/35">
+                  Ranked from your song data.
+                </p>
               )}
             </div>
-            {!search.trim() && (
-              <button onClick={() => navigate('/library')} className="text-xs text-white/45">
-                See All
-              </button>
-            )}
+            <button onClick={() => navigate('/library')} className="text-xs text-white/45">
+              Browse all
+            </button>
           </div>
 
           <div className="divide-y divide-white/10">
-            {searchLoading ? (
-              <div className="py-10 text-center text-sm text-white/35">Searching songs…</div>
+            {searchLoading || (!search.trim() && categoryLoading) ? (
+              <div className="py-10 text-center text-sm text-white/35">Loading songs…</div>
             ) : visibleResults.length ? (
               visibleResults.map(({ song, lyricMatch }, i) => (
                 <SongRow
@@ -267,19 +248,17 @@ export function GuitarCordHome({ songs }: Props) {
                 />
               ))
             ) : (
-              <EmptySongs message={search.trim() ? 'No matching song, artist, lyric or chord found.' : 'No published songs are available yet.'} />
+              <EmptySongs message={search.trim() ? 'No matching song, artist, lyric or chord found.' : `No ${displayedCategory.toLowerCase()} are available yet.`} />
             )}
           </div>
         </section>
 
         {!search.trim() && (
-          <div className="mt-6 rounded-2xl border border-[#FFD600]/10 bg-[#FFD600]/5 px-4 py-3 text-xs text-white/50">
-            Search any Burmese or English song wording, artist name, lyric line or chord to jump straight into the player.
+          <div className="mt-5 rounded-2xl border border-white/10 bg-[#111113] px-4 py-3 text-xs text-white/45">
+            Search by Burmese spelling, English spelling, lyric line, artist, or chord to jump straight into the player.
           </div>
         )}
       </main>
-
-      <BottomNav active="home" />
     </Shell>
   );
 }
