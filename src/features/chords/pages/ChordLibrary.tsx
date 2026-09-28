@@ -1,1 +1,1 @@
-export { ChordLibrary as default, ChordLibrary } from '../../../components/GuitarCordUI';
+export { ChordLibrary as default, ChordLibrary } from '../components/ChordLibrary';
