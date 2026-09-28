@@ -1,6 +1,8 @@
 export {
   fetchApprovedSongs,
   fetchApprovedSong,
+  fetchApprovedSongBySlug,
+  fetchHomeSongs,
   fetchUserSongs,
   fetchAdminSongs,
   insertSong,
