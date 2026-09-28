@@ -9,11 +9,13 @@ import { LoginPage, UserDashboard, type UnifiedUser } from '../features/auth';
 import { GuitarCordHome, GuitarCordLibrary, GuitarCordPlayer, GuitarCordProfile } from '../features/songs';
 import { ChordLibrary } from '../features/chords';
 import type { Song } from '../types';
-import { fetchApprovedSong, fetchApprovedSongs } from '../services/songs/songService';
+import { fetchApprovedSong, fetchApprovedSongBySlug, fetchApprovedSongs } from '../services/songs/songService';
+import { getSongPath } from '../lib/seo';
+import { SongSeo } from '../features/songs/components/SongSeo';
 import { isUserAdmin, subscribeToAuthChanges } from '../services/auth/authService';
 
 function Player() {
-  const { chordId = '' } = useParams();
+  const { artistSlug = '', songSlug = '' } = useParams();
   const [song, setSong] = useState<Song | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -22,7 +24,8 @@ function Player() {
     let active = true;
     setLoading(true);
     setError('');
-    fetchApprovedSong(chordId)
+
+    fetchApprovedSongBySlug(artistSlug, songSlug)
       .then(data => {
         if (!active) return;
         if (!data) setError('Song not found.');
@@ -32,24 +35,72 @@ function Player() {
         console.error('Could not load song:', err);
         if (active) setError(err instanceof Error ? err.message : 'Could not load song.');
       })
-      .finally(() => { if (active) setLoading(false); });
+      .finally(() => {
+        if (active) setLoading(false);
+      });
 
-    return () => { active = false; };
-  }, [chordId]);
+    return () => {
+      active = false;
+    };
+  }, [artistSlug, songSlug]);
 
-  if (loading) return <div className="min-h-screen bg-black text-white grid place-items-center">Loading song…</div>;
+  if (loading) {
+    return <div className="min-h-screen bg-black text-white grid place-items-center">Loading song…</div>;
+  }
+
   if (error || !song) {
     return (
       <div className="min-h-screen bg-black text-white grid place-items-center px-6 text-center">
         <div>
           <p className="text-white/70 mb-4">{error || 'Song not found.'}</p>
-          <button onClick={() => window.history.back()} className="px-4 py-2 rounded-xl bg-white/10">Go back</button>
+          <button onClick={() => window.history.back()} className="px-4 py-2 rounded-xl bg-white/10">
+            Go back
+          </button>
         </div>
       </div>
     );
   }
 
-  return <GuitarCordPlayer song={song} />;
+  return (
+    <>
+      <SongSeo song={song} />
+      <GuitarCordPlayer song={song} />
+    </>
+  );
+}
+
+function LegacyChordRedirect() {
+  const { chordId = '' } = useParams();
+  const navigate = useNavigate();
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let active = true;
+
+    fetchApprovedSong(chordId)
+      .then(song => {
+        if (!active) return;
+        if (!song) {
+          setError('Song not found.');
+          return;
+        }
+
+        navigate(getSongPath(song.artist, song.songTitle), { replace: true });
+      })
+      .catch(err => {
+        if (active) setError(err instanceof Error ? err.message : 'Could not open song.');
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [chordId, navigate]);
+
+  return (
+    <div className="min-h-screen bg-black text-white grid place-items-center px-6 text-center">
+      <div className="text-sm text-white/55">{error || 'Opening song…'}</div>
+    </div>
+  );
 }
 
 function Screens({ user }: { user: UnifiedUser | null }) {
@@ -94,11 +145,12 @@ function Screens({ user }: { user: UnifiedUser | null }) {
 
       <Routes>
         <Route path="/" element={<GuitarCordHome songs={songs} user={user} />} />
-        <Route path="/app" element={<GuitarCordHome songs={songs} user={user} />} />
-        <Route path="/songs" element={<GuitarCordHome songs={songs} user={user} />} />
+        <Route path="/app" element={<Navigate to="/" replace />} />
+        <Route path="/songs" element={<Navigate to="/" replace />} />
         <Route path="/library" element={<GuitarCordLibrary songs={songs} user={user} />} />
         <Route path="/chords" element={<ChordLibrary />} />
-        <Route path="/chord/:chordId" element={<Player />} />
+        <Route path="/song/:artistSlug/:songSlug" element={<Player />} />
+        <Route path="/chord/:chordId" element={<LegacyChordRedirect />} />
         <Route path="/profile" element={<GuitarCordProfile user={user} />} />
         <Route path="/learn" element={<OnboardingPage />} />
         <Route path="/create" element={<ChordEditor onClose={() => window.history.back()} user={user} isAdmin={admin} />} />
