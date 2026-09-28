@@ -40,7 +40,9 @@ CREATE POLICY "Admins have full access" ON public.songs FOR ALL USING ((auth.jwt
 
 
 -- Server-side public search.
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE SCHEMA IF NOT EXISTS extensions;
+CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA extensions;
+ALTER EXTENSION pg_trgm SET SCHEMA extensions;
 CREATE INDEX IF NOT EXISTS songs_song_title_trgm_idx ON public.songs USING gin (song_title gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS songs_artist_trgm_idx ON public.songs USING gin (artist gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS songs_lyrics_trgm_idx ON public.songs USING gin (lyrics gin_trgm_ops);
@@ -56,7 +58,7 @@ RETURNS TABLE (
   status TEXT, is_watermarked BOOLEAN, created_at TIMESTAMPTZ, updated_at TIMESTAMPTZ,
   lyric_match TEXT, score REAL
 )
-LANGUAGE SQL STABLE SECURITY INVOKER SET search_path = public
+LANGUAGE SQL STABLE SECURITY INVOKER SET search_path = public, extensions
 AS $$
   WITH input AS (
     SELECT
