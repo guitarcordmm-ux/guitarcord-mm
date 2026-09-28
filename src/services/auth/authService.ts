@@ -9,3 +9,5 @@ export {
   signInWithGoogleOAuth,
   signOutUser,
 } from '../../lib/supabaseAuth';
+
+export type { UnifiedUser } from '../../lib/supabase';
