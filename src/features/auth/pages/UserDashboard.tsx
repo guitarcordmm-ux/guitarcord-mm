@@ -1,0 +1,1 @@
+export { UserDashboard as default, UserDashboard } from '../../../components/UserDashboard';
