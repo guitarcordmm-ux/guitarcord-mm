@@ -39,11 +39,11 @@ export function ChordModal({ song, onClose, isAdmin, user }: Props) {
 
   // Keep screen awake while reading chord sheets (vital for mobile guitarists)
   useEffect(() => {
-    let sentinel: any = null;
+    let sentinel: { release: () => Promise<void> } | null = null;
     const requestWakeLock = async () => {
       if ('wakeLock' in navigator) {
         try {
-          sentinel = await (navigator as any).wakeLock.request('screen');
+          sentinel = await (navigator as Navigator & { wakeLock?: { request: (type: 'screen') => Promise<{ release: () => Promise<void> }> } }).wakeLock?.request('screen');
           setIsScreenAwake(true);
           sentinel.addEventListener('release', () => {
             setIsScreenAwake(false);
