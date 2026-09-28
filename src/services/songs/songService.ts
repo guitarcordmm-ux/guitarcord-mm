@@ -6,9 +6,13 @@ export {
   insertSong,
   updateSong,
   deleteSongPermanent,
-  isSupabaseConfigured,
+  mapRowToSong,
+} from './songRepository';
+
+export {
   getSupabase,
+  isSupabaseConfigured,
   formatSupabaseUser,
-} from '../../lib/supabase';
+} from '../supabase/client';
 
 export type { User as UnifiedUser } from '../../types';
