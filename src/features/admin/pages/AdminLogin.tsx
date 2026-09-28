@@ -1,0 +1,1 @@
+export { AdminLogin as default, AdminLogin } from '../../../components/AdminLogin';
