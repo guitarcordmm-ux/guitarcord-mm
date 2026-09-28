@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { OnboardingPage } from '../components/OnboardingPage';
 import { SupabaseBanner } from '../components/SupabaseBanner';
+import { OnboardingPage } from '../components/OnboardingPage';
 import { AdminPanel, AdminLogin, AdminSongImport } from '../features/admin';
 import { ChordEditor } from '../features/editor';
 import { LoginPage, UserDashboard, type UnifiedUser } from '../features/auth';
@@ -76,7 +76,11 @@ function Screens({ user }: { user: UnifiedUser | null }) {
   return (
     <>
       <Helmet>
-        <title>GuitarCord — Chords · Lyrics · Play</title>
+        <title>Myanmar Guitar Chords & Lyrics | GuitarCord</title>
+        <meta
+          name="description"
+          content="Find Myanmar guitar chords, song lyrics, transpose tools and easy-to-read song sheets on GuitarCord."
+        />
         <meta name="theme-color" content="#000000" />
       </Helmet>
 
@@ -89,7 +93,7 @@ function Screens({ user }: { user: UnifiedUser | null }) {
       )}
 
       <Routes>
-        <Route path="/" element={<OnboardingPage />} />
+        <Route path="/" element={<GuitarCordHome songs={songs} user={user} />} />
         <Route path="/app" element={<GuitarCordHome songs={songs} user={user} />} />
         <Route path="/songs" element={<GuitarCordHome songs={songs} user={user} />} />
         <Route path="/library" element={<GuitarCordLibrary songs={songs} user={user} />} />
