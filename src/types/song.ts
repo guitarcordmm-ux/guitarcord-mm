@@ -10,6 +10,7 @@ export interface Song {
   tutorialURL?: string;
   lyrics?: string;
   tags?: string[];
+  searchAliases?: string[];
   status?: 'pending' | 'approved' | 'rejected' | 'private' | 'deleted';
   isWatermarked?: boolean;
   approvedAt?: string | Date;
