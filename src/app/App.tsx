@@ -3,16 +3,14 @@ import { BrowserRouter, Navigate, Route, Routes, useParams } from 'react-router-
 import { Helmet } from 'react-helmet-async';
 import { OnboardingPage } from '../components/OnboardingPage';
 import { SupabaseBanner } from '../components/SupabaseBanner';
-import { AdminPanel } from '../components/AdminPanel';
-import { AdminLogin } from '../components/AdminLogin';
-import { AdminSongImport } from '../components/AdminSongImport';
-import { ChordEditor } from '../components/ChordEditor';
-import { LoginPage } from '../components/LoginPage';
-import { UserDashboard } from '../components/UserDashboard';
-import { GuitarCordHome, GuitarCordLibrary, ChordLibrary, GuitarCordProfile } from '../components/GuitarCordUI';
-import { GuitarCordPlayer } from '../components/GuitarCordPlayer';
-import { Song } from '../types';
-import { fetchApprovedSong, fetchApprovedSongs, UnifiedUser } from '../services/songs/songService';
+import { AdminPanel, AdminLogin, AdminSongImport } from '../features/admin';
+import { ChordEditor } from '../features/editor';
+import { LoginPage, UserDashboard } from '../features/auth';
+import { GuitarCordHome, GuitarCordLibrary, GuitarCordPlayer, GuitarCordProfile } from '../features/songs';
+import { ChordLibrary } from '../features/chords';
+import type { Song } from '../types';
+import { fetchApprovedSong, fetchApprovedSongs } from '../services/songs/songService';
+import type { UnifiedUser } from '../lib/supabase';
 import { isUserAdmin, subscribeToAuthChanges } from '../services/auth/authService';
 
 function Player() {
