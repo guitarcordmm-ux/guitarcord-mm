@@ -6,7 +6,7 @@ import { ChordEditor } from './ChordEditor';
 import { motion, AnimatePresence } from 'motion/react';
 import { fetchAdminSongs, updateSong, deleteSongPermanent } from '../services/songs/songService';
 import type { UnifiedUser } from '../services/auth/authService';
-import { subscribeToAuthChanges, isUserAdmin, signOutUser } from '../lib/supabaseAuth';
+import { subscribeToAuthChanges, isUserAdmin, signOutUser } from '../services/auth/authService';
 
 export function AdminPanel() {
   const [submissions, setSubmissions] = useState<Song[]>([]);
