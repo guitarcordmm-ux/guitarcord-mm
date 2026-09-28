@@ -31,8 +31,8 @@ export function AdminLogin() {
       } else {
         setError('This account is not authorized as an administrator.');
       }
-    } catch (err: any) {
-      setError(err.message || 'Invalid username or password');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Invalid username or password');
     } finally {
       setLoading(false);
     }
