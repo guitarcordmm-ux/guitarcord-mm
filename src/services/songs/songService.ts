@@ -4,6 +4,7 @@ export {
   fetchUserSongs,
   fetchAdminSongs,
   insertSong,
+  insertSongs,
   updateSong,
   deleteSongPermanent,
   mapRowToSong,
