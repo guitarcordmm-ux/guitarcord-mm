@@ -16,6 +16,11 @@ type SearchApiRow = Song & {
   created_at?: string | null;
   updated_at?: string | null;
   lyric_match?: string | null;
+  artist_slug?: string | null;
+  song_slug?: string | null;
+  language?: string | null;
+  difficulty?: string | null;
+  play_count?: number | null;
 };
 
 export function normalizeSearchText(value: string) {
@@ -54,6 +59,11 @@ function mapSearchRow(value: unknown): SongSearchResult | null {
       lyrics: row.lyrics || '',
       tags,
       searchAliases,
+      artistSlug: row.artist_slug || undefined,
+      songSlug: row.song_slug || undefined,
+      language: row.language || 'my',
+      difficulty: row.difficulty || 'intermediate',
+      playCount: row.play_count ?? 0,
       status: row.status || 'approved',
       isWatermarked: row.is_watermarked ?? true,
       createdAt: row.created_at,
