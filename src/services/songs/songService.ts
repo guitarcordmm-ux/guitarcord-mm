@@ -17,3 +17,6 @@ export {
 } from '../supabase/client';
 
 export type { User as UnifiedUser } from '../../types';
+
+export { searchSongs } from './songSearch';
+export type { SongSearchResult } from './songSearch';
