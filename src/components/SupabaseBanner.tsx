@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Database, Copy, Check, ExternalLink, X, ChevronDown, ChevronUp } from 'lucide-react';
-import { isSupabaseConfigured, SUPABASE_SQL_SETUP } from '../lib/supabase';
+import { isSupabaseConfigured } from '../services/supabase/client';
+import { SUPABASE_SQL_SETUP } from '../services/supabase/schema';
 
 export function SupabaseBanner() {
   const [copied, setCopied] = useState(false);
