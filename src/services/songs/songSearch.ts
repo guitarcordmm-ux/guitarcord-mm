@@ -6,7 +6,7 @@ export type SongSearchResult = {
   score: number;
 };
 
-function normalizeSearchText(value: string) {
+export function normalizeSearchText(value: string) {
   return value
     .normalize('NFC')
     .toLocaleLowerCase('my-MM')
