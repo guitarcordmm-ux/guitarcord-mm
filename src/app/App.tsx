@@ -5,12 +5,11 @@ import { OnboardingPage } from '../components/OnboardingPage';
 import { SupabaseBanner } from '../components/SupabaseBanner';
 import { AdminPanel, AdminLogin, AdminSongImport } from '../features/admin';
 import { ChordEditor } from '../features/editor';
-import { LoginPage, UserDashboard } from '../features/auth';
+import { LoginPage, UserDashboard, type UnifiedUser } from '../features/auth';
 import { GuitarCordHome, GuitarCordLibrary, GuitarCordPlayer, GuitarCordProfile } from '../features/songs';
 import { ChordLibrary } from '../features/chords';
 import type { Song } from '../types';
 import { fetchApprovedSong, fetchApprovedSongs } from '../services/songs/songService';
-import type { UnifiedUser } from '../lib/supabase';
 import { isUserAdmin, subscribeToAuthChanges } from '../services/auth/authService';
 
 function Player() {
