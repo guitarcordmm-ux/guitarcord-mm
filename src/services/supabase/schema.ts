@@ -114,7 +114,7 @@ AS $$
   )
   SELECT
     scored.id, scored.song_title, scored.title, scored.artist, scored.composer, scored.album, scored.genre,
-    scored.image_url, scored.tutorial_url, scored.lyrics, scored.tags, scored.search_aliases,
+    scored.image_url, scored.tutorial_url, NULL::TEXT AS lyrics, scored.tags, scored.search_aliases,
     scored.status, scored.is_watermarked, scored.created_at, scored.updated_at,
     CASE
       WHEN scored.q <> '' AND position(scored.q in lower(coalesce(scored.lyrics, ''))) > 0
