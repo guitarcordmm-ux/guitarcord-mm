@@ -18,7 +18,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import type { Song, User } from '../../../types';
-import { searchSongs, type SongSearchResult } from '../../../services/songs/songService';
+import { normalizeSearchText, searchSongs, type SongSearchResult } from '../../../services/songs/songService';
 
 type Props = { songs: Song[]; user?: User | null };
 
