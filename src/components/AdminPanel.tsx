@@ -95,7 +95,7 @@ export function AdminPanel() {
       setSubmissions(prev => prev.filter(s => s.id !== songToDelete));
       setSongToDelete(null);
       showStatus('Song permanently deleted');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error deleting song:', err);
       showStatus('Delete failed: ' + (err instanceof Error ? err.message : 'Error'), 'error');
     }
