@@ -6,6 +6,18 @@ export type SongSearchResult = {
   score: number;
 };
 
+type SearchApiRow = Song & {
+  song_title?: string;
+  image_url?: string | null;
+  tutorial_url?: string | null;
+  tags?: unknown;
+  search_aliases?: unknown;
+  is_watermarked?: boolean | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  lyric_match?: string | null;
+};
+
 export function normalizeSearchText(value: string) {
   return value
     .normalize('NFC')
@@ -15,52 +27,76 @@ export function normalizeSearchText(value: string) {
     .trim();
 }
 
-function songSearchText(song: Song) {
-  const fields = [
-    song.songTitle,
-    song.title,
-    song.artist,
-    song.composer,
-    song.album,
-    song.genre,
-    ...(song.tags ?? []),
-    song.lyrics,
-  ];
-
-  return fields
-    .filter(Boolean)
-    .map(value => normalizeSearchText(value ?? ''))
-    .join(' ');
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
 }
 
-function getLyricMatch(song: Song, normalizedQuery: string) {
-  if (!normalizedQuery || !song.lyrics) return '';
+function mapSearchRow(value: unknown): SongSearchResult | null {
+  if (!isRecord(value) || typeof value.id !== 'string') return null;
 
-  return song.lyrics
-    .split('\n')
-    .map(line => line.replace(/\[([^\]]+)\]/g, '').trim())
-    .find(line => normalizeSearchText(line).includes(normalizedQuery)) ?? '';
+  const row = value as SearchApiRow;
+  const tags = Array.isArray(row.tags) ? row.tags.filter((tag): tag is string => typeof tag === 'string') : [];
+  const searchAliases = Array.isArray(row.search_aliases)
+    ? row.search_aliases.filter((alias): alias is string => typeof alias === 'string')
+    : [];
+
+  return {
+    song: {
+      id: row.id,
+      songTitle: row.song_title || row.title || 'Untitled',
+      title: row.title || row.song_title || 'Untitled',
+      artist: row.artist || 'Unknown Artist',
+      composer: row.composer || '',
+      album: row.album || '',
+      genre: row.genre || '',
+      imageURL: row.image_url || '',
+      tutorialURL: row.tutorial_url || '',
+      lyrics: row.lyrics || '',
+      tags,
+      searchAliases,
+      status: row.status || 'approved',
+      isWatermarked: row.is_watermarked ?? true,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    },
+    lyricMatch: typeof row.lyric_match === 'string' ? row.lyric_match : '',
+    score: typeof row.score === 'number' ? row.score : 0,
+  };
 }
 
-export function searchSongs(songs: Song[], query: string): SongSearchResult[] {
+export async function searchSongs(
+  query: string,
+  options: { limit?: number; offset?: number; signal?: AbortSignal } = {},
+): Promise<SongSearchResult[]> {
   const normalizedQuery = normalizeSearchText(query);
+  if (!normalizedQuery) return [];
 
-  if (!normalizedQuery) {
-    return songs.map(song => ({ song, lyricMatch: '', score: 0 }));
+  const limit = Math.min(Math.max(options.limit ?? 20, 1), 50);
+  const offset = Math.max(options.offset ?? 0, 0);
+  const params = new URLSearchParams({
+    q: normalizedQuery,
+    limit: String(limit),
+    offset: String(offset),
+  });
+
+  const response = await fetch(`/api/songs?${params.toString()}`, {
+    headers: { Accept: 'application/json' },
+    signal: options.signal,
+    cache: 'default',
+  });
+
+  if (!response.ok) {
+    throw new Error(`Song search request failed (${response.status})`);
   }
 
-  const terms = normalizedQuery.split(' ').filter(Boolean);
+  const payload: unknown = await response.json();
+  const rows = isRecord(payload) && Array.isArray(payload.songs)
+    ? payload.songs
+    : Array.isArray(payload)
+      ? payload
+      : [];
 
-  return songs
-    .map(song => {
-      const text = songSearchText(song);
-      const lyricMatch = getLyricMatch(song, normalizedQuery);
-      const phraseMatch = text.includes(normalizedQuery);
-      const termMatches = terms.filter(term => text.includes(term)).length;
-      const score = (phraseMatch ? 100 : 0) + (lyricMatch ? 30 : 0) + termMatches;
-
-      return { song, lyricMatch, score };
-    })
-    .filter(result => result.score > 0)
-    .sort((a, b) => b.score - a.score);
+  return rows
+    .map(mapSearchRow)
+    .filter((result): result is SongSearchResult => result !== null);
 }
