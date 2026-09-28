@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient, User as SupabaseUser } from '@supabase/supabase-js';
-import { Song } from '../types';
+import { Song, User } from '../types';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim() || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim() || '';
@@ -20,7 +20,7 @@ export function getSupabase(): SupabaseClient | null {
 }
 export const supabase = getSupabase();
 
-export interface UnifiedUser { uid: string; id: string; email?: string; displayName?: string; role?: string; isAnonymous?: boolean; }
+export type UnifiedUser = User;
 export function formatSupabaseUser(user: SupabaseUser | null): UnifiedUser | null {
   if (!user) return null;
   return {
