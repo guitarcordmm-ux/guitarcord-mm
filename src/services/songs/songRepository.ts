@@ -115,6 +115,52 @@ export async function insertSong(songData: Partial<Song> & { userId?: string; us
   return mapRowToSong(data);
 }
 
+export async function insertSongs(
+  songs: Array<Partial<Song> & { userId?: string; userEmail?: string }>
+): Promise<Song[]> {
+  if (!songs.length) return [];
+
+  const client = getSupabase();
+  if (!client) {
+    const inserted: Song[] = [];
+    for (const song of songs) {
+      inserted.push(await insertSong(song));
+    }
+    return inserted;
+  }
+
+  const now = new Date().toISOString();
+  const payload = songs.map(song => {
+    const title = song.songTitle || song.title || 'Untitled';
+    return {
+      song_title: title,
+      title,
+      artist: song.artist || '',
+      composer: song.composer || '',
+      album: song.album || '',
+      genre: song.genre || '',
+      image_url: song.imageURL || '',
+      tutorial_url: song.tutorialURL || '',
+      lyrics: song.lyrics || '',
+      tags: song.tags || [],
+      status: song.status || 'pending',
+      is_watermarked: song.isWatermarked ?? true,
+      user_id: song.userId || null,
+      user_email: song.userEmail || null,
+      created_at: now,
+      updated_at: now,
+    };
+  });
+
+  const { data, error } = await client.from('songs').insert(payload).select();
+  if (error) {
+    console.error('Error inserting songs to Supabase:', error);
+    throw error;
+  }
+
+  return (Array.isArray(data) ? data : []).filter(isSongRow).map(mapRowToSong);
+}
+
 export async function updateSong(id: string, updates: Partial<Song>): Promise<void> {
   const client = getSupabase();
   if (!client) {
