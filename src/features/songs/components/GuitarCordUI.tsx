@@ -99,7 +99,9 @@ function getLyricMatch(song: Song, normalizedQuery: string) {
   return exactLine ?? '';
 }
 
-function searchSongs(songs: Song[], query: string) {
+type SongSearchResult = { song: Song; lyricMatch: string; score: number };
+
+function searchSongs(songs: Song[], query: string): SongSearchResult[] {
   const normalizedQuery = normalizeSearchText(query);
   if (!normalizedQuery) return songs;
 
@@ -208,9 +210,9 @@ export function GuitarCordHome({ songs }: Props) {
   const [category, setCategory] = useState<Category>('popular');
 
   const results = useMemo(() => searchSongs(songs, search), [songs, search]);
-  const visibleSongs = useMemo(() => {
+  const visibleResults = useMemo<SongSearchResult[]>(() => {
     if (search.trim()) return results.slice(0, 10);
-    return categorySongs(songs, category);
+    return categorySongs(songs, category).map(song => ({ song, lyricMatch: '', score: 0 }));
   }, [songs, search, results, category]);
 
   const categoryItems: Array<{ key: Category; label: string; Icon: typeof Clock3 }> = [
@@ -296,8 +298,8 @@ export function GuitarCordHome({ songs }: Props) {
           </div>
 
           <div className="divide-y divide-white/10">
-            {visibleSongs.length ? (
-              visibleSongs.map(({ song, lyricMatch } = { song: null as never, lyricMatch: '' }, i) => (
+            {visibleResults.length ? (
+              visibleResults.map(({ song, lyricMatch }, i) => (
                 <SongRow
                   key={song.id || i}
                   song={song}
