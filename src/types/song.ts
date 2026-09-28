@@ -11,6 +11,11 @@ export interface Song {
   lyrics?: string;
   tags?: string[];
   searchAliases?: string[];
+  artistSlug?: string;
+  songSlug?: string;
+  language?: string;
+  difficulty?: 'easy' | 'intermediate' | 'advanced' | string;
+  playCount?: number;
   status?: 'pending' | 'approved' | 'rejected' | 'private' | 'deleted';
   isWatermarked?: boolean;
   approvedAt?: string | Date;
