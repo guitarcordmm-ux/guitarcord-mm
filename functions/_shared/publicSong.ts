@@ -1,3 +1,4 @@
+import { getEnglishSlug } from './songUrl';
 export type PublicSong = {
   id: string;
   song_title?: string | null;
@@ -45,6 +46,41 @@ export async function getPublicSongById(id: string, env: SongEnv): Promise<Publi
 
   const payload: unknown = await response.json();
   return Array.isArray(payload) ? ((payload[0] as PublicSong | undefined) || null) : null;
+}
+
+export async function getPublicSongByUrlSlugs(
+  artistSlug: string,
+  songSlug: string,
+  env: SongEnv,
+): Promise<PublicSong | null> {
+  const exact = await getPublicSongBySlug(artistSlug, songSlug, env);
+  if (exact) return exact;
+
+  const supabaseUrl = env.SUPABASE_URL?.trim() || env.VITE_SUPABASE_URL?.trim();
+  const supabaseKey = env.SUPABASE_ANON_KEY?.trim() || env.VITE_SUPABASE_ANON_KEY?.trim();
+  if (!supabaseUrl || !supabaseKey) return null;
+
+  const url = new URL('/rest/v1/songs', supabaseUrl);
+  url.searchParams.set('select', 'id,song_title,title,artist,artist_slug,song_slug,status');
+  url.searchParams.set('status', 'eq.approved');
+  url.searchParams.set('order', 'created_at.asc');
+  url.searchParams.set('limit', '1000');
+
+  const response = await fetch(url.toString(), {
+    headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}`, Accept: 'application/json' },
+  });
+  if (!response.ok) return null;
+
+  const rows = (await response.json()) as PublicSong[];
+  const normalizedArtist = decodeURIComponent(artistSlug).trim().toLowerCase();
+  const normalizedSong = decodeURIComponent(songSlug).trim().toLowerCase();
+  const match = rows.find(row => {
+    const rowArtist = getEnglishSlug(row.artist || 'artist', row.artist_slug);
+    const rowSong = getEnglishSlug(row.song_title || row.title || 'song', row.song_slug);
+    return rowArtist === normalizedArtist && rowSong === normalizedSong;
+  });
+
+  return match?.id ? getPublicSongById(match.id, env) : null;
 }
 
 export async function getPublicSongBySlug(
