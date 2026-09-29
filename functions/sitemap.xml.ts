@@ -10,6 +10,7 @@ type SitemapSong = {
   song_title?: string | null;
   title?: string | null;
   song_slug?: string | null;
+  artist?: string | null;
   updated_at?: string | null;
 };
 
@@ -42,7 +43,7 @@ export async function onRequestGet({ env }: { env: Env }): Promise<Response> {
 
   while (true) {
     const url = new URL('/rest/v1/songs', supabaseUrl);
-    url.searchParams.set('select', 'id,song_title,title,song_slug,updated_at');
+    url.searchParams.set('select', 'id,song_title,title,artist,song_slug,updated_at');
     url.searchParams.set('status', 'eq.approved');
     url.searchParams.set('order', 'created_at.asc');
     url.searchParams.set('limit', String(pageSize));
@@ -65,7 +66,9 @@ export async function onRequestGet({ env }: { env: Env }): Promise<Response> {
   const urls = [
     ...staticUrls.map(loc => `<url><loc>${loc}</loc></url>`),
     ...songs.map(song => {
-      const loc = `${base}/song/${encodeURIComponent(song.id)}/${encodeURIComponent(getSongNameSlug(song))}`;
+      const artistSlug = getSongNameSlug({ ...song, song_title: song.artist || 'artist' });
+        const songSlug = getSongNameSlug(song);
+        const loc = `${base}/song/${encodeURIComponent(artistSlug)}/${encodeURIComponent(songSlug)}`;
       const lastmod = song.updated_at ? `<lastmod>${new Date(song.updated_at).toISOString()}</lastmod>` : '';
       return `<url><loc>${loc}</loc>${lastmod}</url>`;
     }),
