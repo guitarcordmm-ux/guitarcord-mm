@@ -84,6 +84,28 @@ export async function fetchApprovedSongBySlug(artistSlug: string, songSlug: stri
   const cleanSongSlug = songSlug.trim();
   if (!cleanArtistSlug || !cleanSongSlug) return null;
 
+  // Read the published song directly from Supabase first. The songs table has
+  // a public SELECT policy for approved rows, so this avoids any stale/missing
+  // lyrics caused by an edge proxy deployment or cache.
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('songs')
+        .select('id,song_title,title,artist,composer,album,genre,image_url,tutorial_url,lyrics,tags,status,is_watermarked,created_at,updated_at,artist_slug,song_slug,language,difficulty,play_count,search_aliases,user_id')
+        .eq('status', 'approved')
+        .eq('artist_slug', cleanArtistSlug)
+        .eq('song_slug', cleanSongSlug)
+        .limit(1)
+        .maybeSingle();
+
+      if (!error && data) return mapRowToSong(data);
+      if (error) console.warn('Direct Supabase song lookup failed; using API fallback:', error);
+    } catch (directError) {
+      console.warn('Direct Supabase song lookup failed; using API fallback:', directError);
+    }
+  }
+
   const params = new URLSearchParams({
     artist_slug: cleanArtistSlug,
     song_slug: cleanSongSlug,
