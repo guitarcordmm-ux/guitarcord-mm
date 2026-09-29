@@ -1,3 +1,5 @@
+import { useMemo } from 'react';
+
 type ChordToken = {
   chord: string | null;
   text: string;
@@ -45,16 +47,23 @@ function parseTokens(line: string): ChordToken[] {
 }
 
 export function ChordLyricsLine({ line, transpose, className = '' }: Props) {
-  const tokens = parseTokens(line);
+  const tokens = useMemo(() => parseTokens(line), [line]);
+  const transposedTokens = useMemo(
+    () => tokens.map(token => ({
+      ...token,
+      chord: token.chord ? transpose(token.chord) : null,
+    })),
+    [tokens, transpose],
+  );
 
   return (
     <div
       className={`flex w-full max-w-full flex-wrap items-end gap-x-2 gap-y-2 font-mono ${className}`}
       role="text"
     >
-      {tokens.map((token, index) => {
+      {transposedTokens.map((token, index) => {
         const lyricText = token.text || '\u00A0';
-        const chordText = token.chord ? transpose(token.chord) : '';
+        const chordText = token.chord || '';
 
         return (
           <span
