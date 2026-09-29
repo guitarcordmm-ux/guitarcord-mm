@@ -128,6 +128,48 @@ export async function onRequestGet({ request, env }: { request: Request; env: En
     });
   }
 
+  if (artistSlug && songSlug && !id) {
+    const slugUrl = new URL('/rest/v1/rpc/get_public_song_by_slug', supabaseUrl);
+
+    try {
+      const slugResponse = await fetch(slugUrl.toString(), {
+        method: 'POST',
+        headers: {
+          apikey: supabaseKey,
+          Authorization: `Bearer ${supabaseKey}`,
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          p_artist_slug: artistSlug,
+          p_song_slug: songSlug,
+        }),
+      });
+
+      const slugBody = await slugResponse.text();
+      const slugHeaders = new Headers({
+        'Content-Type': 'application/json; charset=utf-8',
+        'Cache-Control': 'public, max-age=60, s-maxage=300',
+      });
+
+      if (!slugResponse.ok) {
+        console.error('Supabase song slug lookup error:', slugResponse.status, slugBody.slice(0, 500));
+        return new Response(JSON.stringify({ error: 'Supabase song lookup failed.' }), {
+          status: slugResponse.status,
+          headers: slugHeaders,
+        });
+      }
+
+      return new Response(slugBody, { status: 200, headers: slugHeaders });
+    } catch (error) {
+      console.error('Supabase song slug proxy error:', error);
+      return Response.json(
+        { error: 'Unable to reach Supabase from the Cloudflare edge.' },
+        { status: 502 },
+      );
+    }
+  }
+
   const upstreamUrl = new URL('/rest/v1/songs', supabaseUrl);
   upstreamUrl.searchParams.set('select', id ? PUBLIC_SONG_FIELDS : PUBLIC_LIST_FIELDS);
   upstreamUrl.searchParams.set('status', 'eq.approved');
