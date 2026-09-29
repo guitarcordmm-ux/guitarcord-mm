@@ -15,7 +15,7 @@ import { SongSeo } from '../features/songs/components/SongSeo';
 import { isUserAdmin, subscribeToAuthChanges } from '../services/auth/authService';
 
 function Player() {
-  const { songId = '' } = useParams();
+  const { artistSlug = '', songSlug = '' } = useParams();
   const [song, setSong] = useState<Song | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -25,7 +25,7 @@ function Player() {
     setLoading(true);
     setError('');
 
-    fetchApprovedSong(songId)
+    fetchApprovedSongBySlug(artistSlug, songSlug)
       .then(data => {
         if (!active) return;
         if (!data) setError('Song not found.');
@@ -40,7 +40,7 @@ function Player() {
       });
 
     return () => { active = false; };
-  }, [songId]);
+  }, [artistSlug, songSlug]);
 
   if (loading) return <div className="min-h-screen bg-black text-white grid place-items-center">Loading song…</div>;
 
@@ -145,7 +145,7 @@ function Screens({ user }: { user: UnifiedUser | null }) {
         <Route path="/songs" element={<Navigate to="/" replace />} />
         <Route path="/library" element={<GuitarCordLibrary songs={songs} user={user} />} />
         <Route path="/chords" element={<ChordLibrary />} />
-        <Route path="/song/:songId/:songName" element={<Player />} />
+        <Route path="/song/:artistSlug/:songSlug" element={<Player />} />
         <Route path="/song/:artistSlug/:songSlug" element={<LegacySongRedirect />} />
         <Route path="/chord/:chordId" element={<LegacyChordRedirect />} />
         <Route path="/profile" element={<GuitarCordProfile user={user} />} />
