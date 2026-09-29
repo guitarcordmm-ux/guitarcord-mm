@@ -1,6 +1,6 @@
 import type { Song } from '../../types';
 import { getSupabase } from '../supabase/client';
-import { slugifyText } from '../../lib/seo';
+import { getEnglishSlug, slugifyText } from '../../lib/seo';
 
 type SongRow = {
   id: string; song_title?: string | null; title?: string | null; artist?: string | null;
@@ -136,8 +136,8 @@ export async function fetchApprovedSongBySlug(artistSlug: string, songSlug: stri
       try {
         const decodedArtist = decodeURIComponent(cleanArtistSlug);
         const decodedTitle = decodeURIComponent(cleanSongSlug);
-        const normalizedArtist = slugifyText(decodedArtist);
-        const normalizedTitle = slugifyText(decodedTitle);
+        const normalizedArtist = cleanArtistSlug.toLowerCase();
+        const normalizedTitle = cleanSongSlug.toLowerCase();
         // Resolve the URL against lightweight metadata only. Do not fetch
         // lyrics for the whole catalogue when a slug needs normalization.
         const { data: candidates, error: candidateError } = await supabase
@@ -151,10 +151,10 @@ export async function fetchApprovedSongBySlug(artistSlug: string, songSlug: stri
             .map(mapRowToSong)
             .find(candidate => {
               const artistMatch =
-                (candidate.artistSlug && slugifyText(candidate.artistSlug) === normalizedArtist) ||
+                getEnglishSlug(candidate.artist, candidate.artistSlug) === normalizedArtist ||
                 slugifyText(candidate.artist) === normalizedArtist;
               const titleMatch =
-                (candidate.songSlug && slugifyText(candidate.songSlug) === normalizedTitle) ||
+                getEnglishSlug(candidate.songTitle, candidate.songSlug) === normalizedTitle ||
                 slugifyText(candidate.songTitle) === normalizedTitle;
               return artistMatch && titleMatch;
             });
@@ -245,12 +245,12 @@ export async function fetchApprovedSongBySlug(artistSlug: string, songSlug: stri
   // slugs in the edge URL query. The public catalogue is already approved-only.
   try {
     const songs = await fetchApprovedSongs();
-    const normalizedArtist = slugifyText(decodeURIComponent(cleanArtistSlug));
-    const normalizedTitle = slugifyText(decodeURIComponent(cleanSongSlug));
+    const normalizedArtist = cleanArtistSlug.toLowerCase();
+    const normalizedTitle = cleanSongSlug.toLowerCase();
     return songs.find(song => {
-      const artistMatch = (song.artistSlug && slugifyText(song.artistSlug) === normalizedArtist)
+      const artistMatch = getEnglishSlug(song.artist, song.artistSlug) === normalizedArtist
         || slugifyText(song.artist) === normalizedArtist;
-      const titleMatch = (song.songSlug && slugifyText(song.songSlug) === normalizedTitle)
+      const titleMatch = getEnglishSlug(song.songTitle, song.songSlug) === normalizedTitle
         || slugifyText(song.songTitle) === normalizedTitle;
       return artistMatch && titleMatch;
     }) || null;
