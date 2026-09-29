@@ -58,23 +58,25 @@ async function fetchPublicSongsPage(offset = 0, limit = 50): Promise<Song[]> {
   return rows.filter(isSongRow).map(mapRowToSong);
 }
 
-export async function fetchApprovedSongs(): Promise<Song[]> {
+export async function fetchApprovedSongs(limit = 50, offset = 0): Promise<Song[]> {
+  const pageSize = Math.min(Math.max(limit, 1), 50);
+  const pageOffset = Math.max(offset, 0);
+
   try {
-    const allSongs: Song[] = [];
-    let offset = 0;
-    const pageSize = 50;
-    while (true) {
-      const page = await fetchPublicSongsPage(offset, pageSize);
-      allSongs.push(...page);
-      if (page.length < pageSize) break;
-      offset += pageSize;
+    const page = await fetchPublicSongsPage(pageOffset, pageSize);
+    if (page.length) {
+      // Cache the first page as the lightweight offline catalogue.
+      if (pageOffset === 0) writePublicSongsCache(page);
+      return page;
     }
-    if (!allSongs.length) return readPublicSongsCache() || [];
-    writePublicSongsCache(allSongs);
-    return allSongs;
+
+    return pageOffset === 0 ? readPublicSongsCache() || [] : [];
   } catch (error) {
-    const cachedSongs = readPublicSongsCache();
-    if (cachedSongs?.length) { console.warn('Song API unavailable; using cached catalogue.', error); return cachedSongs; }
+    const cachedSongs = pageOffset === 0 ? readPublicSongsCache() : null;
+    if (cachedSongs?.length) {
+      console.warn('Song API unavailable; using cached first page.', error);
+      return cachedSongs;
+    }
     throw error;
   }
 }
@@ -287,14 +289,21 @@ export async function fetchApprovedSong(id: string): Promise<Song | null> {
 
 export async function fetchUserSongs(userId: string): Promise<Song[]> {
   const client = getSupabase(); if (!client) return [];
-  const { data, error } = await client.from('songs').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+  const { data, error } = await client
+    .from('songs')
+    .select('id,song_title,title,artist,composer,album,genre,image_url,tutorial_url,lyrics,tags,status,is_watermarked,created_at,updated_at,artist_slug,song_slug,language,difficulty,play_count,search_aliases,user_id')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
   if (error) { console.error('Error fetching user songs from Supabase:', error); throw error; }
   return (Array.isArray(data) ? data : []).filter(isSongRow).map(mapRowToSong);
 }
 
 export async function fetchAdminSongs(status: string): Promise<Song[]> {
   const client = getSupabase(); if (!client) return [];
-  let query = client.from('songs').select('*').eq('status', status);
+  let query = client
+    .from('songs')
+    .select('id,song_title,title,artist,composer,album,genre,image_url,tutorial_url,lyrics,tags,status,is_watermarked,created_at,updated_at,artist_slug,song_slug,language,difficulty,play_count,search_aliases,user_id')
+    .eq('status', status);
   query = status === 'deleted' ? query.order('deleted_at', { ascending: false }) : query.order('created_at', { ascending: false });
   const { data, error } = await query;
   if (error) { console.error('Error fetching admin songs from Supabase:', error); throw error; }
