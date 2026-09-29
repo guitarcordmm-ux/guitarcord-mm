@@ -166,11 +166,22 @@ export async function fetchApprovedSongBySlug(artistSlug: string, songSlug: stri
   }
 }
 
+const HOME_CATEGORY_CACHE_TTL_MS = 5 * 60 * 1000;
+const homeCategoryCache = new Map<string, { savedAt: number; songs: Song[] }>();
+
 export async function fetchHomeSongs(
   category: 'popular' | 'recent' | 'myanmar' | 'easy',
   limit = 8,
 ): Promise<Song[]> {
-  const params = new URLSearchParams({ category, limit: String(Math.min(Math.max(limit, 1), 20)) });
+  const pageSize = Math.min(Math.max(limit, 1), 20);
+  const cacheKey = `${category}:${pageSize}`;
+  const cached = homeCategoryCache.get(cacheKey);
+  if (cached && Date.now() - cached.savedAt <= HOME_CATEGORY_CACHE_TTL_MS) {
+    return cached.songs;
+  }
+  if (cached) homeCategoryCache.delete(cacheKey);
+
+  const params = new URLSearchParams({ category, limit: String(pageSize) });
   const response = await fetch(`/api/songs?${params.toString()}`, {
     headers: { Accept: 'application/json' },
     cache: 'default',
@@ -178,7 +189,9 @@ export async function fetchHomeSongs(
   if (!response.ok) throw new Error(`Home category request failed (${response.status})`);
   const payload: unknown = await response.json();
   const rows = isRecord(payload) && Array.isArray(payload.songs) ? payload.songs : Array.isArray(payload) ? payload : [];
-  return rows.filter(isSongRow).map(mapRowToSong);
+  const songs = rows.filter(isSongRow).map(mapRowToSong);
+  homeCategoryCache.set(cacheKey, { savedAt: Date.now(), songs });
+  return songs;
 }
 
 export async function fetchApprovedSong(id: string): Promise<Song | null> {
