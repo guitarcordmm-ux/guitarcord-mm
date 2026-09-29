@@ -19,7 +19,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import type { Song, User } from '../../../types';
-import { type SongSearchResult } from '../../../services/songs/songService';
+import { fetchApprovedSongs, type SongSearchResult } from '../../../services/songs/songService';
 import { getSongPath } from '../../../lib/seo';
 import { useSongSearch } from '../hooks/useSongSearch';
 import { useHomeCategories, type HomeCategory } from '../hooks/useHomeCategories';
@@ -266,10 +266,32 @@ export function GuitarCordHome({ songs }: Props) {
 export function GuitarCordLibrary({ songs }: Props) {
   const [search, setSearch] = useState('');
   const [tab, setTab] = useState<'songs' | 'favorites' | 'downloads'>('songs');
+  const [librarySongs, setLibrarySongs] = useState<Song[]>(songs);
+  const [loadingMore, setLoadingMore] = useState(false);
   const { results, loading: searchLoading, error: searchError } = useSongSearch(search);
+
+  useEffect(() => {
+    setLibrarySongs(songs);
+  }, [songs]);
+
+  const loadMoreSongs = async () => {
+    if (loadingMore || librarySongs.length < 50) return;
+    setLoadingMore(true);
+    try {
+      const nextPage = await fetchApprovedSongs(50, librarySongs.length);
+      if (nextPage.length) {
+        setLibrarySongs(current => [...current, ...nextPage]);
+      }
+    } catch (error) {
+      console.error('Could not load more songs:', error);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
   const visibleSongs = search.trim()
     ? results
-    : songs.map(song => ({ song, lyricMatch: '', score: 0 }));
+    : librarySongs.map(song => ({ song, lyricMatch: '', score: 0 }));
 
   return (
     <Shell>
@@ -319,7 +341,26 @@ export function GuitarCordLibrary({ songs }: Props) {
             <SongRow key={song.id || i} song={song} showHeart={tab === 'favorites'} lyricMatch={lyricMatch} />
           ))
         ) : (
-          <EmptySongs message={searchError || "No songs match your search or library is empty."} />
+          <>
+            {visibleSongs.length ? (
+              visibleSongs.map(({ song, lyricMatch }, i) => (
+                <SongRow key={song.id || i} song={song} showHeart={tab === 'favorites'} lyricMatch={lyricMatch} />
+              ))
+            ) : (
+              <EmptySongs message={searchError || "No songs match your search or library is empty."} />
+            )}
+
+            {!search.trim() && librarySongs.length >= 50 && (
+              <button
+                type="button"
+                onClick={loadMoreSongs}
+                disabled={loadingMore}
+                className="w-full py-4 mt-2 rounded-2xl bg-white/5 border border-white/10 text-xs text-white/60 disabled:opacity-40"
+              >
+                {loadingMore ? 'Loading more songs…' : 'Load more songs'}
+              </button>
+            )}
+          </>
         )}
       </main>
 
