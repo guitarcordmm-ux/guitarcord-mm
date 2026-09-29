@@ -63,31 +63,6 @@ function Player() {
   );
 }
 
-function LegacySongRedirect() {
-  const { artistSlug = '', songSlug = '' } = useParams();
-  const navigate = useNavigate();
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    let active = true;
-    fetchApprovedSongBySlug(artistSlug, songSlug)
-      .then(song => {
-        if (!active) return;
-        if (!song) {
-          setError('Song not found.');
-          return;
-        }
-        navigate(getSongPath(song), { replace: true });
-      })
-      .catch(err => {
-        if (active) setError(err instanceof Error ? err.message : 'Could not open song.');
-      });
-    return () => { active = false; };
-  }, [artistSlug, songSlug, navigate]);
-
-  return <div className="min-h-screen bg-black text-white grid place-items-center px-6 text-center"><div className="text-sm text-white/55">{error || 'Opening song…'}</div></div>;
-}
-
 function LegacyChordRedirect() {
   const { chordId = '' } = useParams();
   const navigate = useNavigate();
@@ -146,7 +121,6 @@ function Screens({ user }: { user: UnifiedUser | null }) {
         <Route path="/library" element={<GuitarCordLibrary songs={songs} user={user} />} />
         <Route path="/chords" element={<ChordLibrary />} />
         <Route path="/song/:artistSlug/:songSlug" element={<Player />} />
-        <Route path="/song/:artistSlug/:songSlug" element={<LegacySongRedirect />} />
         <Route path="/chord/:chordId" element={<LegacyChordRedirect />} />
         <Route path="/profile" element={<GuitarCordProfile user={user} />} />
         <Route path="/learn" element={<OnboardingPage />} />
