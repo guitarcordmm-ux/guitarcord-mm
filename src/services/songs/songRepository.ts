@@ -81,14 +81,32 @@ export async function fetchApprovedSongs(limit = 50, offset = 0): Promise<Song[]
   }
 }
 
+const SONG_DETAIL_CACHE_TTL_MS = 5 * 60 * 1000;
+const songDetailCache = new Map<string, { savedAt: number; song: Song | null }>();
+
+function getSongDetailCache(key: string): Song | null | undefined {
+  const cached = songDetailCache.get(key);
+  if (!cached) return undefined;
+  if (Date.now() - cached.savedAt > SONG_DETAIL_CACHE_TTL_MS) {
+    songDetailCache.delete(key);
+    return undefined;
+  }
+  return cached.song;
+}
+
+function setSongDetailCache(key: string, song: Song | null): void {
+  songDetailCache.set(key, { savedAt: Date.now(), song });
+}
+
 export async function fetchApprovedSongBySlug(artistSlug: string, songSlug: string): Promise<Song | null> {
   const cleanArtistSlug = artistSlug.trim();
   const cleanSongSlug = songSlug.trim();
   if (!cleanArtistSlug || !cleanSongSlug) return null;
 
-  // Read the published song directly from Supabase first. The songs table has
-  // a public SELECT policy for approved rows, so this avoids any stale/missing
-  // lyrics caused by an edge proxy deployment or cache.
+  const cacheKey = `approved:${cleanArtistSlug.toLowerCase()}:${cleanSongSlug.toLowerCase()}`;
+  const cached = getSongDetailCache(cacheKey);
+  if (cached !== undefined) return cached;
+
   const supabase = getSupabase();
   if (supabase) {
     try {
@@ -98,165 +116,53 @@ export async function fetchApprovedSongBySlug(artistSlug: string, songSlug: stri
         .eq('status', 'approved')
         .eq('artist_slug', cleanArtistSlug)
         .eq('song_slug', cleanSongSlug)
-        .limit(1)
         .maybeSingle();
 
-      let matchedSong: Song | null = null;
-
       if (!error && data) {
-        matchedSong = mapRowToSong(data);
-
-        if (matchedSong.lyrics.trim()) return matchedSong;
-
-        // Retry by the stable row id if the slug query returned metadata
-        // without lyrics. This stays entirely on Supabase.
-        try {
-          const { data: detailData, error: detailError } = await supabase
-            .from('songs')
-            .select('id,song_title,title,artist,composer,album,genre,image_url,tutorial_url,lyrics,tags,status,is_watermarked,created_at,updated_at,artist_slug,song_slug,language,difficulty,play_count,search_aliases,user_id')
-            .eq('id', matchedSong.id)
-            .eq('status', 'approved')
-            .maybeSingle();
-
-          if (!detailError && detailData) {
-            const detailSong = mapRowToSong(detailData);
-            if (detailSong.lyrics.trim()) return detailSong;
-            matchedSong = detailSong;
-          }
-        } catch (detailError) {
-          console.warn('Supabase song detail retry failed:', detailError);
-        }
-      } else if (error) {
-        console.warn('Direct Supabase song lookup failed; using fallback lookup:', error);
+        const song = mapRowToSong(data);
+        setSongDetailCache(cacheKey, song);
+        return song;
       }
 
-      // Final Supabase fallback: resolve the URL slugs against the actual
-      // title/artist and return the full row including lyrics. This also runs
-      // when the exact slug query returns no row.
-      try {
-        const decodedArtist = decodeURIComponent(cleanArtistSlug);
-        const decodedTitle = decodeURIComponent(cleanSongSlug);
-        const normalizedArtist = cleanArtistSlug.toLowerCase();
-        const normalizedTitle = cleanSongSlug.toLowerCase();
-        // Resolve the URL against lightweight metadata only. Do not fetch
-        // lyrics for the whole catalogue when a slug needs normalization.
-        const { data: candidates, error: candidateError } = await supabase
-          .from('songs')
-          .select('id,song_title,title,artist,artist_slug,song_slug')
-          .eq('status', 'approved')
-          .limit(500);
-
-        if (!candidateError && Array.isArray(candidates)) {
-          const match = candidates
-            .map(mapRowToSong)
-            .find(candidate => {
-              const artistMatch =
-                getEnglishSlug(candidate.artist, candidate.artistSlug) === normalizedArtist ||
-                slugifyText(candidate.artist) === normalizedArtist;
-              const titleMatch =
-                getEnglishSlug(candidate.songTitle, candidate.songSlug) === normalizedTitle ||
-                slugifyText(candidate.songTitle) === normalizedTitle;
-              return artistMatch && titleMatch;
-            });
-
-          if (match) {
-            // Only the selected song gets its full content.
-            const { data: detailData, error: detailError } = await supabase
-              .from('songs')
-              .select('id,song_title,title,artist,composer,album,genre,image_url,tutorial_url,lyrics,tags,status,is_watermarked,created_at,updated_at,artist_slug,song_slug,language,difficulty,play_count,search_aliases,user_id')
-              .eq('id', match.id)
-              .eq('status', 'approved')
-              .maybeSingle();
-
-            if (!detailError && detailData) {
-              matchedSong = mapRowToSong(detailData);
-              if (matchedSong.lyrics.trim()) return matchedSong;
-            } else {
-              matchedSong = match;
-            }
-          }
-        }
-      } catch (fallbackError) {
-        console.warn('Supabase slug fallback failed:', fallbackError);
+      if (error) {
+        console.warn('Supabase song lookup failed; using API fallback:', error);
       }
-
-      if (matchedSong) return matchedSong;
-    } catch (directError) {
-      console.warn('Direct Supabase song lookup failed; using API fallback:', directError);
+    } catch (error) {
+      console.warn('Supabase song lookup failed; using API fallback:', error);
     }
   }
 
-  const params = new URLSearchParams({
-    artist_slug: cleanArtistSlug,
-    song_slug: cleanSongSlug,
-  });
-  const response = await fetch(`/api/songs?${params.toString()}`, {
-    headers: { Accept: 'application/json' },
-    // A song page must always get the latest lyrics/chord sheet, not a stale
-    // edge/browser cache entry created before lyrics were added.
-    cache: 'no-store',
-  });
-
-  if (response.status === 404) return null;
-  if (!response.ok) throw new Error(`Song API request failed (${response.status})`);
-
-  const payload: unknown = await response.json();
-  const rows = Array.isArray(payload)
-    ? payload
-    : isRecord(payload) && Array.isArray(payload.songs)
-      ? payload.songs
-      : [];
-  const row = rows.find(isSongRow);
-  if (row) {
-    const mappedSong = mapRowToSong(row);
-    if (mappedSong.lyrics.trim()) return mappedSong;
-
-    // Some cached/older edge responses can contain the song metadata but omit
-    // lyrics. Re-fetch the song by id, where the proxy explicitly includes
-    // the full lyrics field, before falling back to the public catalogue.
-    try {
-      const detailResponse = await fetch(`/api/songs?id=${encodeURIComponent(row.id)}`, {
-        headers: { Accept: 'application/json' },
-        cache: 'no-store',
-      });
-      if (detailResponse.ok) {
-        const detailPayload: unknown = await detailResponse.json();
-        const detailRows = Array.isArray(detailPayload)
-          ? detailPayload
-          : isRecord(detailPayload) && Array.isArray(detailPayload.songs)
-            ? detailPayload.songs
-            : [];
-        const detailRow = detailRows.find(isSongRow);
-        if (detailRow) {
-          const detailSong = mapRowToSong(detailRow);
-          if (detailSong.lyrics.trim()) return detailSong;
-        }
-      }
-    } catch (detailError) {
-      console.warn('Song lyrics detail lookup failed:', detailError);
-    }
-
-    // Keep the metadata result as the last fallback if lyrics genuinely are
-    // empty in the database.
-    return mappedSong;
-  }
-
-  // Fallback for deployments/proxies that cannot reliably match Myanmar Unicode
-  // slugs in the edge URL query. The public catalogue is already approved-only.
+  // One network fallback only. Avoid re-fetching the same row by id and avoid
+  // scanning hundreds of catalogue rows when a URL slug does not match.
   try {
-    const songs = await fetchApprovedSongs();
-    const normalizedArtist = cleanArtistSlug.toLowerCase();
-    const normalizedTitle = cleanSongSlug.toLowerCase();
-    return songs.find(song => {
-      const artistMatch = getEnglishSlug(song.artist, song.artistSlug) === normalizedArtist
-        || slugifyText(song.artist) === normalizedArtist;
-      const titleMatch = getEnglishSlug(song.songTitle, song.songSlug) === normalizedTitle
-        || slugifyText(song.songTitle) === normalizedTitle;
-      return artistMatch && titleMatch;
-    }) || null;
-  } catch (fallbackError) {
-    console.warn('Song slug lookup fallback failed:', fallbackError);
-    return null;
+    const params = new URLSearchParams({
+      artist_slug: cleanArtistSlug,
+      song_slug: cleanSongSlug,
+    });
+    const response = await fetch(`/api/songs?${params.toString()}`, {
+      headers: { Accept: 'application/json' },
+      cache: 'default',
+    });
+
+    if (response.status === 404) {
+      setSongDetailCache(cacheKey, null);
+      return null;
+    }
+    if (!response.ok) throw new Error(`Song API request failed (${response.status})`);
+
+    const payload: unknown = await response.json();
+    const rows = Array.isArray(payload)
+      ? payload
+      : isRecord(payload) && Array.isArray(payload.songs)
+        ? payload.songs
+        : [];
+    const row = rows.find(isSongRow);
+    const song = row ? mapRowToSong(row) : null;
+    setSongDetailCache(cacheKey, song);
+    return song;
+  } catch (error) {
+    console.warn('Song API fallback failed:', error);
+    throw error;
   }
 }
 
