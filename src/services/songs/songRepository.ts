@@ -94,7 +94,7 @@ export async function fetchApprovedSongBySlug(artistSlug: string, songSlug: stri
     try {
       const { data, error } = await supabase
         .from('songs')
-        .select('id,song_title,title,artist,composer,album,genre,image_url,tutorial_url,lyrics,tags,status,is_watermarked,created_at,updated_at,artist_slug,song_slug,language,difficulty,play_count,search_aliases,user_id')
+        .select('id,song_title,title,artist,composer,album,genre,image_url,tutorial_url,tags,status,is_watermarked,created_at,updated_at,artist_slug,song_slug,language,difficulty,play_count,search_aliases,user_id')
         .eq('status', 'approved')
         .eq('artist_slug', cleanArtistSlug)
         .eq('song_slug', cleanSongSlug)
@@ -113,7 +113,7 @@ export async function fetchApprovedSongBySlug(artistSlug: string, songSlug: stri
         try {
           const { data: detailData, error: detailError } = await supabase
             .from('songs')
-            .select('id,song_title,title,artist,composer,album,genre,image_url,tutorial_url,lyrics,tags,status,is_watermarked,created_at,updated_at,artist_slug,song_slug,language,difficulty,play_count,search_aliases,user_id')
+            .select('id,song_title,title,artist,composer,album,genre,image_url,tutorial_url,tags,status,is_watermarked,created_at,updated_at,artist_slug,song_slug,language,difficulty,play_count,search_aliases,user_id')
             .eq('id', matchedSong.id)
             .eq('status', 'approved')
             .maybeSingle();
@@ -163,7 +163,7 @@ export async function fetchApprovedSongBySlug(artistSlug: string, songSlug: stri
             // Only the selected song gets its full content.
             const { data: detailData, error: detailError } = await supabase
               .from('songs')
-              .select('id,song_title,title,artist,composer,album,genre,image_url,tutorial_url,lyrics,tags,status,is_watermarked,created_at,updated_at,artist_slug,song_slug,language,difficulty,play_count,search_aliases,user_id')
+              .select('id,song_title,title,artist,composer,album,genre,image_url,tutorial_url,tags,status,is_watermarked,created_at,updated_at,artist_slug,song_slug,language,difficulty,play_count,search_aliases,user_id')
               .eq('id', match.id)
               .eq('status', 'approved')
               .maybeSingle();
@@ -291,7 +291,7 @@ export async function fetchUserSongs(userId: string): Promise<Song[]> {
   const client = getSupabase(); if (!client) return [];
   const { data, error } = await client
     .from('songs')
-    .select('id,song_title,title,artist,composer,album,genre,image_url,tutorial_url,lyrics,tags,status,is_watermarked,created_at,updated_at,artist_slug,song_slug,language,difficulty,play_count,search_aliases,user_id')
+    .select('id,song_title,title,artist,composer,album,genre,image_url,tutorial_url,tags,status,is_watermarked,created_at,updated_at,artist_slug,song_slug,language,difficulty,play_count,search_aliases,user_id')
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
   if (error) { console.error('Error fetching user songs from Supabase:', error); throw error; }
@@ -302,7 +302,7 @@ export async function fetchAdminSongs(status: string): Promise<Song[]> {
   const client = getSupabase(); if (!client) return [];
   let query = client
     .from('songs')
-    .select('id,song_title,title,artist,composer,album,genre,image_url,tutorial_url,lyrics,tags,status,is_watermarked,created_at,updated_at,artist_slug,song_slug,language,difficulty,play_count,search_aliases,user_id')
+    .select('id,song_title,title,artist,composer,album,genre,image_url,tutorial_url,tags,status,is_watermarked,created_at,updated_at,artist_slug,song_slug,language,difficulty,play_count,search_aliases,user_id')
     .eq('status', status);
   query = status === 'deleted' ? query.order('deleted_at', { ascending: false }) : query.order('created_at', { ascending: false });
   const { data, error } = await query;
