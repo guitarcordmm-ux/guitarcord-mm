@@ -156,7 +156,7 @@ function injectIntoAppHtml(html: string, content: string, song: PublicSong, cano
     `<div id="root">${content}</div>`,
   );
 
-  output = output.replace(/<title>.*?<\\/title>/i, `<title>${escapedTitle}</title>`);
+  output = output.replace(/<title>.*?<\/title>/i, `<title>${escapedTitle}</title>`);
   output = output.replace(
     /<meta name="description" content=".*?">/i,
     `<meta name="description" content="${escapedDescription}">`,
