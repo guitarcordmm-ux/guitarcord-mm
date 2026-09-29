@@ -19,6 +19,34 @@ type SongEnv = {
   VITE_SUPABASE_ANON_KEY?: string;
 };
 
+export async function getPublicSongById(id: string, env: SongEnv): Promise<PublicSong | null> {
+  const supabaseUrl = env.SUPABASE_URL?.trim() || env.VITE_SUPABASE_URL?.trim();
+  const supabaseKey = env.SUPABASE_ANON_KEY?.trim() || env.VITE_SUPABASE_ANON_KEY?.trim();
+  if (!supabaseUrl || !supabaseKey || !id) return null;
+
+  const url = new URL('/rest/v1/songs', supabaseUrl);
+  url.searchParams.set('select', 'id,song_title,title,artist,composer,image_url,lyrics,language,artist_slug,song_slug,status');
+  url.searchParams.set('id', `eq.${id}`);
+  url.searchParams.set('status', 'eq.approved');
+  url.searchParams.set('limit', '1');
+
+  const response = await fetch(url.toString(), {
+    headers: {
+      apikey: supabaseKey,
+      Authorization: `Bearer ${supabaseKey}`,
+      Accept: 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    console.error('SSR song ID lookup failed:', response.status);
+    return null;
+  }
+
+  const payload: unknown = await response.json();
+  return Array.isArray(payload) ? ((payload[0] as PublicSong | undefined) || null) : null;
+}
+
 export async function getPublicSongBySlug(
   artistSlug: string,
   songSlug: string,
