@@ -105,10 +105,25 @@ function buildStructuredData(song: PublicSong, canonicalUrl: string): string {
   return JSON.stringify([musicRecording, breadcrumb]).replace(/</g, '\\u003c');
 }
 
+function getLyricsPreview(lyrics: string | null | undefined): string {
+  const cleanedLines = (lyrics || '')
+    .replace(/\\r/g, '')
+    .split('\\n')
+    .map(line => line
+      .replace(/\\[([A-Za-z0-9#b+\\/]+)\\]/g, '')
+      .replace(/\\s+/g, ' ')
+      .trim()
+    )
+    .filter(Boolean);
+
+  return cleanedLines.slice(0, 3).join(' ');
+}
+
 function seoShell(song: PublicSong, canonicalUrl: string): string {
   const title = song.song_title || song.title || 'Untitled';
   const artist = song.artist || 'Unknown Artist';
-  const description = `Myanmar guitar chords and lyrics for ${title} by ${artist} on GuitarCord.`;
+  const lyricsPreview = getLyricsPreview(song.lyrics);
+  const description = lyricsPreview || `${title} - ${artist} | GuitarCord MM`;
   const lyrics = song.lyrics?.trim() || 'Lyrics and chords are available on this song page.';
 
   return `
@@ -145,8 +160,9 @@ function seoShell(song: PublicSong, canonicalUrl: string): string {
 function injectIntoAppHtml(html: string, content: string, song: PublicSong, canonicalUrl: string): string {
   const title = song.song_title || song.title || 'Untitled';
   const artist = song.artist || 'Unknown Artist';
-  const description = `Myanmar guitar chords and lyrics for ${title} by ${artist} on GuitarCord.`;
-  const escapedTitle = escapeHtml(`Myanmar Guitar Chords - ${title} | GuitarCord`);
+  const lyricsPreview = getLyricsPreview(song.lyrics);
+  const description = lyricsPreview || `${title} - ${artist} | GuitarCord MM`;
+  const escapedTitle = escapeHtml(`${artist} - ${title} | GuitarCord MM`);
   const escapedDescription = escapeHtml(description);
 
   let output = html.replace(
