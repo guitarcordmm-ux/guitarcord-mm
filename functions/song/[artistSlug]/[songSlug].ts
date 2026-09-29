@@ -29,7 +29,7 @@ function escapeHtml(value: string): string {
 
 function renderLyrics(lyrics: string): string {
   return lyrics
-    .split(/\\r?\\n/)
+    .split(/\r?\n/)
     .map(line => {
       const escaped = escapeHtml(line);
       const withChords = escaped.replace(
@@ -93,11 +93,11 @@ function buildStructuredData(song: PublicSong, canonicalUrl: string): string {
 
 function getLyricsPreview(lyrics: string | null | undefined): string {
   const cleanedLines = (lyrics || '')
-    .replace(/\\r/g, '')
-    .split('\\n')
+    .replace(/\r/g, '')
+    .split('\n')
     .map(line => line
-      .replace(/\\[([A-Za-z0-9#b+\\/]+)\\]/g, '')
-      .replace(/\\s+/g, ' ')
+      .replace(/\[([A-Za-z0-9#b+\/]+)\]/g, '')
+      .replace(/\s+/g, ' ')
       .trim()
     )
     .filter(Boolean);
@@ -178,7 +178,7 @@ function injectIntoAppHtml(html: string, content: string, song: PublicSong, cano
 
 export async function onRequest({ request, env }: Context): Promise<Response> {
   const url = new URL(request.url);
-  const match = url.pathname.match(/^\\/song\\/([^/]+)\\/([^/]+)\\/?$/);
+  const match = url.pathname.match(/^\/song\/([^/]+)\/([^/]+)\/?$/);
 
   if (!match) {
     return env.ASSETS
