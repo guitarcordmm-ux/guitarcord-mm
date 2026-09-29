@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Minus, Plus, Music2, Pause, Play } from 'lucide-react';
 import type { Song } from '../../../types';
@@ -80,6 +80,10 @@ export function GuitarCordPlayer({ song }: { song: Song }) {
   const rawLines = useMemo(() => (song.lyrics || '').split('\n'), [song.lyrics]);
   const parsed = useMemo(() => rawLines.map(parseLyricsLine), [rawLines]);
   const baseKey = useMemo(() => detectBaseKey(parsed), [parsed]);
+  const transposeForDisplay = useCallback(
+    (chord: string) => transposeChord(chord, transpose),
+    [transpose],
+  );
   const currentKey = useMemo(
     () => (baseKey ? transposeChord(baseKey, transpose) : '—'),
     [baseKey, transpose],
@@ -226,7 +230,7 @@ export function GuitarCordPlayer({ song }: { song: Song }) {
                 <ChordLyricsLine
                   key={i}
                   line={line}
-                  transpose={chord => transposeChord(chord, transpose)}
+                  transpose={transposeForDisplay}
                   className="mb-5 last:mb-0"
                 />
               ),
