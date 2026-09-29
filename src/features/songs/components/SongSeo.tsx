@@ -3,9 +3,9 @@ import type { Song } from '../../../types';
 import { getSongUrl } from '../../../lib/seo';
 
 export function SongSeo({ song }: { song: Song }) {
-  const canonicalUrl = getSongUrl(song.artist, song.songTitle);
-  const title = `Myanmar Guitar Chords - ${song.songTitle} | GuitarCord`;
-  const description = `Learn ${song.songTitle} guitar chords and lyrics by ${song.artist} on GuitarCord. Transpose the key and use auto-scroll while playing.`;
+  const canonicalUrl = getSongUrl(song);
+  const title = `${song.artist} - ${song.songTitle} | GuitarCord MM`;
+  const description = `Learn ${song.songTitle} guitar chords and lyrics by ${song.artist} on GuitarCord.`;
 
   const structuredData = {
     '@context': 'https://schema.org',
@@ -13,48 +13,19 @@ export function SongSeo({ song }: { song: Song }) {
     name: song.songTitle,
     url: canonicalUrl,
     inLanguage: song.language === 'my' ? 'my' : song.language || 'my',
-    byArtist: {
-      '@type': 'MusicGroup',
-      name: song.artist,
-    },
-    ...(song.composer
-      ? {
-          composer: {
-            '@type': 'Person',
-            name: song.composer,
-          },
-        }
-      : {}),
+    byArtist: { '@type': 'MusicGroup', name: song.artist },
+    ...(song.composer ? { composer: { '@type': 'Person', name: song.composer } } : {}),
     ...(song.imageURL ? { image: [song.imageURL] } : {}),
-    isPartOf: {
-      '@type': 'WebSite',
-      name: 'GuitarCord',
-      url: 'https://guitarcordmm.com/',
-    },
+    isPartOf: { '@type': 'WebSite', name: 'GuitarCord', url: 'https://guitarcordmm.com/' },
   };
 
   const breadcrumbData = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      {
-        '@type': 'ListItem',
-        position: 1,
-        name: 'GuitarCord',
-        item: 'https://guitarcordmm.com/',
-      },
-      {
-        '@type': 'ListItem',
-        position: 2,
-        name: 'Songs',
-        item: 'https://guitarcordmm.com/songs',
-      },
-      {
-        '@type': 'ListItem',
-        position: 3,
-        name: song.songTitle,
-        item: canonicalUrl,
-      },
+      { '@type': 'ListItem', position: 1, name: 'GuitarCord', item: 'https://guitarcordmm.com/' },
+      { '@type': 'ListItem', position: 2, name: 'Songs', item: 'https://guitarcordmm.com/songs' },
+      { '@type': 'ListItem', position: 3, name: song.songTitle, item: canonicalUrl },
     ],
   };
 
