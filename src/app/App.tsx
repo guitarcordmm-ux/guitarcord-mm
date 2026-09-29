@@ -153,7 +153,7 @@ function Screens({ user }: { user: UnifiedUser | null }) {
         <Route path="/chord/:chordId" element={<LegacyChordRedirect />} />
         <Route path="/profile" element={<GuitarCordProfile user={user} />} />
         <Route path="/learn" element={<OnboardingPage />} />
-        <Route path="/create" element={<ChordEditor onClose={() => window.history.back()} user={user} isAdmin={admin} />} />
+        <Route path="/create" element={user && !user.isAnonymous ? <ChordEditor onClose={() => window.history.back()} user={user} isAdmin={admin} /> : <Navigate to="/login" replace />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/dashboard" element={user && !user.isAnonymous ? <UserDashboard userId={user.uid} /> : <Navigate to="/" replace />} />
         <Route path="/admin" element={<AdminLogin />} />
