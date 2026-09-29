@@ -136,9 +136,11 @@ export async function fetchApprovedSongBySlug(artistSlug: string, songSlug: stri
         const decodedTitle = decodeURIComponent(cleanSongSlug);
         const normalizedArtist = slugifyText(decodedArtist);
         const normalizedTitle = slugifyText(decodedTitle);
+        // Resolve the URL against lightweight metadata only. Do not fetch
+        // lyrics for the whole catalogue when a slug needs normalization.
         const { data: candidates, error: candidateError } = await supabase
           .from('songs')
-          .select('id,song_title,title,artist,composer,album,genre,image_url,tutorial_url,lyrics,tags,status,is_watermarked,created_at,updated_at,artist_slug,song_slug,language,difficulty,play_count,search_aliases,user_id')
+          .select('id,song_title,title,artist,artist_slug,song_slug')
           .eq('status', 'approved')
           .limit(500);
 
@@ -155,8 +157,22 @@ export async function fetchApprovedSongBySlug(artistSlug: string, songSlug: stri
               return artistMatch && titleMatch;
             });
 
-          if (match?.lyrics.trim()) return match;
-          if (match) matchedSong = match;
+          if (match) {
+            // Only the selected song gets its full content.
+            const { data: detailData, error: detailError } = await supabase
+              .from('songs')
+              .select('id,song_title,title,artist,composer,album,genre,image_url,tutorial_url,lyrics,tags,status,is_watermarked,created_at,updated_at,artist_slug,song_slug,language,difficulty,play_count,search_aliases,user_id')
+              .eq('id', match.id)
+              .eq('status', 'approved')
+              .maybeSingle();
+
+            if (!detailError && detailData) {
+              matchedSong = mapRowToSong(detailData);
+              if (matchedSong.lyrics.trim()) return matchedSong;
+            } else {
+              matchedSong = match;
+            }
+          }
         }
       } catch (fallbackError) {
         console.warn('Supabase slug fallback failed:', fallbackError);
