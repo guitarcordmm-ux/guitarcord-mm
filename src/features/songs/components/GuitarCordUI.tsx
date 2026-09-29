@@ -357,6 +357,20 @@ export function GuitarCordProfile({ user }: { user?: User | null }) {
             <span className="text-white/30">›</span>
           </button>
         ))}
+        {user && !user.isAnonymous && (
+          <button
+            onClick={() => navigate('/create')}
+            className="w-full flex items-center gap-3 py-4 text-sm border-b border-white/10"
+          >
+            <Guitar size={18} className="text-[#FFD600]" />
+            <span className="flex-1 text-left">
+              <span className="block">သီချင်း / Lyrics တင်မယ်</span>
+              <span className="block text-[10px] text-white/35 mt-0.5">Lyrics + Chords ကို တင်ပြီး Admin approval ပို့မယ်</span>
+            </span>
+            <span className="text-white/30">›</span>
+          </button>
+        )}
+
         <button
           onClick={() => navigate('/chords')}
           className="w-full flex items-center gap-3 py-4 text-sm"
