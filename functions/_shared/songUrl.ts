@@ -31,6 +31,10 @@ export function getSongNameSlug(songTitle: string, existingSlug?: string | null)
     .toLowerCase() || 'song';
 }
 
+export function getEnglishSlug(value: string, existingSlug?: string | null): string {
+  return getSongNameSlug(value, existingSlug);
+}
+
 export function getSongPath(song: {
   artist?: string | null;
   artist_slug?: string | null;
