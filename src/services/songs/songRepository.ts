@@ -99,8 +99,64 @@ export async function fetchApprovedSongBySlug(artistSlug: string, songSlug: stri
         .limit(1)
         .maybeSingle();
 
-      if (!error && data) return mapRowToSong(data);
-      if (error) console.warn('Direct Supabase song lookup failed; using API fallback:', error);
+      if (!error && data) {
+        const song = mapRowToSong(data);
+        if (song.lyrics.trim()) return song;
+
+        // Retry by the stable row id if the slug query returned metadata
+        // without lyrics. This stays entirely on Supabase.
+        try {
+          const { data: detailData, error: detailError } = await supabase
+            .from('songs')
+            .select('id,song_title,title,artist,composer,album,genre,image_url,tutorial_url,lyrics,tags,status,is_watermarked,created_at,updated_at,artist_slug,song_slug,language,difficulty,play_count,search_aliases,user_id')
+            .eq('id', song.id)
+            .eq('status', 'approved')
+            .maybeSingle();
+
+          if (!detailError && detailData) {
+            const detailSong = mapRowToSong(detailData);
+            if (detailSong.lyrics.trim()) return detailSong;
+          }
+        } catch (detailError) {
+          console.warn('Supabase song detail retry failed:', detailError);
+        }
+
+        return song;
+      }
+      if (error) console.warn('Direct Supabase song lookup failed; using fallback lookup:', error);
+
+      // Final Supabase fallback: resolve the URL slugs against the actual
+      // title/artist and return the full row including lyrics. This avoids
+      // depending on the edge/Cloudflare API.
+      try {
+        const decodedArtist = decodeURIComponent(cleanArtistSlug);
+        const decodedTitle = decodeURIComponent(cleanSongSlug);
+        const { data: candidates, error: candidateError } = await supabase
+          .from('songs')
+          .select('id,song_title,title,artist,composer,album,genre,image_url,tutorial_url,lyrics,tags,status,is_watermarked,created_at,updated_at,artist_slug,song_slug,language,difficulty,play_count,search_aliases,user_id')
+          .eq('status', 'approved')
+          .limit(100);
+
+        if (!candidateError && Array.isArray(candidates)) {
+          const normalizedArtist = slugifyText(decodedArtist);
+          const normalizedTitle = slugifyText(decodedTitle);
+          const match = candidates
+            .map(mapRowToSong)
+            .find(candidate => {
+              const artistMatch =
+                (candidate.artistSlug && slugifyText(candidate.artistSlug) === normalizedArtist) ||
+                slugifyText(candidate.artist) === normalizedArtist;
+              const titleMatch =
+                (candidate.songSlug && slugifyText(candidate.songSlug) === normalizedTitle) ||
+                slugifyText(candidate.songTitle) === normalizedTitle;
+              return artistMatch && titleMatch;
+            });
+
+          if (match) return match;
+        }
+      } catch (fallbackError) {
+        console.warn('Supabase slug fallback failed:', fallbackError);
+      }
     } catch (directError) {
       console.warn('Direct Supabase song lookup failed; using API fallback:', directError);
     }
