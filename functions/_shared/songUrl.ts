@@ -31,7 +31,17 @@ export function getSongNameSlug(songTitle: string, existingSlug?: string | null)
     .toLowerCase() || 'song';
 }
 
-export function getSongPath(song: { id: string; song_title?: string | null; title?: string | null; song_slug?: string | null }): string {
-  const title = song.song_title || song.title || 'song';
-  return `/song/${encodeURIComponent(song.id)}/${encodeURIComponent(getSongNameSlug(title, song.song_slug))}`;
+export function getSongPath(song: {
+  artist?: string | null;
+  artist_slug?: string | null;
+  songTitle?: string | null;
+  song_title?: string | null;
+  title?: string | null;
+  song_slug?: string | null;
+}): string {
+  const artist = song.artist || song.artist_slug || 'artist';
+  const title = song.songTitle || song.song_title || song.title || 'song';
+  const artistSlug = getSongNameSlug(artist, song.artist_slug);
+  const songSlug = getSongNameSlug(title, song.song_slug);
+  return `/song/${encodeURIComponent(artistSlug)}/${encodeURIComponent(songSlug)}`;
 }
