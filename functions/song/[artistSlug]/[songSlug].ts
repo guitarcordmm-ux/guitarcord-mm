@@ -1,4 +1,4 @@
-import { getPublicSongBySlug, type PublicSong } from '../../_shared/publicSong';
+import { getPublicSongByUrlSlugs, type PublicSong } from '../../_shared/publicSong';
 import { getSongPath } from '../../_shared/songUrl';
 
 type AssetsBinding = {
@@ -188,7 +188,7 @@ export async function onRequest({ request, env }: Context): Promise<Response> {
 
   const artistSlug = decodeURIComponent(match[1]);
   const songSlug = decodeURIComponent(match[2]);
-  const song = await getPublicSongBySlug(artistSlug, songSlug, env);
+  const song = await getPublicSongByUrlSlugs(artistSlug, songSlug, env);
 
   if (!song || song.status !== 'approved') {
     if (env.ASSETS) {
