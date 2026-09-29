@@ -99,9 +99,12 @@ export async function fetchApprovedSongBySlug(artistSlug: string, songSlug: stri
         .limit(1)
         .maybeSingle();
 
+      let matchedSong: Song | null = null;
+
       if (!error && data) {
-        const song = mapRowToSong(data);
-        if (song.lyrics.trim()) return song;
+        matchedSong = mapRowToSong(data);
+
+        if (matchedSong.lyrics.trim()) return matchedSong;
 
         // Retry by the stable row id if the slug query returned metadata
         // without lyrics. This stays entirely on Supabase.
@@ -109,37 +112,37 @@ export async function fetchApprovedSongBySlug(artistSlug: string, songSlug: stri
           const { data: detailData, error: detailError } = await supabase
             .from('songs')
             .select('id,song_title,title,artist,composer,album,genre,image_url,tutorial_url,lyrics,tags,status,is_watermarked,created_at,updated_at,artist_slug,song_slug,language,difficulty,play_count,search_aliases,user_id')
-            .eq('id', song.id)
+            .eq('id', matchedSong.id)
             .eq('status', 'approved')
             .maybeSingle();
 
           if (!detailError && detailData) {
             const detailSong = mapRowToSong(detailData);
             if (detailSong.lyrics.trim()) return detailSong;
+            matchedSong = detailSong;
           }
         } catch (detailError) {
           console.warn('Supabase song detail retry failed:', detailError);
         }
-
-        return song;
+      } else if (error) {
+        console.warn('Direct Supabase song lookup failed; using fallback lookup:', error);
       }
-      if (error) console.warn('Direct Supabase song lookup failed; using fallback lookup:', error);
 
       // Final Supabase fallback: resolve the URL slugs against the actual
-      // title/artist and return the full row including lyrics. This avoids
-      // depending on the edge/Cloudflare API.
+      // title/artist and return the full row including lyrics. This also runs
+      // when the exact slug query returns no row.
       try {
         const decodedArtist = decodeURIComponent(cleanArtistSlug);
         const decodedTitle = decodeURIComponent(cleanSongSlug);
+        const normalizedArtist = slugifyText(decodedArtist);
+        const normalizedTitle = slugifyText(decodedTitle);
         const { data: candidates, error: candidateError } = await supabase
           .from('songs')
           .select('id,song_title,title,artist,composer,album,genre,image_url,tutorial_url,lyrics,tags,status,is_watermarked,created_at,updated_at,artist_slug,song_slug,language,difficulty,play_count,search_aliases,user_id')
           .eq('status', 'approved')
-          .limit(100);
+          .limit(500);
 
         if (!candidateError && Array.isArray(candidates)) {
-          const normalizedArtist = slugifyText(decodedArtist);
-          const normalizedTitle = slugifyText(decodedTitle);
           const match = candidates
             .map(mapRowToSong)
             .find(candidate => {
@@ -152,11 +155,14 @@ export async function fetchApprovedSongBySlug(artistSlug: string, songSlug: stri
               return artistMatch && titleMatch;
             });
 
-          if (match) return match;
+          if (match?.lyrics.trim()) return match;
+          if (match) matchedSong = match;
         }
       } catch (fallbackError) {
         console.warn('Supabase slug fallback failed:', fallbackError);
       }
+
+      if (matchedSong) return matchedSong;
     } catch (directError) {
       console.warn('Direct Supabase song lookup failed; using API fallback:', directError);
     }
