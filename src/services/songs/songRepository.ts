@@ -90,7 +90,9 @@ export async function fetchApprovedSongBySlug(artistSlug: string, songSlug: stri
   });
   const response = await fetch(`/api/songs?${params.toString()}`, {
     headers: { Accept: 'application/json' },
-    cache: 'default',
+    // A song page must always get the latest lyrics/chord sheet, not a stale
+    // edge/browser cache entry created before lyrics were added.
+    cache: 'no-store',
   });
 
   if (response.status === 404) return null;
@@ -103,7 +105,39 @@ export async function fetchApprovedSongBySlug(artistSlug: string, songSlug: stri
       ? payload.songs
       : [];
   const row = rows.find(isSongRow);
-  if (row) return mapRowToSong(row);
+  if (row) {
+    const mappedSong = mapRowToSong(row);
+    if (mappedSong.lyrics.trim()) return mappedSong;
+
+    // Some cached/older edge responses can contain the song metadata but omit
+    // lyrics. Re-fetch the song by id, where the proxy explicitly includes
+    // the full lyrics field, before falling back to the public catalogue.
+    try {
+      const detailResponse = await fetch(`/api/songs?id=${encodeURIComponent(row.id)}`, {
+        headers: { Accept: 'application/json' },
+        cache: 'no-store',
+      });
+      if (detailResponse.ok) {
+        const detailPayload: unknown = await detailResponse.json();
+        const detailRows = Array.isArray(detailPayload)
+          ? detailPayload
+          : isRecord(detailPayload) && Array.isArray(detailPayload.songs)
+            ? detailPayload.songs
+            : [];
+        const detailRow = detailRows.find(isSongRow);
+        if (detailRow) {
+          const detailSong = mapRowToSong(detailRow);
+          if (detailSong.lyrics.trim()) return detailSong;
+        }
+      }
+    } catch (detailError) {
+      console.warn('Song lyrics detail lookup failed:', detailError);
+    }
+
+    // Keep the metadata result as the last fallback if lyrics genuinely are
+    // empty in the database.
+    return mappedSong;
+  }
 
   // Fallback for deployments/proxies that cannot reliably match Myanmar Unicode
   // slugs in the edge URL query. The public catalogue is already approved-only.
