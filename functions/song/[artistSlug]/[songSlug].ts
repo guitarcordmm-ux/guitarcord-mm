@@ -33,7 +33,7 @@ function renderLyrics(lyrics: string): string {
     .map(line => {
       const escaped = escapeHtml(line);
       const withChords = escaped.replace(
-        /\\[([A-Za-z0-9#b+\\/]+)\\]/g,
+        /\[([A-Za-z0-9#b+\/]+)\]/g,
         '<span class="seo-chord">[$1]</span>',
       );
       return `<div class="seo-lyrics-line">${withChords || '&nbsp;'}</div>`;
