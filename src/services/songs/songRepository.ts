@@ -103,7 +103,25 @@ export async function fetchApprovedSongBySlug(artistSlug: string, songSlug: stri
       ? payload.songs
       : [];
   const row = rows.find(isSongRow);
-  return row ? mapRowToSong(row) : null;
+  if (row) return mapRowToSong(row);
+
+  // Fallback for deployments/proxies that cannot reliably match Myanmar Unicode
+  // slugs in the edge URL query. The public catalogue is already approved-only.
+  try {
+    const songs = await fetchApprovedSongs();
+    const normalizedArtist = slugifyText(decodeURIComponent(cleanArtistSlug));
+    const normalizedTitle = slugifyText(decodeURIComponent(cleanSongSlug));
+    return songs.find(song => {
+      const artistMatch = (song.artistSlug && slugifyText(song.artistSlug) === normalizedArtist)
+        || slugifyText(song.artist) === normalizedArtist;
+      const titleMatch = (song.songSlug && slugifyText(song.songSlug) === normalizedTitle)
+        || slugifyText(song.songTitle) === normalizedTitle;
+      return artistMatch && titleMatch;
+    }) || null;
+  } catch (fallbackError) {
+    console.warn('Song slug lookup fallback failed:', fallbackError);
+    return null;
+  }
 }
 
 export async function fetchHomeSongs(
