@@ -1,4 +1,9 @@
 const COMMON_MYANMAR_WORDS: Record<string, string> = {
+  'စိုးလွင်လွင်': 'soe-lwin-lwin',
+  'ဆောင်းဦးလှိုင်': 'saung-oo-hlaing',
+  'ဝန': 'wa-na',
+  'လွှမ်းမိုး': 'hlwan-moe',
+  'ညီမင်းခိုင် (Capo - 4)': 'nyi-min-khine-capo-4',
   'သတိရရ မရရ': 'tha-ti-ya-ya-ma-ya-ya',
   'ငါ့ရင်ခွင်ကို': 'nga-yin-khwin-ko',
   'ငယ်သူမို့': 'nge-thu-moh',
