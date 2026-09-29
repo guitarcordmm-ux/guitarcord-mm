@@ -14,22 +14,8 @@ type SitemapSong = {
   updated_at?: string | null;
 };
 
-function getSongNameSlug(song: SitemapSong): string {
-  const existing = (song.song_slug || '').trim();
-  if (existing && /^[A-Za-z0-9-]+$/.test(existing)) return existing.toLowerCase();
+import { getSongPath } from './_shared/songUrl';
 
-  const title = (song.song_title || song.title || 'song').trim();
-  const common: Record<string, string> = {
-    'သတိရရ မရရ': 'tha-ti-ya-ya-ma-ya-ya',
-    'ငါ့ရင်ခွင်ကို': 'nga-yin-khwin-ko',
-    'ငယ်သူမို့': 'nge-thu-moh',
-    'ခိုးစိတ်စိုးထိတ်လွမ်းချိန်': 'khoe-seik-soe-hteik-lwan-chain',
-    'သူငယ်ချင်းအတွက်': 'thu-nge-chin-a-twet',
-  };
-  if (common[title]) return common[title];
-
-  return `song-${song.id.slice(0, 8)}`;
-}
 
 export async function onRequestGet({ env }: { env: Env }): Promise<Response> {
   const supabaseUrl = env.SUPABASE_URL?.trim() || env.VITE_SUPABASE_URL?.trim();
@@ -66,9 +52,7 @@ export async function onRequestGet({ env }: { env: Env }): Promise<Response> {
   const urls = [
     ...staticUrls.map(loc => `<url><loc>${loc}</loc></url>`),
     ...songs.map(song => {
-      const artistSlug = getSongNameSlug({ ...song, song_title: song.artist || 'artist' });
-        const songSlug = getSongNameSlug(song);
-        const loc = `${base}/song/${encodeURIComponent(artistSlug)}/${encodeURIComponent(songSlug)}`;
+      const loc = `${base}${getSongPath({ artist: song.artist || 'artist', songTitle: song.song_title || song.title || 'song', song_slug: song.song_slug })}`;
       const lastmod = song.updated_at ? `<lastmod>${new Date(song.updated_at).toISOString()}</lastmod>` : '';
       return `<url><loc>${loc}</loc>${lastmod}</url>`;
     }),
