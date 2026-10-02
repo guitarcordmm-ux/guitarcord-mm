@@ -42,8 +42,8 @@ export function getEnglishSlug(value: string | null | undefined, existingSlug?: 
     .replace(/[^A-Za-z0-9]+/g, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'song';
 }
 
-export function getArtistPath(artist: string): string {
-  const artistSlug = getEnglishSlug(artist) || 'artist';
+export function getArtistPath(artist: string, existingSlug?: string | null): string {
+  const artistSlug = getEnglishSlug(artist, existingSlug) || 'artist';
   return '/artist/' + encodeURIComponent(artistSlug);
 }
 
