@@ -1,4 +1,5 @@
 export { LoginPage } from './pages/LoginPage';
+export { ResetPasswordPage } from './pages/ResetPasswordPage';
 export { UserDashboard } from './pages/UserDashboard';
 export type { UnifiedUser } from '../../services/auth/authService';
 export {
@@ -10,5 +11,7 @@ export {
   signInWithEmail,
   signUpWithEmail,
   signInWithGoogleOAuth,
+  requestPasswordReset,
+  updatePassword,
   signOutUser,
 } from '../../services/auth/authService';
