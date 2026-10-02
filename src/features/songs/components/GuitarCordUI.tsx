@@ -110,7 +110,7 @@ function SongRow({
       <div className="flex min-w-0 items-center gap-2">
         <button
           type="button"
-          onClick={() => navigate(getArtistPath(song.artist))}
+          onClick={() => navigate(getArtistPath(song.artist, song.artistSlug))}
           className="max-w-[42vw] truncate text-left text-[11px] text-white/45 hover:text-[#FFD600] active:text-[#FFD600]"
           title={'View ' + song.artist + ' songs'}
         >
