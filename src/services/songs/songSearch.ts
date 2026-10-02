@@ -6,7 +6,7 @@ export type SongSearchResult = {
   score: number;
 };
 
-type SearchApiRow = Song & {
+type SearchApiRow = {
   song_title?: string;
   image_url?: string | null;
   tutorial_url?: string | null;
@@ -21,6 +21,7 @@ type SearchApiRow = Song & {
   language?: string | null;
   difficulty?: string | null;
   play_count?: number | null;
+  score?: number | null;
 };
 
 export function normalizeSearchText(value: string) {
@@ -39,7 +40,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function mapSearchRow(value: unknown): SongSearchResult | null {
   if (!isRecord(value) || typeof value.id !== 'string') return null;
 
-  const row = value as SearchApiRow;
+  const row = value as unknown as SearchApiRow;
   const tags = Array.isArray(row.tags) ? row.tags.filter((tag): tag is string => typeof tag === 'string') : [];
   const searchAliases = Array.isArray(row.search_aliases)
     ? row.search_aliases.filter((alias): alias is string => typeof alias === 'string')
@@ -66,8 +67,8 @@ function mapSearchRow(value: unknown): SongSearchResult | null {
       playCount: row.play_count ?? 0,
       status: row.status || 'approved',
       isWatermarked: row.is_watermarked ?? true,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
+      createdAt: row.created_at ?? undefined,
+      updatedAt: row.updated_at ?? undefined,
     },
     lyricMatch: typeof row.lyric_match === 'string' ? row.lyric_match : '',
     score: typeof row.score === 'number' ? row.score : 0,
