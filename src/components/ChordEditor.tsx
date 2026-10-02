@@ -164,7 +164,7 @@ export function ChordEditor({ onClose, onSubmit, initialContent = '', initialSon
       if (line.trim() === '') return <div key={idx} className="h-6"></div>;
       const parts = line.split(/(\[[^[\]]+\])/g);
       const chunks = [];
-      let currentChord = null;
+      let currentChord: string | null = null;
 
       for (let i = 0; i < parts.length; i++) {
         const part = parts[i];
