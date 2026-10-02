@@ -94,9 +94,10 @@ export async function requestPasswordReset(email: string): Promise<void> {
   const client = getSupabase();
   if (!client) throw new Error('Authentication service is not configured.');
 
-  // Use the configured Site URL as the recovery callback. This avoids
-  // failures when /reset-password is not yet in Supabase's redirect allowlist.
-  const redirectTo = window.location.origin;
+  // Password recovery must return to the live production site.
+  // Keeping this fixed avoids localhost links when recovery is requested
+  // from a local development build.
+  const redirectTo = (import.meta.env.VITE_SITE_URL?.trim() || 'https://guitarcordmm.com').replace(/\\/$/, '');
   const { error } = await client.auth.resetPasswordForEmail(email.trim().toLowerCase(), { redirectTo });
   if (error) throw error;
 }
