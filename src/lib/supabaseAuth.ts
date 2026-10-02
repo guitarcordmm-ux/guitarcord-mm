@@ -37,8 +37,6 @@ export function subscribeToAuthChanges(callback: (user: UnifiedUser | null) => v
     return () => {};
   }
 
-  // Subscribe first so INITIAL_SESSION/SIGNED_OUT events cannot be
-  // overwritten by a stale getUser() request during sign-out.
   const { data: { subscription } } = client.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_OUT' || !session) {
       callback(null);
@@ -92,6 +90,23 @@ export async function signInWithGoogleOAuth(): Promise<void> {
   if (error) throw error;
 }
 
+export async function requestPasswordReset(email: string): Promise<void> {
+  const client = getSupabase();
+  if (!client) throw new Error('Authentication service is not configured.');
+
+  const redirectTo = `${window.location.origin}/reset-password`;
+  const { error } = await client.auth.resetPasswordForEmail(email.trim().toLowerCase(), { redirectTo });
+  if (error) throw error;
+}
+
+export async function updatePassword(password: string): Promise<void> {
+  const client = getSupabase();
+  if (!client) throw new Error('Authentication service is not configured.');
+
+  const { error } = await client.auth.updateUser({ password });
+  if (error) throw error;
+}
+
 export async function signOutUser(): Promise<void> {
   const client = getSupabase();
 
@@ -99,10 +114,8 @@ export async function signOutUser(): Promise<void> {
 
   if (!client) return;
 
-  // Local scope signs out only this browser/session and reliably emits SIGNED_OUT.
   const { error } = await client.auth.signOut({ scope: 'local' });
   if (error) throw error;
 
-  // Make the UI deterministic even if a browser delays the auth event.
   localStorage.removeItem('supabase_fallback_user');
 }
