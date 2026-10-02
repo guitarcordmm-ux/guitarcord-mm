@@ -6,7 +6,7 @@ import { OnboardingPage } from '../components/OnboardingPage';
 import { AdminPanel, AdminLogin, AdminSongImport } from '../features/admin';
 import { ChordEditor } from '../features/editor';
 import { LoginPage, UserDashboard, type UnifiedUser } from '../features/auth';
-import { GuitarCordHome, GuitarCordLibrary, GuitarCordPlayer, GuitarCordProfile } from '../features/songs';
+import { GuitarCordHome, GuitarCordLibrary, GuitarCordArtists, GuitarCordArtistPage, GuitarCordPlayer, GuitarCordProfile } from '../features/songs';
 import { ChordLibrary } from '../features/chords';
 import type { Song } from '../types';
 import { fetchApprovedSong, fetchApprovedSongBySlug, fetchApprovedSongs } from '../services/songs/songService';
@@ -125,6 +125,8 @@ function Screens({ user }: { user: UnifiedUser | null }) {
         <Route path="/app" element={<Navigate to="/" replace />} />
         <Route path="/songs" element={<Navigate to="/" replace />} />
         <Route path="/library" element={<GuitarCordLibrary songs={songs} user={user} />} />
+        <Route path="/artists" element={<GuitarCordArtists />} />
+        <Route path="/artist/:artistSlug" element={<GuitarCordArtistPage />} />
         <Route path="/chords" element={<ChordLibrary />} />
         <Route path="/song/:artistSlug/:songSlug" element={<Player />} />
         <Route path="/chord/:chordId" element={<LegacyChordRedirect />} />
