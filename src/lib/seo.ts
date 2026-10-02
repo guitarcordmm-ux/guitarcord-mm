@@ -31,7 +31,7 @@ export function slugifyText(value: string): string {
 export function getEnglishSlug(value: string | null | undefined, existingSlug?: string | null): string {
   const cleanValue = typeof value === 'string' ? value : '';
   const candidate = typeof existingSlug === 'string' ? existingSlug.trim() : '';
-  if (candidate && /^[A-Za-z0-9-]+$/.test(candidate)) return candidate.toLowerCase();
+  if (candidate) return candidate;
 
   const exact = COMMON_MYANMAR_WORDS[cleanValue.trim()];
   if (exact) return exact;
