@@ -58,7 +58,7 @@ export function ChordLyricsLine({ line, transpose, className = '' }: Props) {
 
   return (
     <div
-      className={`flex w-full max-w-full flex-wrap items-end gap-x-1.5 gap-y-0.5 font-mono ${className}`}
+      className={`flex w-full max-w-full flex-wrap items-end gap-x-0 gap-y-0 font-mono ${className}`}
       role="text"
     >
       {transposedTokens.map((token, index) => {
@@ -76,7 +76,7 @@ export function ChordLyricsLine({ line, transpose, className = '' }: Props) {
             >
               {chordText || '\u00A0'}
             </span>
-            <span className="max-w-full whitespace-pre-wrap break-words text-[15px] leading-6 font-medium tracking-[0.01em] text-white">
+            <span className="max-w-full whitespace-pre-wrap break-words text-[15px] leading-6 font-medium tracking-[0.01em] text-white px-0">
               {lyricText}
             </span>
           </span>
