@@ -94,7 +94,9 @@ export async function requestPasswordReset(email: string): Promise<void> {
   const client = getSupabase();
   if (!client) throw new Error('Authentication service is not configured.');
 
-  const redirectTo = `${window.location.origin}/reset-password`;
+  // Use the configured Site URL as the recovery callback. This avoids
+  // failures when /reset-password is not yet in Supabase's redirect allowlist.
+  const redirectTo = window.location.origin;
   const { error } = await client.auth.resetPasswordForEmail(email.trim().toLowerCase(), { redirectTo });
   if (error) throw error;
 }
