@@ -215,7 +215,7 @@ export function GuitarCordPlayer({ song }: { song: Song }) {
       <main className="mx-auto w-full max-w-xl px-4 pt-3 pb-44">
         <div
           ref={scrollRef}
-          className="mt-2 max-h-[calc(100vh-195px)] min-h-[64vh] overflow-y-auto rounded-2xl bg-[#080809] border border-white/5 px-4 py-4 overscroll-contain"
+          className="mt-2 max-h-[calc(100vh-195px)] min-h-[64vh] overflow-y-auto rounded-2xl bg-[#080809] border border-white/5 px-4 pt-8 pb-4 overscroll-contain scroll-pt-6"
         >
           {rawLines.length ? (
             rawLines.map((line, i) =>
