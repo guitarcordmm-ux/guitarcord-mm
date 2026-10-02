@@ -9,7 +9,7 @@ import {
   UserCircle2,
   Heart,
   Play,
-  MoreHorizontal,
+  UsersRound,
   Settings,
   Download,
   CircleHelp,
@@ -282,6 +282,7 @@ export function GuitarCordHome({ songs }: Props) {
 }
 
 export function GuitarCordLibrary({ songs }: Props) {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [tab, setTab] = useState<'songs' | 'favorites' | 'downloads'>('songs');
   const [librarySongs, setLibrarySongs] = useState<Song[]>(songs);
@@ -318,12 +319,12 @@ export function GuitarCordLibrary({ songs }: Props) {
           <AppLogo compact />
           <button
             type="button"
-            onClick={() => (window.location.href = '/artists')}
+            onClick={() => navigate('/artists')}
             className="text-white/45"
             aria-label="Artists"
             title="Artists"
           >
-            <MoreHorizontal size={20} />
+            <UsersRound size={20} />
           </button>
         </div>
 
