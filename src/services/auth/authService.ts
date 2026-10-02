@@ -7,6 +7,8 @@ export {
   signInWithEmail,
   signUpWithEmail,
   signInWithGoogleOAuth,
+  requestPasswordReset,
+  updatePassword,
   signOutUser,
 } from '../../lib/supabaseAuth';
 
