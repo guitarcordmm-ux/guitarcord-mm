@@ -76,7 +76,7 @@ export function ChordLyricsLine({ line, transpose, className = '' }: Props) {
             >
               {chordText || '\u00A0'}
             </span>
-            <span className="max-w-full whitespace-pre-wrap break-words text-[18px] leading-8 font-medium tracking-[0.01em] text-white">
+            <span className="max-w-full whitespace-pre-wrap break-words text-[16.2px] leading-8 font-medium tracking-[0.01em] text-white">
               {lyricText}
             </span>
           </span>
