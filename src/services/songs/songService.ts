@@ -2,6 +2,8 @@ export {
   fetchApprovedSongs,
   fetchApprovedSong,
   fetchApprovedSongBySlug,
+  fetchApprovedArtists,
+  fetchApprovedArtistSongs,
   fetchHomeSongs,
   fetchUserSongs,
   fetchAdminSongs,
@@ -22,3 +24,4 @@ export type { User as UnifiedUser } from '../../types';
 
 export { normalizeSearchText, searchSongs } from './songSearch';
 export type { SongSearchResult } from './songSearch';
+export type { ArtistSummary } from './songRepository';
