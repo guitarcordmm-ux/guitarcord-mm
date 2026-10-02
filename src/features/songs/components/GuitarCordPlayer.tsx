@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Minus, Plus, Music2, Pause, Play } from 'lucide-react';
 import type { Song } from '../../../types';
 import { ChordLyricsLine } from './ChordLyricsLine';
+import { getArtistPath } from '../../../lib/seo';
 
 type ParsedLine = {
   lyrics: string;
@@ -199,7 +200,14 @@ export function GuitarCordPlayer({ song }: { song: Song }) {
           </button>
           <div className="min-w-0 flex-1">
             <div className="text-sm font-bold truncate">{song.songTitle}</div>
-            <div className="text-[11px] text-white/45 truncate">{song.artist}</div>
+            <button
+              type="button"
+              onClick={() => navigate(getArtistPath(song.artist, song.artistSlug))}
+              className="block max-w-full truncate text-left text-[11px] text-white/45 hover:text-[#FFD600] active:text-[#FFD600]"
+              title={'View ' + song.artist + ' songs'}
+            >
+              {song.artist}
+            </button>
           </div>
         </div>
       </header>
