@@ -197,11 +197,36 @@ export async function fetchHomeSongs(
 export async function fetchApprovedSong(id: string): Promise<Song | null> {
   const cleanId = id.trim();
   if (!cleanId) return null;
-  const response = await fetch(`/api/songs?id=${encodeURIComponent(cleanId)}`, { headers: { Accept: 'application/json' }, cache: 'default' });
+
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('songs')
+        .select('id,song_title,title,artist,composer,album,genre,image_url,tutorial_url,lyrics,tags,status,is_watermarked,created_at,updated_at,artist_slug,song_slug,language,difficulty,play_count,search_aliases,user_id')
+        .eq('status', 'approved')
+        .eq('id', cleanId)
+        .maybeSingle();
+
+      if (!error && data) return mapRowToSong(data);
+      if (error) console.warn('Supabase song ID lookup failed; using API fallback:', error);
+    } catch (error) {
+      console.warn('Supabase song ID lookup failed; using API fallback:', error);
+    }
+  }
+
+  const response = await fetch('/api/songs?id=' + encodeURIComponent(cleanId), {
+    headers: { Accept: 'application/json' },
+    cache: 'default',
+  });
   if (response.status === 404) return null;
-  if (!response.ok) throw new Error(`Song API request failed (${response.status})`);
+  if (!response.ok) throw new Error('Song API request failed (' + response.status + ')');
   const payload: unknown = await response.json();
-  const rows = Array.isArray(payload) ? payload : isRecord(payload) && Array.isArray(payload.songs) ? payload.songs : [];
+  const rows = Array.isArray(payload)
+    ? payload
+    : isRecord(payload) && Array.isArray(payload.songs)
+      ? payload.songs
+      : [];
   const row = rows.find(isSongRow);
   return row ? mapRowToSong(row) : null;
 }
