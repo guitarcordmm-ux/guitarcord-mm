@@ -16,6 +16,13 @@ export function ResetPasswordPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    const hashError = hashParams.get('error_code');
+
+    if (hashError === 'otp_expired' || hashParams.get('error') === 'access_denied') {
+      setError('This password reset link is invalid or has expired. Go back to Login and request a new reset link.');
+    }
+
     const client = getSupabase();
     if (!client) {
       setError('Authentication service is not configured.');
@@ -90,7 +97,23 @@ export function ResetPasswordPage() {
         )}
 
         {!ready ? (
-          <p className="text-sm text-white/60">Open the password reset link from your email to continue.</p>
+          <div className="space-y-4">
+            <p className="text-sm text-white/60">
+              {window.location.hash.includes('otp_expired')
+                ? 'Please request a new password reset email.'
+                : 'Open the password reset link from your email to continue.'}
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                window.history.replaceState({}, document.title, window.location.pathname);
+                navigate('/login', { replace: true });
+              }}
+              className="w-full bg-white/10 hover:bg-white/15 text-white font-semibold py-3 rounded-xl"
+            >
+              Back to Login
+            </button>
+          </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="relative">
