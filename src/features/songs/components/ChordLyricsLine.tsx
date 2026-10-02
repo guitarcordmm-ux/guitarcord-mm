@@ -58,7 +58,7 @@ export function ChordLyricsLine({ line, transpose, className = '' }: Props) {
 
   return (
     <div
-      className={`flex w-full max-w-full flex-wrap items-end gap-x-2 gap-y-2 font-mono ${className}`}
+      className={`flex w-full max-w-full flex-wrap items-end gap-x-1.5 gap-y-0.5 font-mono ${className}`}
       role="text"
     >
       {transposedTokens.map((token, index) => {
@@ -71,12 +71,12 @@ export function ChordLyricsLine({ line, transpose, className = '' }: Props) {
             className="inline-flex min-w-0 max-w-full flex-col items-start align-bottom"
           >
             <span
-              className={`min-h-7 text-[15px] leading-7 font-black whitespace-nowrap ${token.chord ? 'text-[#FFD600] drop-shadow-[0_0_6px_rgba(255,214,0,.18)]' : 'text-transparent'}`}
+              className={`min-h-5 text-[13px] leading-5 font-black whitespace-nowrap ${token.chord ? 'text-[#FFD600] drop-shadow-[0_0_6px_rgba(255,214,0,.18)]' : 'text-transparent'}`}
               aria-hidden={!token.chord}
             >
               {chordText || '\u00A0'}
             </span>
-            <span className="max-w-full whitespace-pre-wrap break-words text-[16.2px] leading-8 font-medium tracking-[0.01em] text-white">
+            <span className="max-w-full whitespace-pre-wrap break-words text-[15px] leading-6 font-medium tracking-[0.01em] text-white">
               {lyricText}
             </span>
           </span>
