@@ -81,6 +81,170 @@ export async function fetchApprovedSongs(limit = 50, offset = 0): Promise<Song[]
   }
 }
 
+
+export type ArtistSummary = {
+  slug: string;
+  name: string;
+  imageURL: string;
+  genre: string;
+  songCount: number;
+};
+
+type ArtistListRow = {
+  artist?: string | null;
+  artist_slug?: string | null;
+  image_url?: string | null;
+  genre?: string | null;
+};
+
+function isArtistListRow(value: unknown): value is ArtistListRow {
+  return isRecord(value) && (
+    value.artist === undefined || value.artist === null || typeof value.artist === 'string'
+  ) && (
+    value.artist_slug === undefined || value.artist_slug === null || typeof value.artist_slug === 'string'
+  );
+}
+
+function groupArtistRows(rows: unknown[]): ArtistSummary[] {
+  const grouped = new Map<string, ArtistSummary>();
+
+  for (const value of rows) {
+    if (!isArtistListRow(value)) continue;
+    const name = typeof value.artist === 'string' ? value.artist.trim() : '';
+    const slug = typeof value.artist_slug === 'string' ? value.artist_slug.trim() : '';
+    if (!name || !slug) continue;
+
+    const existing = grouped.get(slug);
+    if (existing) {
+      existing.songCount += 1;
+      if (!existing.imageURL && value.image_url) existing.imageURL = value.image_url;
+      if (!existing.genre && value.genre) existing.genre = value.genre;
+      continue;
+    }
+
+    grouped.set(slug, {
+      slug,
+      name,
+      imageURL: value.image_url || '',
+      genre: value.genre || '',
+      songCount: 1,
+    });
+  }
+
+  return [...grouped.values()].sort((a, b) =>
+    a.name.localeCompare(b.name, 'my-MM'),
+  );
+}
+
+export async function fetchApprovedArtists(): Promise<ArtistSummary[]> {
+  const supabase = getSupabase();
+
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('songs')
+        .select('artist,artist_slug,image_url,genre')
+        .eq('status', 'approved')
+        .order('artist', { ascending: true });
+
+      if (!error) {
+        return groupArtistRows(Array.isArray(data) ? data : []);
+      }
+
+      console.warn('Supabase artist list failed; using API fallback:', error);
+    } catch (error) {
+      console.warn('Supabase artist list failed; using API fallback:', error);
+    }
+  }
+
+  try {
+    const response = await fetch('/api/songs?offset=0&limit=50', {
+      headers: { Accept: 'application/json' },
+      cache: 'default',
+    });
+    if (!response.ok) throw new Error('Artist list API request failed (' + response.status + ')');
+
+    const payload: unknown = await response.json();
+    const rows = Array.isArray(payload)
+      ? payload
+      : isRecord(payload) && Array.isArray(payload.songs)
+        ? payload.songs
+        : [];
+
+    return groupArtistRows(rows);
+  } catch (error) {
+    console.warn('Artist list API fallback failed:', error);
+    return [];
+  }
+}
+
+export async function fetchApprovedArtistSongs(artistSlug: string, limit = 100): Promise<Song[]> {
+  const cleanArtistSlug = artistSlug.trim();
+  if (!cleanArtistSlug) return [];
+
+  const safeLimit = Math.min(Math.max(limit, 1), 100);
+  const selectColumns = 'id,song_title,title,artist,composer,album,genre,image_url,tutorial_url,lyrics,tags,status,is_watermarked,created_at,updated_at,artist_slug,song_slug,language,difficulty,play_count,search_aliases,user_id';
+  const supabase = getSupabase();
+
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('songs')
+        .select(selectColumns)
+        .eq('status', 'approved')
+        .eq('artist_slug', cleanArtistSlug)
+        .order('created_at', { ascending: false })
+        .limit(safeLimit);
+
+      if (!error) {
+        return (Array.isArray(data) ? data : []).filter(isSongRow).map(mapRowToSong);
+      }
+
+      console.warn('Supabase artist songs lookup failed; using API fallback:', error);
+    } catch (error) {
+      console.warn('Supabase artist songs lookup failed; using API fallback:', error);
+    }
+  }
+
+  try {
+    const params = new URLSearchParams({
+      artist_slug: cleanArtistSlug,
+      limit: String(safeLimit),
+    });
+    const response = await fetch('/api/songs?' + params.toString(), {
+      headers: { Accept: 'application/json' },
+      cache: 'default',
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) return [];
+      throw new Error('Artist songs API request failed (' + response.status + ')');
+    }
+
+    const payload: unknown = await response.json();
+    const rows = Array.isArray(payload)
+      ? payload
+      : isRecord(payload) && Array.isArray(payload.songs)
+        ? payload.songs
+        : [];
+
+    const matches = rows
+      .filter(isSongRow)
+      .map(mapRowToSong)
+      .filter(song => (song.artistSlug || '').toLowerCase() === cleanArtistSlug.toLowerCase());
+
+    return matches;
+  } catch (error) {
+    const cached = readPublicSongsCache();
+    if (cached?.length) {
+      return cached.filter(song =>
+        (song.artistSlug || '').toLowerCase() === cleanArtistSlug.toLowerCase()
+      );
+    }
+    throw error;
+  }
+}
+
 const SONG_DETAIL_CACHE_TTL_MS = 5 * 60 * 1000;
 const songDetailCache = new Map<string, { savedAt: number; song: Song | null }>();
 
