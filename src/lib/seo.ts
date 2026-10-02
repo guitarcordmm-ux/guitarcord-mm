@@ -42,6 +42,20 @@ export function getEnglishSlug(value: string | null | undefined, existingSlug?: 
     .replace(/[^A-Za-z0-9]+/g, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'song';
 }
 
+export function getArtistPath(artist: string): string {
+  const artistSlug = getEnglishSlug(artist) || 'artist';
+  return '/artist/' + encodeURIComponent(artistSlug);
+}
+
+export function getArtistUrl(artist: {
+  slug?: string | null;
+  name?: string | null;
+}): string {
+  const origin = (import.meta.env.VITE_SITE_URL as string | undefined)?.trim() || DEFAULT_SITE_URL;
+  const artistSlug = getEnglishSlug(artist.name || '', artist.slug) || 'artist';
+  return origin.replace(/\/$/, '') + '/artist/' + encodeURIComponent(artistSlug);
+}
+
 export function getSongPath(song: {
   artist?: string | null;
   songTitle?: string | null;
@@ -49,7 +63,7 @@ export function getSongPath(song: {
 }): string {
   const artistSlug = getEnglishSlug(song.artist) || 'artist';
   const songSlug = getEnglishSlug(song.songTitle, song.songSlug) || 'song';
-  return `/song/${encodeURIComponent(artistSlug)}/${encodeURIComponent(songSlug)}`;
+  return '/song/' + encodeURIComponent(artistSlug) + '/' + encodeURIComponent(songSlug);
 }
 
 export function getSongUrl(song: {
@@ -58,5 +72,5 @@ export function getSongUrl(song: {
   songSlug?: string | null;
 }): string {
   const origin = (import.meta.env.VITE_SITE_URL as string | undefined)?.trim() || DEFAULT_SITE_URL;
-  return `${origin.replace(/\/$/, '')}${getSongPath(song)}`;
+  return origin.replace(/\/$/, '') + getSongPath(song);
 }
