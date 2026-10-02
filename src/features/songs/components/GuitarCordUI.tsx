@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import type { Song, User } from '../../../types';
 import { fetchApprovedSongs, type SongSearchResult } from '../../../services/songs/songService';
-import { getSongPath } from '../../../lib/seo';
+import { getArtistPath, getSongPath } from '../../../lib/seo';
 import { useSongSearch } from '../hooks/useSongSearch';
 import { useHomeCategories, type HomeCategory } from '../hooks/useHomeCategories';
 
@@ -84,35 +84,48 @@ function SongRow({
   const navigate = useNavigate();
 
   return (
-    <button
-      onClick={() => navigate(`${getSongPath(song)}?id=${encodeURIComponent(song.id)}`)}
-      className="w-full flex items-center gap-3 py-3 text-left active:scale-[0.99] transition-transform"
-    >
-      <div className="w-11 h-11 rounded-xl bg-white/10 overflow-hidden flex-shrink-0 flex items-center justify-center">
-        {song.imageURL ? (
-          <img src={song.imageURL} alt="" className="w-full h-full object-cover" />
+    <div className="w-full flex items-center gap-3 py-3">
+      <button
+        type="button"
+        onClick={() => navigate(getSongPath(song) + '?id=' + encodeURIComponent(song.id))}
+        className="flex min-w-0 flex-1 items-center gap-3 text-left active:scale-[0.99] transition-transform"
+      >
+        <div className="w-11 h-11 rounded-xl bg-white/10 overflow-hidden flex-shrink-0 flex items-center justify-center">
+          {song.imageURL ? (
+            <img src={song.imageURL} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <Guitar className="text-[#FFD600]" size={18} />
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="font-medium truncate text-[14px]">{song.songTitle}</div>
+          {lyricMatch && (
+            <div className="mt-0.5 text-[10px] leading-4 text-white/30 truncate">
+              “{lyricMatch}”
+            </div>
+          )}
+        </div>
+      </button>
+
+      <div className="flex min-w-0 items-center gap-2">
+        <button
+          type="button"
+          onClick={() => navigate(getArtistPath(song.artist))}
+          className="max-w-[42vw] truncate text-left text-[11px] text-white/45 hover:text-[#FFD600] active:text-[#FFD600]"
+          title={'View ' + song.artist + ' songs'}
+        >
+          {song.artist}
+        </button>
+
+        {showHeart ? (
+          <Heart size={17} className="flex-shrink-0 text-[#FFD600] fill-[#FFD600]" />
         ) : (
-          <Guitar className="text-[#FFD600]" size={18} />
+          <Play size={16} className="flex-shrink-0 text-[#FFD600] fill-[#FFD600]" />
         )}
       </div>
-      <div className="min-w-0 flex-1">
-        <div className="font-medium truncate text-[14px]">{song.songTitle}</div>
-        <div className="text-[11px] text-white/45 truncate">{song.artist}</div>
-        {lyricMatch && (
-          <div className="mt-0.5 text-[10px] leading-4 text-white/30 truncate">
-            “{lyricMatch}”
-          </div>
-        )}
-      </div>
-      {showHeart ? (
-        <Heart size={17} className="text-[#FFD600] fill-[#FFD600]" />
-      ) : (
-        <Play size={16} className="text-[#FFD600] fill-[#FFD600]" />
-      )}
-    </button>
+    </div>
   );
 }
-
 function Shell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-black text-white selection:bg-[#FFD600]/30">
@@ -231,9 +244,14 @@ export function GuitarCordHome({ songs }: Props) {
                 </p>
               )}
             </div>
-            <button onClick={() => navigate('/library')} className="text-xs text-white/45">
-              Browse all
-            </button>
+            <div className="flex items-center gap-3">
+              <button onClick={() => navigate('/artists')} className="text-xs text-[#FFD600]/80">
+                Artists
+              </button>
+              <button onClick={() => navigate('/library')} className="text-xs text-white/45">
+                Browse all
+              </button>
+            </div>
           </div>
 
           <div className="divide-y divide-white/10">
@@ -298,7 +316,13 @@ export function GuitarCordLibrary({ songs }: Props) {
       <header className="px-5 pt-safe pt-5">
         <div className="flex items-center justify-between">
           <AppLogo compact />
-          <button className="text-white/45" aria-label="More options">
+          <button
+            type="button"
+            onClick={() => (window.location.href = '/artists')}
+            className="text-white/45"
+            aria-label="Artists"
+            title="Artists"
+          >
             <MoreHorizontal size={20} />
           </button>
         </div>
