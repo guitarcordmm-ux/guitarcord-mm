@@ -95,6 +95,8 @@ function LegacyChordRedirect() {
 }
 
 function Screens({ user }: { user: UnifiedUser | null }) {
+  const recoveryError = new URLSearchParams(window.location.hash.replace(/^#/, '')).get('error_code');
+  const recoveryMode = window.location.hash.includes('type=recovery') || Boolean(recoveryError);
   const [songs, setSongs] = useState<Song[]>([]);
   const [songsError, setSongsError] = useState('');
 
@@ -121,7 +123,14 @@ function Screens({ user }: { user: UnifiedUser | null }) {
       <SupabaseBanner />
       {songsError && <div className="fixed top-0 left-0 right-0 z-[60] bg-red-950/95 border-b border-red-400/20 px-4 py-2 text-center text-xs text-red-200">Supabase song data could not be loaded: {songsError}</div>}
       <Routes>
-        <Route path="/" element={<GuitarCordHome songs={songs} user={user} />} />
+        <Route
+          path="/"
+          element={
+            recoveryMode
+              ? <ResetPasswordPage />
+              : <GuitarCordHome songs={songs} user={user} />
+          }
+        />
         <Route path="/app" element={<Navigate to="/" replace />} />
         <Route path="/songs" element={<Navigate to="/" replace />} />
         <Route path="/library" element={<GuitarCordLibrary songs={songs} user={user} />} />
