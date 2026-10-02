@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BrowserRouter, Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { SupabaseBanner } from '../components/SupabaseBanner';
 import { OnboardingPage } from '../components/OnboardingPage';
@@ -16,6 +16,8 @@ import { isUserAdmin, subscribeToAuthChanges } from '../services/auth/authServic
 
 function Player() {
   const { artistSlug = '', songSlug = '' } = useParams();
+  const [searchParams] = useSearchParams();
+  const songId = searchParams.get('id')?.trim() || '';
   const [song, setSong] = useState<Song | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -25,7 +27,11 @@ function Player() {
     setLoading(true);
     setError('');
 
-    fetchApprovedSongBySlug(artistSlug, songSlug)
+    const loadSong = songId
+      ? fetchApprovedSong(songId)
+      : fetchApprovedSongBySlug(artistSlug, songSlug);
+
+    loadSong
       .then(data => {
         if (!active) return;
         if (!data) setError('Song not found.');
@@ -40,7 +46,7 @@ function Player() {
       });
 
     return () => { active = false; };
-  }, [artistSlug, songSlug]);
+  }, [artistSlug, songSlug, songId]);
 
   if (loading) return <div className="min-h-screen bg-black text-white grid place-items-center">Loading song…</div>;
 
