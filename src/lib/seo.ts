@@ -28,32 +28,33 @@ export function slugifyText(value: string): string {
     .replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '');
 }
 
-export function getEnglishSlug(value: string, existingSlug?: string | null): string {
-  const candidate = (existingSlug || '').trim();
+export function getEnglishSlug(value: string | null | undefined, existingSlug?: string | null): string {
+  const cleanValue = typeof value === 'string' ? value : '';
+  const candidate = typeof existingSlug === 'string' ? existingSlug.trim() : '';
   if (candidate && /^[A-Za-z0-9-]+$/.test(candidate)) return candidate.toLowerCase();
 
-  const exact = COMMON_MYANMAR_WORDS[value.trim()];
+  const exact = COMMON_MYANMAR_WORDS[cleanValue.trim()];
   if (exact) return exact;
 
   let output = '';
-  for (const char of value.normalize('NFKC')) output += MYANMAR_CHAR_MAP[char] ?? char;
+  for (const char of cleanValue.normalize('NFKC')) output += MYANMAR_CHAR_MAP[char] ?? char;
   return output.normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
     .replace(/[^A-Za-z0-9]+/g, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'song';
 }
 
 export function getSongPath(song: {
-  artist: string;
-  songTitle: string;
+  artist?: string | null;
+  songTitle?: string | null;
   songSlug?: string | null;
 }): string {
-  const artistSlug = getEnglishSlug(song.artist);
-  const songSlug = getEnglishSlug(song.songTitle, song.songSlug);
+  const artistSlug = getEnglishSlug(song.artist) || 'artist';
+  const songSlug = getEnglishSlug(song.songTitle, song.songSlug) || 'song';
   return `/song/${encodeURIComponent(artistSlug)}/${encodeURIComponent(songSlug)}`;
 }
 
 export function getSongUrl(song: {
-  artist: string;
-  songTitle: string;
+  artist?: string | null;
+  songTitle?: string | null;
   songSlug?: string | null;
 }): string {
   const origin = (import.meta.env.VITE_SITE_URL as string | undefined)?.trim() || DEFAULT_SITE_URL;
