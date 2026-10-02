@@ -25,6 +25,7 @@ export async function getCurrentUser(): Promise<UnifiedUser | null> {
 
 export function subscribeToAuthChanges(callback: (user: UnifiedUser | null) => void) {
   const client = getSupabase();
+
   if (!client) {
     try {
       const raw = localStorage.getItem('supabase_fallback_user');
@@ -36,12 +37,14 @@ export function subscribeToAuthChanges(callback: (user: UnifiedUser | null) => v
     return () => {};
   }
 
-  client.auth.getUser().then(({ data: { user } }) => {
-    callback(formatSupabaseUser(user));
-  });
-
-  const { data: { subscription } } = client.auth.onAuthStateChange((_event, session) => {
-    callback(formatSupabaseUser(session?.user || null));
+  // Subscribe first so INITIAL_SESSION/SIGNED_OUT events cannot be
+  // overwritten by a stale getUser() request during sign-out.
+  const { data: { subscription } } = client.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_OUT' || !session) {
+      callback(null);
+      return;
+    }
+    callback(formatSupabaseUser(session.user));
   });
 
   return () => subscription.unsubscribe();
@@ -91,6 +94,15 @@ export async function signInWithGoogleOAuth(): Promise<void> {
 
 export async function signOutUser(): Promise<void> {
   const client = getSupabase();
+
   localStorage.removeItem('supabase_fallback_user');
-  if (client) await client.auth.signOut();
+
+  if (!client) return;
+
+  // Local scope signs out only this browser/session and reliably emits SIGNED_OUT.
+  const { error } = await client.auth.signOut({ scope: 'local' });
+  if (error) throw error;
+
+  // Make the UI deterministic even if a browser delays the auth event.
+  localStorage.removeItem('supabase_fallback_user');
 }
