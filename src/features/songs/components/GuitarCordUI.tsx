@@ -22,6 +22,7 @@ import type { Song, User } from '../../../types';
 import { fetchApprovedSongs, type SongSearchResult } from '../../../services/songs/songService';
 import { getArtistPath, getSongPath } from '../../../lib/seo';
 import { useSongSearch } from '../hooks/useSongSearch';
+import { signOutUser } from '../../../services/auth/authService';
 import { useHomeCategories, type HomeCategory } from '../hooks/useHomeCategories';
 
 type Props = { songs: Song[]; user?: User | null };
@@ -416,6 +417,35 @@ export function GuitarCordProfile({ user }: { user?: User | null }) {
       </header>
 
       <main className="px-5 pt-6">
+        {user ? (
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                await signOutUser();
+                navigate('/');
+              } catch (error) {
+                console.error('Logout failed:', error);
+              }
+            }}
+            className="w-full mb-4 flex items-center gap-3 rounded-2xl border border-red-400/10 bg-red-500/5 px-4 py-4 text-sm"
+          >
+            <UserCircle2 size={18} className="text-red-300" />
+            <span className="flex-1 text-left text-red-200">Logout</span>
+            <span className="text-red-200/40">→</span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => navigate('/login')}
+            className="w-full mb-4 flex items-center gap-3 rounded-2xl border border-[#FFD600]/20 bg-[#FFD600]/5 px-4 py-4 text-sm"
+          >
+            <UserCircle2 size={18} className="text-[#FFD600]" />
+            <span className="flex-1 text-left text-[#FFD600]">Login</span>
+            <span className="text-[#FFD600]/50">→</span>
+          </button>
+        )}
+
         {items.map(([Icon, label]) => (
           <button key={label} className="w-full flex items-center gap-3 py-4 border-b border-white/10 text-sm">
             <Icon size={18} className="text-white/60" />
