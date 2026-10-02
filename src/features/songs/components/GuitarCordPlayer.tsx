@@ -212,23 +212,10 @@ export function GuitarCordPlayer({ song }: { song: Song }) {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-xl px-4 pt-5 pb-64">
-        <section className="rounded-2xl border border-white/10 bg-[#111113] px-4 py-3">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <div className="text-[10px] uppercase tracking-[0.16em] text-white/35">Original Key</div>
-              <div className="mt-1 text-sm font-semibold">{baseKey || 'Not detected'}</div>
-            </div>
-            <div className="text-right">
-              <div className="text-[10px] uppercase tracking-[0.16em] text-white/35">Current Key</div>
-              <div className="mt-1 text-lg font-black text-[#FFD600]">{currentKey}</div>
-            </div>
-          </div>
-        </section>
-
+      <main className="mx-auto w-full max-w-xl px-4 pt-3 pb-44">
         <div
           ref={scrollRef}
-          className="mt-3 max-h-[calc(100vh-255px)] min-h-[58vh] overflow-y-auto rounded-2xl bg-[#080809] border border-white/5 px-4 py-6 overscroll-contain"
+          className="mt-2 max-h-[calc(100vh-195px)] min-h-[64vh] overflow-y-auto rounded-2xl bg-[#080809] border border-white/5 px-4 py-4 overscroll-contain"
         >
           {rawLines.length ? (
             rawLines.map((line, i) =>
@@ -252,13 +239,13 @@ export function GuitarCordPlayer({ song }: { song: Song }) {
       </main>
 
       <div className="fixed bottom-0 inset-x-0 z-40 border-t border-white/10 bg-black/95 backdrop-blur-xl pb-safe">
-        <div className="mx-auto max-w-xl px-4 pt-3 pb-3">
+        <div className="mx-auto max-w-xl px-3 pt-2 pb-2">
           <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
             <button
               type="button"
               onClick={decreaseKey}
               aria-label="Lower key"
-              className="min-h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center gap-2 text-sm font-bold active:scale-95"
+              className="min-h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center gap-1.5 text-xs font-bold active:scale-95"
             >
               <Minus size={17} />
               Key
@@ -267,11 +254,11 @@ export function GuitarCordPlayer({ song }: { song: Song }) {
             <button
               type="button"
               onClick={resetTranspose}
-              className="min-w-16 min-h-12 rounded-2xl bg-[#FFD600] text-black px-3 active:scale-95"
+              className="min-w-14 min-h-10 rounded-xl bg-[#FFD600] text-black px-2.5 active:scale-95"
               aria-label="Reset to original key"
             >
               <div className="text-[9px] uppercase font-black tracking-[0.12em]">Key</div>
-              <div className="text-lg font-black leading-none mt-0.5">{currentKey}</div>
+              <div className="text-base font-black leading-none mt-0.5">{currentKey}</div>
             </button>
 
             <button
@@ -288,15 +275,15 @@ export function GuitarCordPlayer({ song }: { song: Song }) {
           <div className="mt-3 flex items-center gap-3">
             <button
               onClick={toggleAutoScroll}
-              className="w-14 h-14 flex-shrink-0 rounded-full bg-[#FFD600] text-black flex items-center justify-center active:scale-95 transition-transform shadow-[0_8px_30px_rgba(255,214,0,.14)]"
+              className="w-11 h-11 flex-shrink-0 rounded-full bg-[#FFD600] text-black flex items-center justify-center active:scale-95 transition-transform shadow-[0_8px_30px_rgba(255,214,0,.14)]"
               aria-label={playing ? 'Pause auto scroll' : 'Start auto scroll'}
               title={playing ? 'Pause auto scroll' : 'Start auto scroll'}
             >
-              {playing ? <Pause size={22} /> : <Play size={22} className="fill-black" />}
+              {playing ? <Pause size={18} /> : <Play size={18} className="fill-black" />}
             </button>
 
             <div className="min-w-0 flex-1">
-              <div className="flex items-center justify-between text-[10px] text-white/45">
+              <div className="flex items-center justify-between text-[9px] text-white/45">
                 <span>{playing ? 'Auto Scroll On' : 'Auto Scroll'}</span>
                 <span>{speed.toFixed(1)}×</span>
               </div>
@@ -307,7 +294,7 @@ export function GuitarCordPlayer({ song }: { song: Song }) {
                 step="0.1"
                 value={speed}
                 onChange={e => setSpeed(Number(e.target.value))}
-                className="mt-1 w-full accent-yellow-400"
+                className="mt-0.5 w-full h-2 accent-yellow-400"
                 aria-label="Scroll speed"
               />
             </div>
@@ -317,7 +304,7 @@ export function GuitarCordPlayer({ song }: { song: Song }) {
             </div>
           </div>
 
-          <div className="mt-2 text-center text-[9px] text-white/25">
+          <div className="mt-1 text-center text-[8px] text-white/20">
             {playing ? 'Screen stays awake while Auto Scroll is running when supported.' : 'Tap ▶ to start hands-free scrolling.'}
           </div>
         </div>
