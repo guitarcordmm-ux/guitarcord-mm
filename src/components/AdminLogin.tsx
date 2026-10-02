@@ -16,7 +16,7 @@ export function AdminLogin() {
       navigate('/admin-panel');
     } catch (error: unknown) {
       console.error('Login error:', error);
-      setError(error instanceof Error ? error.message : 'Authentication failed' || 'Login failed');
+      setError(error instanceof Error ? error.message : 'Login failed');
     }
   };
 
