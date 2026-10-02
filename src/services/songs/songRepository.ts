@@ -25,7 +25,7 @@ export function mapRowToSong(row: unknown): Song {
     artistSlug: row.artist_slug || getEnglishSlug(row.artist || '') || undefined,
     songSlug: row.song_slug || getEnglishSlug(row.song_title || row.title || '') || undefined,
     language: row.language || 'my', difficulty: row.difficulty || 'intermediate', playCount: row.play_count ?? 0,
-    createdAt: row.created_at, updatedAt: row.updated_at, userId: row.user_id,
+    createdAt: row.created_at ?? undefined, updatedAt: row.updated_at ?? undefined, userId: row.user_id ?? undefined,
   };
 }
 
