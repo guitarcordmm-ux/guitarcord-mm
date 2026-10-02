@@ -85,7 +85,7 @@ function SongRow({
 
   return (
     <button
-      onClick={() => navigate(getSongPath(song.artist, song.songTitle))}
+      onClick={() => navigate(getSongPath(song))}
       className="w-full flex items-center gap-3 py-3 text-left active:scale-[0.99] transition-transform"
     >
       <div className="w-11 h-11 rounded-xl bg-white/10 overflow-hidden flex-shrink-0 flex items-center justify-center">
