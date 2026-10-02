@@ -5,7 +5,7 @@ import { SupabaseBanner } from '../components/SupabaseBanner';
 import { OnboardingPage } from '../components/OnboardingPage';
 import { AdminPanel, AdminLogin, AdminSongImport } from '../features/admin';
 import { ChordEditor } from '../features/editor';
-import { LoginPage, UserDashboard, type UnifiedUser } from '../features/auth';
+import { LoginPage, ResetPasswordPage, UserDashboard, type UnifiedUser } from '../features/auth';
 import { GuitarCordHome, GuitarCordLibrary, GuitarCordArtists, GuitarCordArtistPage, GuitarCordPlayer, GuitarCordProfile } from '../features/songs';
 import { ChordLibrary } from '../features/chords';
 import type { Song } from '../types';
@@ -134,6 +134,7 @@ function Screens({ user }: { user: UnifiedUser | null }) {
         <Route path="/learn" element={<OnboardingPage />} />
         <Route path="/create" element={user && !user.isAnonymous ? <ChordEditor onClose={() => window.history.back()} user={user} isAdmin={admin} /> : <Navigate to="/login" replace />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/dashboard" element={user && !user.isAnonymous ? <UserDashboard userId={user.uid} /> : <Navigate to="/" replace />} />
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/admin-panel" element={<AdminPanel />} />
