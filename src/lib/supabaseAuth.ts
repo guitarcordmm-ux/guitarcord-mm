@@ -1,7 +1,7 @@
 import { getSupabase, formatSupabaseUser, UnifiedUser } from './supabase';
 
-const ADMIN_USERNAME = import.meta.env.VITE_ADMIN_USERNAME?.trim() || '';
-const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL?.trim().toLowerCase() || '';
+export const ADMIN_USERNAME = import.meta.env.VITE_ADMIN_USERNAME?.trim() || '';
+export const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL?.trim().toLowerCase() || '';
 
 export function isUserAdmin(user: UnifiedUser | null): boolean {
   return user?.role === 'admin';
