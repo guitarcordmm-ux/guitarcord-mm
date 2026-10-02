@@ -220,13 +220,13 @@ export function GuitarCordPlayer({ song }: { song: Song }) {
           {rawLines.length ? (
             rawLines.map((line, i) =>
               line.trim() === '' ? (
-                <div key={i} className="h-5" aria-hidden="true" />
+                <div key={i} className="h-2" aria-hidden="true" />
               ) : (
                 <ChordLyricsLine
                   key={i}
                   line={line}
                   transpose={transposeForDisplay}
-                  className="mb-5 last:mb-0"
+                  className="mb-2 last:mb-0"
                 />
               ),
             )
