@@ -22,7 +22,7 @@ import type { Song, User } from '../../../types';
 import { fetchApprovedSongs, type SongSearchResult } from '../../../services/songs/songService';
 import { getArtistPath, getSongPath } from '../../../lib/seo';
 import { useSongSearch } from '../hooks/useSongSearch';
-import { signOutUser } from '../../../services/auth/authService';
+import { isUserAdmin, signOutUser } from '../../../services/auth/authService';
 import { useHomeCategories, type HomeCategory } from '../hooks/useHomeCategories';
 
 type Props = { songs: Song[]; user?: User | null };
@@ -453,6 +453,23 @@ export function GuitarCordProfile({ user }: { user?: User | null }) {
             <span className="text-white/30">›</span>
           </button>
         ))}
+
+        {user && !user.isAnonymous && isUserAdmin(user) && (
+          <button
+            type="button"
+            onClick={() => navigate('/admin-panel')}
+            className="w-full flex items-center gap-3 py-4 border-b border-white/10 text-sm"
+          >
+            <span className="text-[#FFD600] text-lg leading-none">🛡</span>
+            <span className="flex-1 text-left">
+              <span className="block font-semibold text-[#FFD600]">Admin Dashboard</span>
+              <span className="block text-[10px] text-white/35 mt-0.5">
+                Manage songs, approvals and submissions
+              </span>
+            </span>
+            <span className="text-[#FFD600]/50">›</span>
+          </button>
+        )}
         {user && !user.isAnonymous && (
           <button
             onClick={() => navigate('/create')}
