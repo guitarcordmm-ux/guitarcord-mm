@@ -42,7 +42,20 @@ export function subscribeToAuthChanges(callback: (user: UnifiedUser | null) => v
       callback(null);
       return;
     }
-    callback(formatSupabaseUser(session.user));
+
+    // Keep the auth event responsive, then refresh the authenticated user
+    // from Supabase so app_metadata.role is always read from the server.
+    const sessionUser = formatSupabaseUser(session.user);
+    if (sessionUser) callback(sessionUser);
+
+    window.setTimeout(async () => {
+      try {
+        const { data: { user } } = await client.auth.getUser();
+        callback(formatSupabaseUser(user));
+      } catch (error) {
+        console.error('Could not refresh authenticated user:', error);
+      }
+    }, 0);
   });
 
   return () => subscription.unsubscribe();
