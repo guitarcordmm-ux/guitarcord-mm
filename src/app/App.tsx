@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes, useNavigate, useParams, useSear
 import { Helmet } from 'react-helmet-async';
 import { SupabaseBanner } from '../components/SupabaseBanner';
 import { OnboardingPage } from '../components/OnboardingPage';
+import { SettingsPage } from '../components/SettingsPage';
 import { AdminPanel, AdminLogin, AdminSongImport } from '../features/admin';
 import { ChordEditor } from '../features/editor';
 import { LoginPage, ResetPasswordPage, UserDashboard, type UnifiedUser } from '../features/auth';
@@ -27,10 +28,7 @@ function Player() {
     setLoading(true);
     setError('');
 
-    const loadSong = songId
-      ? fetchApprovedSong(songId)
-      : fetchApprovedSongBySlug(artistSlug, songSlug);
-
+    const loadSong = songId ? fetchApprovedSong(songId) : fetchApprovedSongBySlug(artistSlug, songSlug);
     loadSong
       .then(data => {
         if (!active) return;
@@ -49,24 +47,14 @@ function Player() {
   }, [artistSlug, songSlug, songId]);
 
   if (loading) return <div className="min-h-screen bg-black text-white grid place-items-center">Loading song…</div>;
-
   if (error || !song) {
     return (
       <div className="min-h-screen bg-black text-white grid place-items-center px-6 text-center">
-        <div>
-          <p className="text-white/70 mb-4">{error || 'Song not found.'}</p>
-          <button onClick={() => window.history.back()} className="px-4 py-2 rounded-xl bg-white/10">Go back</button>
-        </div>
+        <div><p className="text-white/70 mb-4">{error || 'Song not found.'}</p><button onClick={() => window.history.back()} className="px-4 py-2 rounded-xl bg-white/10">Go back</button></div>
       </div>
     );
   }
-
-  return (
-    <>
-      <SongSeo song={song} />
-      <GuitarCordPlayer song={song} />
-    </>
-  );
+  return <><SongSeo song={song} /><GuitarCordPlayer song={song} /></>;
 }
 
 function LegacyChordRedirect() {
@@ -79,15 +67,10 @@ function LegacyChordRedirect() {
     fetchApprovedSong(chordId)
       .then(song => {
         if (!active) return;
-        if (!song) {
-          setError('Song not found.');
-          return;
-        }
+        if (!song) { setError('Song not found.'); return; }
         navigate(getSongPath(song), { replace: true });
       })
-      .catch(err => {
-        if (active) setError(err instanceof Error ? err.message : 'Could not open song.');
-      });
+      .catch(err => { if (active) setError(err instanceof Error ? err.message : 'Could not open song.'); });
     return () => { active = false; };
   }, [chordId, navigate]);
 
@@ -123,14 +106,7 @@ function Screens({ user }: { user: UnifiedUser | null }) {
       <SupabaseBanner />
       {songsError && <div className="fixed top-0 left-0 right-0 z-[60] bg-red-950/95 border-b border-red-400/20 px-4 py-2 text-center text-xs text-red-200">Supabase song data could not be loaded: {songsError}</div>}
       <Routes>
-        <Route
-          path="/"
-          element={
-            recoveryMode
-              ? <ResetPasswordPage />
-              : <GuitarCordHome songs={songs} user={user} />
-          }
-        />
+        <Route path="/" element={recoveryMode ? <ResetPasswordPage /> : <GuitarCordHome songs={songs} user={user} />} />
         <Route path="/app" element={<Navigate to="/" replace />} />
         <Route path="/songs" element={<Navigate to="/" replace />} />
         <Route path="/library" element={<GuitarCordLibrary songs={songs} user={user} />} />
@@ -140,6 +116,7 @@ function Screens({ user }: { user: UnifiedUser | null }) {
         <Route path="/song/:artistSlug/:songSlug" element={<Player />} />
         <Route path="/chord/:chordId" element={<LegacyChordRedirect />} />
         <Route path="/profile" element={<GuitarCordProfile user={user} />} />
+        <Route path="/settings" element={user && !user.isAnonymous ? <SettingsPage user={user} /> : <Navigate to="/login" replace />} />
         <Route path="/learn" element={<OnboardingPage />} />
         <Route path="/create" element={user && !user.isAnonymous ? <ChordEditor onClose={() => window.history.back()} user={user} isAdmin={admin} /> : <Navigate to="/login" replace />} />
         <Route path="/login" element={<LoginPage />} />
