@@ -77,6 +77,13 @@ function LegacyChordRedirect() {
   return <div className="min-h-screen bg-black text-white grid place-items-center px-6 text-center"><div className="text-sm text-white/55">{error || 'Opening song…'}</div></div>;
 }
 
+function AdminOnly({ user, children }: { user: UnifiedUser | null; children: JSX.Element }) {
+  if (!user || user.isAnonymous || !isUserAdmin(user)) {
+    return <Navigate to="/" replace />;
+  }
+  return children;
+}
+
 function Screens({ user }: { user: UnifiedUser | null }) {
   const recoveryError = new URLSearchParams(window.location.hash.replace(/^#/, '')).get('error_code');
   const recoveryMode = window.location.hash.includes('type=recovery') || Boolean(recoveryError);
@@ -123,8 +130,8 @@ function Screens({ user }: { user: UnifiedUser | null }) {
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/dashboard" element={user && !user.isAnonymous ? <UserDashboard userId={user.uid} /> : <Navigate to="/" replace />} />
         <Route path="/admin" element={<AdminLogin />} />
-        <Route path="/admin-panel" element={<AdminPanel />} />
-        <Route path="/admin-import" element={<AdminSongImport />} />
+        <Route path="/admin-panel" element={<AdminOnly user={user}><AdminPanel /></AdminOnly>} />
+        <Route path="/admin-import" element={<AdminOnly user={user}><AdminSongImport /></AdminOnly>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>
