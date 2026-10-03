@@ -13,7 +13,7 @@ export function AdminLogin() {
   const handleGoogleLogin = async () => {
     try {
       await signInWithGoogleOAuth();
-      navigate('/admin-panel');
+      navigate('/');
     } catch (error: unknown) {
       console.error('Login error:', error);
       setError(error instanceof Error ? error.message : 'Login failed');
@@ -27,7 +27,7 @@ export function AdminLogin() {
     try {
       const user = await signInWithEmail(username, password);
       if (isUserAdmin(user)) {
-        navigate('/admin-panel');
+        navigate('/');
       } else {
         setError('This account is not authorized as an administrator.');
       }
