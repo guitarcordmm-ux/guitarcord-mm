@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GuitarCordProfile as ProfileContent } from '../components/GuitarCordUI';
 import type { User } from '../../../types';
-import { isUserAdmin } from '../../../services/auth/authService';
 
 export function GuitarCordProfile({ user }: { user?: User | null }) {
   const navigate = useNavigate();
@@ -22,7 +21,7 @@ export function GuitarCordProfile({ user }: { user?: User | null }) {
   }, [navigate]);
 
   useEffect(() => {
-    if (!isUserAdmin(user as any)) return;
+    if (user?.role !== 'admin') return;
 
     const settingsButton = Array.from(document.querySelectorAll('button')).find(
       button => button.textContent?.trim() === 'Settings'
@@ -44,10 +43,8 @@ export function GuitarCordProfile({ user }: { user?: User | null }) {
     adminButton.addEventListener('click', () => navigate('/admin-panel'));
     settingsButton.parentElement?.insertBefore(adminButton, settingsButton.nextSibling);
 
-    return () => {
-      adminButton.remove();
-    };
-  }, [navigate, user]);
+    return () => adminButton.remove();
+  }, [navigate, user?.role]);
 
   return <ProfileContent user={user} />;
 }
