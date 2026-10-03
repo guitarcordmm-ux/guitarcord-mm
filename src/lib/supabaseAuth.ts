@@ -37,25 +37,28 @@ export function subscribeToAuthChanges(callback: (user: UnifiedUser | null) => v
     return () => {};
   }
 
-  const { data: { subscription } } = client.auth.onAuthStateChange((event, session) => {
-    if (event === 'SIGNED_OUT' || !session) {
-      callback(null);
-      return;
-    }
-
-    // Keep the auth event responsive, then refresh the authenticated user
-    // from Supabase so app_metadata.role is always read from the server.
-    const sessionUser = formatSupabaseUser(session.user);
-    if (sessionUser) callback(sessionUser);
-
+  const refreshUserFromSupabase = (fallbackUser: UnifiedUser | null = null) => {
     window.setTimeout(async () => {
       try {
         const { data: { user } } = await client.auth.getUser();
         callback(formatSupabaseUser(user));
       } catch (error) {
         console.error('Could not refresh authenticated user:', error);
+        callback(fallbackUser);
       }
     }, 0);
+  };
+
+  const { data: { subscription } } = client.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_OUT' || !session) {
+      callback(null);
+      return;
+    }
+
+    // Do not overwrite the app state with a session object that may have
+    // stale/missing app_metadata. Read the authenticated user from Supabase
+    // first so role === 'admin' remains available after navigation/login.
+    refreshUserFromSupabase(formatSupabaseUser(session.user));
   });
 
   return () => subscription.unsubscribe();
