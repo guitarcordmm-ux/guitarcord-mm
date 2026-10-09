@@ -1,4 +1,5 @@
 import type { Song } from '../../types';
+import { apiUrl } from '../../lib/apiUrl';
 import { getSupabase } from '../supabase/client';
 import { getEnglishSlug } from '../../lib/seo';
 
@@ -51,7 +52,7 @@ function writePublicSongsCache(songs: Song[]): void {
 }
 
 async function fetchPublicSongsPage(offset = 0, limit = 50): Promise<Song[]> {
-  const response = await fetch(`/api/songs?offset=${offset}&limit=${limit}`, { headers: { Accept: 'application/json' }, cache: 'default' });
+  const response = await fetch(apiUrl(`/api/songs?offset=${offset}&limit=${limit}`), { headers: { Accept: 'application/json' }, cache: 'default' });
   if (!response.ok) throw new Error(`Song API request failed (${response.status})`);
   const payload: unknown = await response.json();
   const rows = Array.isArray(payload) ? payload : isRecord(payload) && Array.isArray(payload.songs) ? payload.songs : [];
@@ -158,7 +159,7 @@ export async function fetchApprovedArtists(): Promise<ArtistSummary[]> {
   }
 
   try {
-    const response = await fetch('/api/songs?offset=0&limit=50', {
+    const response = await fetch(apiUrl('/api/songs?offset=0&limit=50'), {
       headers: { Accept: 'application/json' },
       cache: 'default',
     });
@@ -211,7 +212,7 @@ export async function fetchApprovedArtistSongs(artistSlug: string, limit = 100):
       artist_slug: cleanArtistSlug,
       limit: String(safeLimit),
     });
-    const response = await fetch('/api/songs?' + params.toString(), {
+    const response = await fetch(apiUrl('/api/songs?' + params.toString()), {
       headers: { Accept: 'application/json' },
       cache: 'default',
     });
@@ -303,7 +304,7 @@ export async function fetchApprovedSongBySlug(artistSlug: string, songSlug: stri
       artist_slug: cleanArtistSlug,
       song_slug: cleanSongSlug,
     });
-    const response = await fetch(`/api/songs?${params.toString()}`, {
+    const response = await fetch(apiUrl(`/api/songs?${params.toString()}`), {
       headers: { Accept: 'application/json' },
       cache: 'default',
     });
@@ -346,7 +347,7 @@ export async function fetchHomeSongs(
   if (cached) homeCategoryCache.delete(cacheKey);
 
   const params = new URLSearchParams({ category, limit: String(pageSize) });
-  const response = await fetch(`/api/songs?${params.toString()}`, {
+  const response = await fetch(apiUrl(`/api/songs?${params.toString()}`), {
     headers: { Accept: 'application/json' },
     cache: 'default',
   });
@@ -379,7 +380,7 @@ export async function fetchApprovedSong(id: string): Promise<Song | null> {
     }
   }
 
-  const response = await fetch('/api/songs?id=' + encodeURIComponent(cleanId), {
+  const response = await fetch(apiUrl('/api/songs?id=' + encodeURIComponent(cleanId)), {
     headers: { Accept: 'application/json' },
     cache: 'default',
   });
