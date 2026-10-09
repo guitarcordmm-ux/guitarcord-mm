@@ -8,7 +8,15 @@ export type SongSearchResult = {
 };
 
 type SearchApiRow = {
+  id: string;
+  title?: string | null;
   song_title?: string;
+  artist?: string | null;
+  composer?: string | null;
+  album?: string | null;
+  genre?: string | null;
+  lyrics?: string | null;
+  status?: Song['status'] | null;
   image_url?: string | null;
   tutorial_url?: string | null;
   tags?: unknown;
