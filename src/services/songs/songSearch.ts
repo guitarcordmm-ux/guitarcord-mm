@@ -1,4 +1,5 @@
 import type { Song } from '../../types';
+import { apiUrl } from '../../lib/apiUrl';
 
 export type SongSearchResult = {
   song: Song;
@@ -90,7 +91,7 @@ export async function searchSongs(
     offset: String(offset),
   });
 
-  const response = await fetch(`/api/songs?${params.toString()}`, {
+  const response = await fetch(apiUrl(`/api/songs?${params.toString()}`), {
     headers: { Accept: 'application/json' },
     signal: options.signal,
     cache: 'default',
