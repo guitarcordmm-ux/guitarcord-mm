@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { SupabaseBanner } from '../components/SupabaseBanner';
@@ -77,7 +77,7 @@ function LegacyChordRedirect() {
   return <div className="min-h-screen bg-black text-white grid place-items-center px-6 text-center"><div className="text-sm text-white/55">{error || 'Opening song…'}</div></div>;
 }
 
-function AdminOnly({ user, children }: { user: UnifiedUser | null; children: JSX.Element }) {
+function AdminOnly({ user, children }: { user: UnifiedUser | null; children: ReactNode }) {
   if (!user || user.isAnonymous || !isUserAdmin(user)) {
     return <Navigate to="/" replace />;
   }
