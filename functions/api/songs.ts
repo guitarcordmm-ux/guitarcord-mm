@@ -31,7 +31,7 @@ const PUBLIC_SONG_FIELDS = `${PUBLIC_LIST_FIELDS},lyrics`;
 const DEFAULT_PAGE_SIZE = 50;
 const MAX_PAGE_SIZE = 100;
 
-export async function onRequestGet({ request, env }: { request: Request; env: Env }): Promise<Response> {
+async function handleRequestGet({ request, env }: { request: Request; env: Env }): Promise<Response> {
   const supabaseUrl = env.SUPABASE_URL?.trim() || env.VITE_SUPABASE_URL?.trim();
   const supabaseKey = env.SUPABASE_ANON_KEY?.trim() || env.VITE_SUPABASE_ANON_KEY?.trim();
 
@@ -214,4 +214,31 @@ export async function onRequestGet({ request, env }: { request: Request; env: En
       { status: 502 },
     );
   }
+}
+
+
+// Capacitor Android loads the bundled UI from https://localhost, so public song
+// API responses must explicitly allow the native WebView's cross-origin request.
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Allow-Headers': 'Accept, Content-Type, Authorization',
+  'Access-Control-Max-Age': '86400',
+};
+
+export async function onRequestGet(context: { request: Request; env: Env }): Promise<Response> {
+  const response = await handleRequestGet(context);
+  const headers = new Headers(response.headers);
+  for (const [name, value] of Object.entries(corsHeaders)) {
+    headers.set(name, value);
+  }
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
+export function onRequestOptions(): Response {
+  return new Response(null, { status: 204, headers: corsHeaders });
 }
