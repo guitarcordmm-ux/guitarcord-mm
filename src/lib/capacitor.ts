@@ -12,7 +12,7 @@ export async function initCapacitorMobile(): Promise<void> {
 
   try {
     // Configure status bar for true black theme
-    await StatusBar.setStyle({ style: Style.Dark });
+    await StatusBar.setStyle({ style: Style.Light });
     await StatusBar.setBackgroundColor({ color: '#000000' });
   } catch (err) {
     console.warn('Status bar configuration error:', err);
