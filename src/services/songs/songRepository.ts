@@ -453,8 +453,8 @@ export async function insertSongs(
   const payload = songs.map(song => {
     const title = song.songTitle || song.title || 'Untitled';
     const artist = song.artist || '';
-    const artistSlug = song.artistSlug || slugifyText(artist);
-    const songSlug = song.songSlug || slugifyText(title);
+    const artistSlug = song.artistSlug || getEnglishSlug(artist);
+    const songSlug = song.songSlug || getEnglishSlug(title);
     return {
       song_title: title,
       title,
