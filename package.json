@@ -11,7 +11,9 @@
     "lint": "tsc --noEmit",
     "cap:sync": "cap sync",
     "cap:android": "cap run android",
-    "cap:ios": "cap run ios"
+    "cap:ios": "cap run ios",
+    "android:prepare": "npm run build && npx cap sync android",
+    "android:open": "npx cap open android"
   },
   "dependencies": {
     "@capacitor/app": "^8.1.1",
@@ -42,7 +44,8 @@
     "react-router-dom": "^7.2.0",
     "react-zoom-pan-pinch": "^4.0.3",
     "vite": "^6.2.0",
-    "vite-plugin-pwa": "^1.2.0"
+    "vite-plugin-pwa": "^1.2.0",
+    "@capacitor/android": "^8.5.2"
   },
   "devDependencies": {
     "@capacitor/cli": "^8.5.2",
