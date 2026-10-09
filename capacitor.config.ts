@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.guitarcordmm.app',
-  appName: 'ChordStream Pro',
+  appName: 'GuitarCordMM',
   webDir: 'dist',
   server: {
     androidScheme: 'https',
@@ -18,7 +18,7 @@ const config: CapacitorConfig = {
       showSpinner: false,
     },
     StatusBar: {
-      style: 'DARK',
+      style: 'LIGHT',
       backgroundColor: '#000000',
     },
   },
