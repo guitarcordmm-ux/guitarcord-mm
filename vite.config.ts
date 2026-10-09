@@ -18,11 +18,11 @@ export default defineConfig(({mode}) => {
         registerType: 'autoUpdate',
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
         manifest: {
-          name: 'ChordStream Pro',
-          short_name: 'ChordStream',
-          description: 'Premium Minimalist Chord Viewer with Stage Mode',
-          theme_color: '#0D0221',
-          background_color: '#0D0221',
+          name: 'GuitarCordMM',
+          short_name: 'GuitarCord',
+          description: 'Myanmar guitar chords and lyrics library',
+          theme_color: '#000000',
+          background_color: '#000000',
           display: 'standalone',
           icons: [
             {
