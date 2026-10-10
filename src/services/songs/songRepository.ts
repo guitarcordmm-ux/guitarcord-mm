@@ -52,11 +52,32 @@ function writePublicSongsCache(songs: Song[]): void {
 }
 
 async function fetchPublicSongsPage(offset = 0, limit = 50): Promise<Song[]> {
-  const response = await fetch(apiUrl(`/api/songs?offset=${offset}&limit=${limit}`), { headers: { Accept: 'application/json' }, cache: 'default' });
-  if (!response.ok) throw new Error(`Song API request failed (${response.status})`);
+  const response = await fetch(apiUrl('/api/songs?offset=' + offset + '&limit=' + limit), {
+    headers: { Accept: 'application/json' },
+    cache: 'default',
+  });
+  if (!response.ok) throw new Error('Song API request failed (' + response.status + ')');
   const payload: unknown = await response.json();
   const rows = Array.isArray(payload) ? payload : isRecord(payload) && Array.isArray(payload.songs) ? payload.songs : [];
   return rows.filter(isSongRow).map(mapRowToSong);
+}
+
+// The API route can be unreachable in a packaged Android WebView (for example,
+// due to a deployment/CORS issue). Retry via the public Supabase client, which
+// still obeys Supabase Row Level Security and only selects approved songs.
+async function fetchApprovedSongsDirectlyFromSupabase(offset: number, limit: number): Promise<Song[] | null> {
+  const client = getSupabase();
+  if (!client) return null;
+
+  const { data, error } = await client
+    .from('songs')
+    .select('id,song_title,title,artist,composer,album,genre,image_url,tutorial_url,tags,status,is_watermarked,created_at,updated_at,artist_slug,song_slug,language,difficulty,play_count')
+    .eq('status', 'approved')
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (error) throw error;
+  return (Array.isArray(data) ? data : []).filter(isSongRow).map(mapRowToSong);
 }
 
 export async function fetchApprovedSongs(limit = 50, offset = 0): Promise<Song[]> {
@@ -72,13 +93,24 @@ export async function fetchApprovedSongs(limit = 50, offset = 0): Promise<Song[]
     }
 
     return pageOffset === 0 ? readPublicSongsCache() || [] : [];
-  } catch (error) {
+  } catch (apiError) {
+    // Try the direct Supabase query before falling back to the offline cache.
+    try {
+      const directSongs = await fetchApprovedSongsDirectlyFromSupabase(pageOffset, pageSize);
+      if (directSongs !== null) {
+        if (pageOffset === 0 && directSongs.length) writePublicSongsCache(directSongs);
+        return directSongs;
+      }
+    } catch (supabaseError) {
+      console.warn('Direct Supabase public song fallback failed:', supabaseError);
+    }
+
     const cachedSongs = pageOffset === 0 ? readPublicSongsCache() : null;
     if (cachedSongs?.length) {
-      console.warn('Song API unavailable; using cached first page.', error);
+      console.warn('Song API and direct Supabase query unavailable; using cached first page.', apiError);
       return cachedSongs;
     }
-    throw error;
+    throw apiError;
   }
 }
 
