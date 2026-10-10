@@ -18,7 +18,9 @@ const config: CapacitorConfig = {
       showSpinner: false,
     },
     StatusBar: {
-      style: 'LIGHT',
+      // Keep the system status bar visible and use light icons on the black theme.
+      overlaysWebView: false,
+      style: 'DARK',
       backgroundColor: '#000000',
     },
   },
