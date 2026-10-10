@@ -1,16 +1,21 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import fs from 'node:fs';
 import { fileURLToPath } from 'url';
 import {defineConfig, loadEnv} from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+// Windows can expose the same folder through two drive paths (for example C: and D:).
+// Resolve Vite's root to the physical path so HTML entries and config.root use one path.
+const projectRoot = fs.realpathSync.native(process.cwd());
 
 export default defineConfig(({mode}) => {
-  const env = loadEnv(mode, '.', '');
+  const env = loadEnv(mode, projectRoot, '');
   return {
+    root: projectRoot,
     plugins: [
       react(), 
       tailwindcss(),
