@@ -371,7 +371,7 @@ export async function fetchHomeSongs(
   limit = 8,
 ): Promise<Song[]> {
   const pageSize = Math.min(Math.max(limit, 1), 20);
-  const cacheKey = `${category}:${pageSize}`;
+  const cacheKey = category + ':' + pageSize;
   const cached = homeCategoryCache.get(cacheKey);
   if (cached && Date.now() - cached.savedAt <= HOME_CATEGORY_CACHE_TTL_MS) {
     return cached.songs;
@@ -379,16 +379,40 @@ export async function fetchHomeSongs(
   if (cached) homeCategoryCache.delete(cacheKey);
 
   const params = new URLSearchParams({ category, limit: String(pageSize) });
-  const response = await fetch(apiUrl(`/api/songs?${params.toString()}`), {
-    headers: { Accept: 'application/json' },
-    cache: 'default',
-  });
-  if (!response.ok) throw new Error(`Home category request failed (${response.status})`);
-  const payload: unknown = await response.json();
-  const rows = isRecord(payload) && Array.isArray(payload.songs) ? payload.songs : Array.isArray(payload) ? payload : [];
-  const songs = rows.filter(isSongRow).map(mapRowToSong);
-  homeCategoryCache.set(cacheKey, { savedAt: Date.now(), songs });
-  return songs;
+  try {
+    const response = await fetch(apiUrl('/api/songs?' + params.toString()), {
+      headers: { Accept: 'application/json' },
+      cache: 'default',
+    });
+    if (!response.ok) throw new Error('Home category request failed (' + response.status + ')');
+    const payload: unknown = await response.json();
+    const rows = isRecord(payload) && Array.isArray(payload.songs) ? payload.songs : Array.isArray(payload) ? payload : [];
+    const songs = rows.filter(isSongRow).map(mapRowToSong);
+    homeCategoryCache.set(cacheKey, { savedAt: Date.now(), songs });
+    return songs;
+  } catch (apiError) {
+    const client = getSupabase();
+    if (!client) throw apiError;
+
+    const { data, error } = await client.rpc('get_home_songs', {
+      category,
+      result_limit: pageSize,
+      result_offset: 0,
+    });
+    if (error) {
+      console.warn('Home category API and Supabase fallback failed:', { apiError, error });
+      throw error;
+    }
+
+    const rows: unknown[] = Array.isArray(data)
+      ? data
+      : isRecord(data) && Array.isArray(data.songs)
+        ? data.songs
+        : [];
+    const songs = rows.filter(isSongRow).map(mapRowToSong);
+    homeCategoryCache.set(cacheKey, { savedAt: Date.now(), songs });
+    return songs;
+  }
 }
 
 export async function fetchApprovedSong(id: string): Promise<Song | null> {
