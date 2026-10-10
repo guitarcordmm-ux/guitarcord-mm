@@ -1,5 +1,6 @@
 import type { Song } from '../../types';
 import { apiUrl } from '../../lib/apiUrl';
+import { getSupabase } from '../supabase/client';
 
 export type SongSearchResult = {
   song: Song;
@@ -93,30 +94,60 @@ export async function searchSongs(
 
   const limit = Math.min(Math.max(options.limit ?? 20, 1), 50);
   const offset = Math.max(options.offset ?? 0, 0);
-  const params = new URLSearchParams({
-    q: normalizedQuery,
-    limit: String(limit),
-    offset: String(offset),
-  });
 
-  const response = await fetch(apiUrl(`/api/songs?${params.toString()}`), {
-    headers: { Accept: 'application/json' },
-    signal: options.signal,
-    cache: 'default',
-  });
+  try {
+    const params = new URLSearchParams({
+      q: normalizedQuery,
+      limit: String(limit),
+      offset: String(offset),
+    });
 
-  if (!response.ok) {
-    throw new Error(`Song search request failed (${response.status})`);
+    const response = await fetch(apiUrl('/api/songs?' + params.toString()), {
+      headers: { Accept: 'application/json' },
+      signal: options.signal,
+      cache: 'default',
+    });
+
+    if (!response.ok) {
+      throw new Error('Song search request failed (' + response.status + ')');
+    }
+
+    const payload: unknown = await response.json();
+    const rows = isRecord(payload) && Array.isArray(payload.songs)
+      ? payload.songs
+      : Array.isArray(payload)
+        ? payload
+        : [];
+
+    return rows
+      .map(mapSearchRow)
+      .filter((result): result is SongSearchResult => result !== null);
+  } catch (apiError) {
+    // Debounced searches cancel older requests; do not retry cancelled ones.
+    if (options.signal?.aborted) throw apiError;
+
+    const client = getSupabase();
+    if (!client) throw apiError;
+
+    const { data, error } = await client.rpc('search_public_songs', {
+      search_query: normalizedQuery,
+      result_limit: limit,
+      result_offset: offset,
+    });
+
+    if (error) {
+      console.warn('Song search API and Supabase fallback failed:', { apiError, error });
+      throw error;
+    }
+
+    const rows: unknown[] = Array.isArray(data)
+      ? data
+      : isRecord(data) && Array.isArray(data.songs)
+        ? data.songs
+        : [];
+
+    return rows
+      .map(mapSearchRow)
+      .filter((result): result is SongSearchResult => result !== null);
   }
-
-  const payload: unknown = await response.json();
-  const rows = isRecord(payload) && Array.isArray(payload.songs)
-    ? payload.songs
-    : Array.isArray(payload)
-      ? payload
-      : [];
-
-  return rows
-    .map(mapSearchRow)
-    .filter((result): result is SongSearchResult => result !== null);
 }
