@@ -14,7 +14,9 @@ This project uses Capacitor to package the existing React web app as an Android 
 4. When the run succeeds, open that run and download the `guitarcordmm-debug-apk` artifact.
 5. Extract the ZIP and install `app-debug.apk` on an Android device. Android may ask you to allow installation from that source.
 
-The APK uses the bundled web UI and connects to the production API at `https://guitarcordmm.com`. Internet access is required for current songs and Supabase-backed features.
+The APK uses the bundled web UI and connects to the production API at `https://guitarcord-mm.pages.dev`. Internet access is required for current songs and Supabase-backed features. `VITE_API_BASE_URL` can override this endpoint at build time; changing it requires rebuilding and installing a new APK.
+
+Every `cap sync android` runs `scripts/configure-android-theme.mjs` to give the generated Android launch and app themes a black window background. This is required for edge-to-edge system bars, where the old StatusBar background-color option does not apply. Capacitor SystemBars controls the light icons and safe-area insets.
 
 ## Build locally on Windows
 

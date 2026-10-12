@@ -1,6 +1,5 @@
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, SystemBars, SystemBarsStyle } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
-import { StatusBar, Style } from '@capacitor/status-bar';
 
 /**
  * Initialize Capacitor native features for iOS and Android
@@ -11,15 +10,14 @@ export async function initCapacitorMobile(): Promise<void> {
   }
 
   try {
-    // Keep the operating system status bar visible above the app.
-    // LIGHT means light-colored status icons/text, suitable for a black status bar.
-    await StatusBar.show();
-    await StatusBar.setOverlaysWebView({ overlay: false });
-    await StatusBar.setStyle({ style: Style.Light });
-    await StatusBar.setBackgroundColor({ color: '#000000' });
+    // Edge-to-edge bars use the app/native theme background on Android 15+.
+    await SystemBars.setStyle({ style: SystemBarsStyle.Dark });
+    await SystemBars.show();
   } catch (err) {
     console.warn('Status bar configuration error:', err);
   }
+
+  if (Capacitor.getPlatform() !== 'android') return;
 
   try {
     // Handle Android hardware back button

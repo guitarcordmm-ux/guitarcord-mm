@@ -4,9 +4,10 @@ const config: CapacitorConfig = {
   appId: 'com.guitarcordmm.app',
   appName: 'GuitarCordMM',
   webDir: 'dist',
+  backgroundColor: '#000000',
   server: {
     androidScheme: 'https',
-    iosScheme: 'https',
+    iosScheme: 'capacitor',
   },
   plugins: {
     SplashScreen: {
@@ -17,11 +18,11 @@ const config: CapacitorConfig = {
       androidScaleType: 'CENTER_CROP',
       showSpinner: false,
     },
-    StatusBar: {
-      // Keep the system status bar visible and use light icons on the black theme.
-      overlaysWebView: false,
-      style: 'LIGHT',
-      backgroundColor: '#000000',
+    SystemBars: {
+      // DARK means light text/icons on the app's dark background.
+      style: 'DARK',
+      hidden: false,
+      insetsHandling: 'css',
     },
   },
 };

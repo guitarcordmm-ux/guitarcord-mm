@@ -11,6 +11,7 @@ on:
       - 'vite.config.ts'
       - 'package.json'
       - 'package-lock.json'
+      - 'scripts/**'
       - '.github/workflows/android-apk.yml'
 
 permissions:
@@ -25,7 +26,7 @@ jobs:
       VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
       VITE_ADMIN_USERNAME: ${{ secrets.VITE_ADMIN_USERNAME }}
       VITE_ADMIN_EMAIL: ${{ secrets.VITE_ADMIN_EMAIL }}
-      VITE_API_BASE_URL: https://guitarcordmm.com
+      VITE_API_BASE_URL: https://guitarcord-mm.pages.dev
 
     steps:
       - name: Checkout repository
@@ -59,6 +60,9 @@ jobs:
 
       - name: Build web assets
         run: npm run build
+
+      - name: Check mobile configuration
+        run: node --test scripts/configure-android-theme.test.mjs
 
       - name: Generate Android project
         run: npx cap add android
