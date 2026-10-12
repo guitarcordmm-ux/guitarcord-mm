@@ -20,7 +20,7 @@ const config: CapacitorConfig = {
     StatusBar: {
       // Keep the system status bar visible and use light icons on the black theme.
       overlaysWebView: false,
-      style: 'DARK',
+      style: 'LIGHT',
       backgroundColor: '#000000',
     },
   },
