@@ -25,6 +25,12 @@ html {
   -webkit-text-size-adjust: 100%;
 }
 
+#root {
+  min-height: 100vh;
+  background: var(--gc-black);
+  color: #fff;
+}
+
 body {
   @apply min-h-screen bg-black text-white font-sans m-0;
   -webkit-tap-highlight-color: transparent;
