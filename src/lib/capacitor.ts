@@ -12,10 +12,10 @@ export async function initCapacitorMobile(): Promise<void> {
 
   try {
     // Keep the operating system status bar visible above the app.
-    // DARK means light-colored status icons/text, suitable for a black status bar.
+    // LIGHT means light-colored status icons/text, suitable for a black status bar.
     await StatusBar.show();
     await StatusBar.setOverlaysWebView({ overlay: false });
-    await StatusBar.setStyle({ style: Style.Dark });
+    await StatusBar.setStyle({ style: Style.Light });
     await StatusBar.setBackgroundColor({ color: '#000000' });
   } catch (err) {
     console.warn('Status bar configuration error:', err);
