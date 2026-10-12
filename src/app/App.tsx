@@ -111,7 +111,7 @@ function Screens({ user }: { user: UnifiedUser | null }) {
         <meta name="theme-color" content="#000000" />
       </Helmet>
       <SupabaseBanner />
-      {songsError && <div className="fixed top-0 left-0 right-0 z-[60] bg-red-950/95 border-b border-red-400/20 px-4 py-2 text-center text-xs text-red-200">Supabase song data could not be loaded: {songsError}</div>}
+      {songsError && <div style={{ top: "env(safe-area-inset-top, 0px)" }} className="fixed left-0 right-0 z-[60] bg-red-950/95 border-b border-red-400/20 px-4 py-2 text-center text-xs text-red-200">Supabase song data could not be loaded: {songsError}</div>}
       <Routes>
         <Route path="/" element={recoveryMode ? <ResetPasswordPage /> : <GuitarCordHome songs={songs} user={user} />} />
         <Route path="/app" element={<Navigate to="/" replace />} />
