@@ -1,4 +1,5 @@
 import type { Song } from '../../types';
+import { Capacitor } from '@capacitor/core';
 import { apiUrl } from '../../lib/apiUrl';
 import { getSupabase } from '../supabase/client';
 import { getEnglishSlug } from '../../lib/seo';
@@ -83,36 +84,77 @@ async function fetchApprovedSongsDirectlyFromSupabase(offset: number, limit: num
 export async function fetchApprovedSongs(limit = 50, offset = 0): Promise<Song[]> {
   const pageSize = Math.min(Math.max(limit, 1), 50);
   const pageOffset = Math.max(offset, 0);
+  const native = Capacitor.isNativePlatform();
+  let nativeSupabaseSongs: Song[] | null = null;
+  let supabaseError: unknown = null;
+
+  // On Android/iOS prefer the Supabase SDK directly to avoid WebView/CORS
+  // failures against the web site's /api endpoint.
+  if (native) {
+    try {
+      nativeSupabaseSongs = await fetchApprovedSongsDirectlyFromSupabase(pageOffset, pageSize);
+      if (nativeSupabaseSongs?.length) {
+        if (pageOffset === 0) writePublicSongsCache(nativeSupabaseSongs);
+        return nativeSupabaseSongs;
+      }
+      if (nativeSupabaseSongs === null) {
+        supabaseError = new Error(
+          'Supabase client is not configured in this APK. Check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY, then rebuild.',
+        );
+      }
+    } catch (error) {
+      supabaseError = error;
+      console.warn('Direct Supabase song request failed in native app:', error);
+    }
+  }
 
   try {
     const page = await fetchPublicSongsPage(pageOffset, pageSize);
     if (page.length) {
-      // Cache the first page as the lightweight offline catalogue.
       if (pageOffset === 0) writePublicSongsCache(page);
       return page;
     }
 
+    if (nativeSupabaseSongs !== null) return nativeSupabaseSongs;
     return pageOffset === 0 ? readPublicSongsCache() || [] : [];
   } catch (apiError) {
-    // Try the direct Supabase query before falling back to the offline cache.
-    try {
-      const directSongs = await fetchApprovedSongsDirectlyFromSupabase(pageOffset, pageSize);
-      if (directSongs !== null) {
-        if (pageOffset === 0 && directSongs.length) writePublicSongsCache(directSongs);
-        return directSongs;
+    // Browser builds use the API first; attempt Supabase if that API is down.
+    if (!native) {
+      try {
+        const directSongs = await fetchApprovedSongsDirectlyFromSupabase(pageOffset, pageSize);
+        if (directSongs !== null) {
+          if (pageOffset === 0 && directSongs.length) writePublicSongsCache(directSongs);
+          return directSongs;
+        }
+        supabaseError = new Error(
+          'Supabase client is not configured in this build. Check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.',
+        );
+      } catch (error) {
+        supabaseError = error;
+        console.warn('Direct Supabase public song fallback failed:', error);
       }
-    } catch (supabaseError) {
-      console.warn('Direct Supabase public song fallback failed:', supabaseError);
     }
+
+    if (nativeSupabaseSongs !== null) return nativeSupabaseSongs;
 
     const cachedSongs = pageOffset === 0 ? readPublicSongsCache() : null;
     if (cachedSongs?.length) {
       console.warn('Song API and direct Supabase query unavailable; using cached first page.', apiError);
       return cachedSongs;
     }
+
+    const describeError = (error: unknown): string =>
+      error instanceof Error ? error.message : String(error);
+    if (supabaseError) {
+      throw new Error(
+        'Unable to load songs. Website API: ' + describeError(apiError) +
+        '. Supabase: ' + describeError(supabaseError),
+      );
+    }
     throw apiError;
   }
 }
+
 
 
 export type ArtistSummary = {
