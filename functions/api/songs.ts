@@ -37,7 +37,7 @@ async function handleRequestGet({ request, env }: { request: Request; env: Env }
 
   if (!supabaseUrl || !supabaseKey) {
     return Response.json(
-      { error: 'Supabase proxy is not configured on Cloudflare.' },
+      { error: 'The API server is not configured with Supabase credentials.' },
       { status: 500 },
     );
   }
