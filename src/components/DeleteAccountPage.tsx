@@ -3,7 +3,7 @@ import { ArrowLeft, Trash2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { apiUrl } from '../lib/apiUrl';
 import { getSupabase } from '../services/supabase/client';
-import type { UnifiedUser } from '../types';
+import type { UnifiedUser } from '../services/auth/authService';
 
 export function DeleteAccountPage({ user }: { user: UnifiedUser | null }) {
   const navigate = useNavigate();
