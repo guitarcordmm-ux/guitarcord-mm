@@ -141,7 +141,7 @@ export function GuitarCordHome({ songs }: Props) {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState<HomeCategory>('popular');
-  const { categories, loading: categoryLoading, error: categoryError } = useHomeCategories(category);
+  const { songs: categorySongs, loading: categoryLoading, error: categoryError } = useHomeCategories(category);
 
   const { results, loading: searchLoading, error: searchError } = useSongSearch(search);
 
@@ -155,13 +155,12 @@ export function GuitarCordHome({ songs }: Props) {
   const visibleResults = useMemo<SongSearchResult[]>(() => {
     if (search.trim()) return results.slice(0, 10);
 
-    const selected = categories[category];
-    if (selected.length || !categoryError) {
-      return selected.map(song => ({ song, lyricMatch: '', score: 0 }));
+    if (categorySongs.length || !categoryError) {
+      return categorySongs.map(song => ({ song, lyricMatch: '', score: 0 }));
     }
 
     return songs.slice(0, 8).map(song => ({ song, lyricMatch: '', score: 0 }));
-  }, [search, results, categories, category, categoryError, songs]);
+  }, [search, results, categorySongs, categoryError, songs]);
 
   const displayedCategory = categoryItems.find(item => item.key === category)?.label || 'Songs';
 

@@ -4,43 +4,34 @@ import type { Song } from '../../../types';
 
 export type HomeCategory = 'popular' | 'recent' | 'myanmar' | 'easy';
 
-type HomeCategories = Record<HomeCategory, Song[]>;
-
-const EMPTY: HomeCategories = {
-  popular: [],
-  recent: [],
-  myanmar: [],
-  easy: [],
-};
-
 export function useHomeCategories(selectedCategory: HomeCategory) {
-  const [categories, setCategories] = useState<HomeCategories>(EMPTY);
+  const [songs, setSongs] = useState<Song[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    let active = true;
-
+    let cancelled = false;
+    setSongs([]);
     setLoading(true);
     setError('');
+
     fetchHomeSongs(selectedCategory, 8)
       .then(songs => {
-        if (!active) return;
-        setCategories(current => ({ ...current, [selectedCategory]: songs }));
+        if (!cancelled) setSongs(songs);
       })
-      .catch(err => {
-        if (!active) return;
-        console.error('Home category fetch failed:', err);
-        setError(err instanceof Error ? err.message : 'Could not load home categories.');
+      .catch(error => {
+        if (cancelled) return;
+        console.error('Home category fetch failed:', error);
+        setError(error instanceof Error ? error.message : 'Could not load songs.');
       })
       .finally(() => {
-        if (active) setLoading(false);
+        if (!cancelled) setLoading(false);
       });
 
     return () => {
-      active = false;
+      cancelled = true;
     };
   }, [selectedCategory]);
 
-  return { categories, loading, error };
+  return { songs, loading, error };
 }
