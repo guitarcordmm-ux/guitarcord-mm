@@ -498,7 +498,7 @@ export async function fetchUserSongs(userId: string): Promise<Song[]> {
   const client = getSupabase(); if (!client) return [];
   const { data, error } = await client
     .from('songs')
-    .select('id,song_title,title,artist,composer,album,genre,image_url,tutorial_url,tags,status,is_watermarked,created_at,updated_at,artist_slug,song_slug,language,difficulty,play_count,search_aliases,user_id')
+    .select('id,song_title,title,artist,composer,album,genre,image_url,tutorial_url,lyrics,tags,status,is_watermarked,created_at,updated_at,artist_slug,song_slug,language,difficulty,play_count,search_aliases,user_id')
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
   if (error) { console.error('Error fetching user songs from Supabase:', error); throw error; }

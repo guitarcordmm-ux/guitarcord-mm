@@ -146,10 +146,10 @@ export function ChordEditor({ onClose, onSubmit, initialContent = '', initialSon
         difficulty,
         userId: user?.uid,
         userEmail: user?.email,
-        status: isAdmin ? 'approved' : 'pending',
+        status: 'approved',
       });
-      showStatus(isAdmin ? 'Published to library!' : 'Sent for review successfully!');
-      if (isAdmin) setTimeout(onClose, 1000);
+      showStatus('Published to the library and saved to your account!');
+      setTimeout(onClose, 1000);
     } catch (error) {
       console.error('Failed to submit song:', error);
       showStatus('Submission failed', 'error');
