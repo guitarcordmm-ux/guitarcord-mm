@@ -1,4 +1,4 @@
-import { onRequestGet, onRequestOptions } from '../functions/api/songs';
+import { onRequestGet, onRequestOptions } from '../functions/api/songs.ts';
 
 interface VercelRequest {
   method?: string;

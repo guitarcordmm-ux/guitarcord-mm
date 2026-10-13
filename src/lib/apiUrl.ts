@@ -1,7 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 
 const configuredApiBase = (import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/+$/, '');
-const apiBase = configuredApiBase || (Capacitor.isNativePlatform() ? 'https://guitarcord-mm.pages.dev' : '');
+const apiBase = configuredApiBase || (Capacitor.isNativePlatform() ? 'https://guitarcord-mm.vercel.app' : '');
 
 /**
  * Return an API URL that works in both the browser and the packaged Capacitor app.
