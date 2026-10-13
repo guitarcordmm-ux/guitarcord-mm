@@ -68,18 +68,27 @@ export default {
     if (authError || !data.user) return response(request, { error: 'Your session expired. Please sign in again.' }, 401);
 
     const userId = data.user.id;
-    const { error: songsError } = await supabase.from('songs').delete().eq('user_id', userId);
+    const { error: songsError } = await supabase
+      .from('songs')
+      .update({
+        status: 'deleted',
+        deleted_at: new Date().toISOString(),
+        user_id: null,
+        user_email: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('user_id', userId);
     if (songsError) {
-      console.error('Could not remove account song submissions:', songsError.message);
-      return response(request, { error: 'Could not remove your submitted songs. No account was deleted.' }, 500);
+      console.error('Could not archive account song submissions:', songsError.message);
+      return response(request, { error: 'Could not unpublish and archive your submitted songs. No account was deleted.' }, 500);
     }
 
     const { error: deleteError } = await supabase.auth.admin.deleteUser(userId);
     if (deleteError) {
       console.error('Could not delete Supabase account:', deleteError.message);
-      return response(request, { error: 'Your songs were removed, but the account could not be deleted. Contact support@guitarcordmm.com.' }, 500);
+      return response(request, { error: 'Your songs were unpublished and archived, but the account could not be deleted. Contact support@guitarcordmm.com.' }, 500);
     }
 
-    return response(request, { message: 'Your account and submitted songs have been deleted.' }, 200);
+    return response(request, { message: 'Your account was deleted. Submitted songs were unpublished, anonymized, and retained in the private GuitarCord archive.' }, 200);
   },
 };

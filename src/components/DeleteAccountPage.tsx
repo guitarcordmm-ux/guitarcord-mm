@@ -72,7 +72,7 @@ export function DeleteAccountPage({ user }: { user: UnifiedUser | null }) {
         {deleted ? (
           <main className="mt-8 rounded-2xl border border-green-400/20 bg-green-500/5 p-5">
             <h2 className="font-semibold text-green-200">Account deleted</h2>
-            <p className="mt-2 text-sm leading-6 text-white/60">Your account and submitted songs were deleted.</p>
+            <p className="mt-2 text-sm leading-6 text-white/60">Your account was deleted. Your submitted songs were unpublished and saved in GuitarCord’s private archive without your account details.</p>
             <button type="button" onClick={() => navigate('/', { replace: true })} className="mt-5 rounded-xl bg-[#FFD600] px-4 py-3 text-sm font-semibold text-black">Return to GuitarCord</button>
           </main>
         ) : !user || user.isAnonymous ? (
@@ -86,8 +86,8 @@ export function DeleteAccountPage({ user }: { user: UnifiedUser | null }) {
           <main className="mt-8 space-y-5">
             <div className="rounded-2xl border border-red-400/20 bg-red-500/5 p-5">
               <div className="flex items-center gap-2 font-semibold text-red-200"><Trash2 size={18} /> This cannot be undone</div>
-              <p className="mt-3 text-sm leading-6 text-white/65">Deleting your account permanently removes your GuitarCord sign-in and the songs you submitted. You will be signed out, and you will not be able to recover the deleted account or submissions.</p>
-              <p className="mt-3 text-sm leading-6 text-white/65">Songs submitted by your account—including approved songs—will be removed. Some provider backups or records that must be retained for legal or security reasons may take longer to disappear.</p>
+              <p className="mt-3 text-sm leading-6 text-white/65">Deleting your account permanently removes your GuitarCord sign-in. You will be signed out, and you will not be able to recover the deleted account.</p>
+              <p className="mt-3 text-sm leading-6 text-white/65">Songs submitted by your account—including approved songs—will be removed from the public library and retained in GuitarCord’s private database archive for possible future reuse. We will remove the link to your account and your email from those song records. The archived songs will not appear publicly.</p>
             </div>
 
             <label className="block text-sm text-white/70" htmlFor="delete-confirmation">
