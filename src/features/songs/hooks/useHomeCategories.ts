@@ -13,7 +13,7 @@ const EMPTY: HomeCategories = {
   easy: [],
 };
 
-export function useHomeCategories() {
+export function useHomeCategories(selectedCategory: HomeCategory) {
   const [categories, setCategories] = useState<HomeCategories>(EMPTY);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -21,19 +21,12 @@ export function useHomeCategories() {
   useEffect(() => {
     let active = true;
 
-    Promise.all(
-      (Object.keys(EMPTY) as HomeCategory[]).map(async category => ({
-        category,
-        songs: await fetchHomeSongs(category, 8),
-      })),
-    )
-      .then(items => {
+    setLoading(true);
+    setError('');
+    fetchHomeSongs(selectedCategory, 8)
+      .then(songs => {
         if (!active) return;
-        setCategories(items.reduce<HomeCategories>((acc, item) => {
-          acc[item.category] = item.songs;
-          return acc;
-        }, { ...EMPTY }));
-        setError('');
+        setCategories(current => ({ ...current, [selectedCategory]: songs }));
       })
       .catch(err => {
         if (!active) return;
@@ -47,7 +40,7 @@ export function useHomeCategories() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [selectedCategory]);
 
   return { categories, loading, error };
 }

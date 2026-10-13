@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import * as XLSX from '@e965/xlsx';
 import { ArrowLeft, CheckCircle2, FileSpreadsheet, Upload, XCircle } from 'lucide-react';
 import { insertSongs } from '../services/songs/songService';
 import type { UnifiedUser } from '../services/auth/authService';
@@ -84,6 +83,7 @@ export function AdminSongImport() {
   const handleFile = async (file: File) => {
     setFileName(file.name); setParseError(''); setStatus(''); setRows([]);
     try {
+      const XLSX = await import('@e965/xlsx');
       const buffer = await file.arrayBuffer();
       const workbook = XLSX.read(buffer, { type: 'array' });
       const firstSheet = workbook.Sheets[workbook.SheetNames[0]];

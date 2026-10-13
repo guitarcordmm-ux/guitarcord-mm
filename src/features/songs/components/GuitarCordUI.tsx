@@ -141,7 +141,7 @@ export function GuitarCordHome({ songs }: Props) {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState<HomeCategory>('popular');
-  const { categories, loading: categoryLoading, error: categoryError } = useHomeCategories();
+  const { categories, loading: categoryLoading, error: categoryError } = useHomeCategories(category);
 
   const { results, loading: searchLoading, error: searchError } = useSongSearch(search);
 
