@@ -12,6 +12,7 @@ import { isUserAdmin, subscribeToAuthChanges } from '../services/auth/authServic
 
 const OnboardingPage = lazy(() => import('../components/OnboardingPage').then(module => ({ default: module.OnboardingPage })));
 const SettingsPage = lazy(() => import('../components/SettingsPage').then(module => ({ default: module.SettingsPage })));
+const HelpSupportPage = lazy(() => import('../components/HelpSupportPage').then(module => ({ default: module.HelpSupportPage })));
 const AdminPanel = lazy(() => import('../features/admin/pages/AdminPanel'));
 const AdminLogin = lazy(() => import('../features/admin/pages/AdminLogin'));
 const AdminSongImport = lazy(() => import('../features/admin/pages/AdminSongImport'));
@@ -147,7 +148,8 @@ function Screens({ user }: { user: UnifiedUser | null }) {
           <Route path="/song/:artistSlug/:songSlug" element={<Player />} />
           <Route path="/chord/:chordId" element={<LegacyChordRedirect />} />
           <Route path="/profile" element={<GuitarCordProfile user={user} />} />
-          <Route path="/settings" element={user && !user.isAnonymous ? <SettingsPage user={user} /> : <Navigate to="/login" replace />} />
+          <Route path="/settings" element={<SettingsPage user={user} />} />
+          <Route path="/help" element={<HelpSupportPage />} />
           <Route path="/learn" element={<OnboardingPage />} />
           <Route path="/create" element={user && !user.isAnonymous ? <ChordEditor onClose={() => window.history.back()} user={user} isAdmin={admin} /> : <Navigate to="/login" replace />} />
           <Route path="/login" element={<LoginPage />} />

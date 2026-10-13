@@ -446,7 +446,12 @@ export function GuitarCordProfile({ user }: { user?: User | null }) {
         )}
 
         {items.map(([Icon, label]) => (
-          <button key={label} className="w-full flex items-center gap-3 py-4 border-b border-white/10 text-sm">
+          <button
+            key={label}
+            type="button"
+            onClick={() => navigate(label === 'Settings' ? '/settings' : '/help')}
+            className="w-full flex items-center gap-3 py-4 border-b border-white/10 text-sm"
+          >
             <Icon size={18} className="text-white/60" />
             <span className="flex-1 text-left">{label}</span>
             <span className="text-white/30">›</span>

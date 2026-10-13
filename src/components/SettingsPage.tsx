@@ -33,7 +33,7 @@ export function SettingsPage({ user }: { user?: User | null }) {
 
             <button
               type="button"
-              onClick={() => navigate('/profile')}
+              onClick={() => navigate('/help')}
               className="w-full flex items-center gap-3 px-4 py-4 text-sm border-b border-white/10"
             >
               <CircleHelp size={18} className="text-white/55" />
