@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronRight, ShieldCheck, Settings, CircleHelp, Shield } from 'lucide-react';
+import { ArrowLeft, ChevronRight, ShieldCheck, Settings, CircleHelp, Shield, Trash2 } from 'lucide-react';
 import type { User } from '../types';
 
 export function SettingsPage({ user }: { user?: User | null }) {
@@ -50,6 +50,18 @@ export function SettingsPage({ user }: { user?: User | null }) {
               <span className="flex-1 text-left">Privacy Policy</span>
               <ChevronRight size={17} className="text-white/25" />
             </button>
+
+            {user && !user.isAnonymous && (
+              <button
+                type="button"
+                onClick={() => navigate('/delete-account')}
+                className="w-full flex items-center gap-3 px-4 py-4 text-sm border-t border-white/10"
+              >
+                <Trash2 size={18} className="text-red-300" />
+                <span className="flex-1 text-left text-red-200">Delete Account</span>
+                <ChevronRight size={17} className="text-red-200/40" />
+              </button>
+            )}
 
             {isAdmin && (
               <button

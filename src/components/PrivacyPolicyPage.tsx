@@ -141,12 +141,12 @@ export function PrivacyPolicyPage() {
 
           <PolicySection title="၁၃။ အကောင့်နှင့် data ဖျက်ရန်">
             <p>
-              အကောင့်ဖျက်လိုပါက{' '}
-              <a className="text-[#FFD600] underline" href="mailto:support@guitarcordmm.com?subject=GuitarCord%20account%20deletion">support@guitarcordmm.com</a>{' '}
-              သို့ “Account deletion request” ခေါင်းစဉ်ဖြင့် email ပို့ပြီး GuitarCord account email ကို ဖော်ပြပါ။ လိုအပ်ပါက အကောင့်ပိုင်ရှင်ဖြစ်ကြောင်း အတည်ပြုမေးမြန်းပါမယ်။ ဖျက်ပေးရန် တောင်းဆိုချက်ကို စစ်ဆေးပြီး သက်ဆိုင်ရာ account data နှင့် ထိုအကောင့်နှင့်ဆက်စပ်သည့် content ကို ဖယ်ရှားရန် ဆောင်ရွက်ပါမယ်။ ဥပဒေအရ မဖြစ်မနေသိမ်းဆည်းရသည့် မှတ်တမ်း၊ လုံခြုံရေး/လိမ်လည်မှုစစ်ဆေးမှုအတွက် လိုအပ်သည့် အချက်အလက် သို့မဟုတ် backup များတွင် ကျန်နိုင်သည့် ယာယီမိတ္တူများကို ချက်ချင်းမဖျက်နိုင်ပါ။
+              အကောင့်ဖျက်ရန် app ထဲရှိ Settings → Delete Account ကိုဖွင့်ပါ၊ သို့မဟုတ်{' '}
+              <Link className="text-[#FFD600] underline" to="/delete-account">အများသုံး Account Deletion စာမျက်နှာ</Link>{' '}
+              ကိုဖွင့်ပြီး အကောင့်ဝင်ကာ အတည်ပြုပါ။ ဝင်မရပါက support@guitarcordmm.com သို့ account email ကိုဖော်ပြပြီး တောင်းဆိုနိုင်ပါတယ်။ အတည်ပြုလိုက်သည်နှင့် အကောင့်နှင့် ထိုအကောင့်မှ တင်သွင်းထားသော သီချင်းများကို ဖျက်ပါမယ်။ ဥပဒေအရ မဖြစ်မနေသိမ်းဆည်းရသည့် မှတ်တမ်း၊ လုံခြုံရေး/လိမ်လည်မှုစစ်ဆေးမှုအတွက် လိုအပ်သည့် အချက်အလက် သို့မဟုတ် backup များတွင် ကျန်နိုင်သည့် ယာယီမိတ္တူများကို ချက်ချင်းမဖျက်နိုင်ပါ။
             </p>
             <p>
-              Google Play နှင့် Apple App Store သို့ တင်မည့်အခါ အကောင့်ဖျက်ရန်အတွက် in-app entry point နှင့် public request webpage ကို သီးခြားပြင်ဆင်ပြီး စမ်းသပ်ရပါမယ်။ လက်ရှိ email request နည်းလမ်းတစ်ခုတည်းကို store စည်းမျဉ်းအားလုံးနှင့် ကိုက်ညီသည်ဟု မယူဆပါနှင့်။
+              အကောင့်တင်သွင်းမှုများကို account ID နဲ့ ချိတ်ထားတာကြောင့် အဲဒီအကောင့်မှတင်ထားသမျှ approved/pending သီချင်းများလည်း ဖယ်ရှားမယ်။ ဖျက်ပြီးသွားပါက အကောင့်ပြန်ယူလို့မရပါ။
             </p>
           </PolicySection>
 
@@ -164,6 +164,7 @@ export function PrivacyPolicyPage() {
 
           <div className="border-t border-white/10 pt-5 text-xs leading-6 text-white/40">
             <p>မေးခွန်း သို့မဟုတ် privacy request — <a className="text-[#FFD600] underline" href="mailto:support@guitarcordmm.com">support@guitarcordmm.com</a></p>
+            <Link to="/delete-account" className="mt-2 inline-block text-[#FFD600] underline">အကောင့်ဖျက်ရန်</Link>
             <Link to="/settings" className="mt-3 inline-block text-[#FFD600] underline">Settings သို့ပြန်ရန်</Link>
           </div>
         </main>

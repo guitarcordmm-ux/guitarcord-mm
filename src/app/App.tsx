@@ -14,6 +14,7 @@ const OnboardingPage = lazy(() => import('../components/OnboardingPage').then(mo
 const SettingsPage = lazy(() => import('../components/SettingsPage').then(module => ({ default: module.SettingsPage })));
 const HelpSupportPage = lazy(() => import('../components/HelpSupportPage').then(module => ({ default: module.HelpSupportPage })));
 const PrivacyPolicyPage = lazy(() => import('../components/PrivacyPolicyPage').then(module => ({ default: module.PrivacyPolicyPage })));
+const DeleteAccountPage = lazy(() => import('../components/DeleteAccountPage').then(module => ({ default: module.DeleteAccountPage })));
 const AdminPanel = lazy(() => import('../features/admin/pages/AdminPanel'));
 const AdminLogin = lazy(() => import('../features/admin/pages/AdminLogin'));
 const AdminSongImport = lazy(() => import('../features/admin/pages/AdminSongImport'));
@@ -152,6 +153,7 @@ function Screens({ user }: { user: UnifiedUser | null }) {
           <Route path="/settings" element={<SettingsPage user={user} />} />
           <Route path="/help" element={<HelpSupportPage />} />
           <Route path="/privacy" element={<PrivacyPolicyPage />} />
+          <Route path="/delete-account" element={<DeleteAccountPage user={user} />} />
           <Route path="/learn" element={<OnboardingPage />} />
           <Route path="/create" element={user && !user.isAnonymous ? <ChordEditor onClose={() => window.history.back()} user={user} isAdmin={admin} /> : <Navigate to="/login" replace />} />
           <Route path="/login" element={<LoginPage />} />

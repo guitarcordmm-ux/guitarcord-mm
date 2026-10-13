@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Eye, EyeOff, Lock, AlertCircle, ArrowLeft, User } from 'lucide-react';
 import {
   signInWithEmail,
@@ -11,6 +11,7 @@ import {
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [isLogin, setIsLogin] = useState(true);
   const [isResetting, setIsResetting] = useState(false);
   const [identifier, setIdentifier] = useState('');
@@ -49,7 +50,7 @@ export function LoginPage() {
       if (isUserAdmin(user)) {
         navigate('/admin-panel');
       } else {
-        navigate('/');
+        navigate(searchParams.get('redirect') === '/delete-account' ? '/delete-account' : '/');
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Authentication error occurred');
