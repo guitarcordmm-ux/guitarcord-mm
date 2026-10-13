@@ -50,6 +50,9 @@ export default defineConfig(({mode}) => {
         },
         workbox: {
           globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+          // Spreadsheet parsing is only needed by admins after choosing a file.
+          // Do not download/cache its large lazy chunk during app installation.
+          globIgnores: ['**/xlsx-*.js'],
           runtimeCaching: [
             {
               urlPattern: ({ request }) => request.destination === 'image',
@@ -89,6 +92,23 @@ export default defineConfig(({mode}) => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
+      },
+    },
+    build: {
+      // The only chunk above 500 kB is the optional spreadsheet parser,
+      // loaded only after an admin chooses an Excel file.
+      chunkSizeWarningLimit: 520,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (!id.includes('/node_modules/')) return;
+            if (id.includes('/node_modules/@supabase/')) return 'supabase-vendor';
+            if (id.includes('/node_modules/react-router')) return 'router-vendor';
+            if (/\/node_modules\/(react|react-dom|scheduler|react-helmet-async)\//.test(id)) {
+              return 'react-vendor';
+            }
+          },
+        },
       },
     },
     server: {
