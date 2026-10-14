@@ -38,7 +38,7 @@ function AppLogo({ compact = false }: { compact?: boolean }) {
   );
 }
 
-function BottomNav({ active }: { active: 'home' | 'library' | 'profile' }) {
+function BottomNav({ active, contained = false }: { active: 'home' | 'library' | 'profile'; contained?: boolean }) {
   const navigate = useNavigate();
   const items = [
     ['home', Home, 'Home', '/'],
@@ -47,11 +47,13 @@ function BottomNav({ active }: { active: 'home' | 'library' | 'profile' }) {
   ] as const;
 
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-40 border-t border-white/10 bg-black/95 backdrop-blur-xl pb-safe">
+    <nav aria-label="Main navigation" className={`${contained ? 'shrink-0' : 'fixed bottom-0 inset-x-0'} z-40 border-t border-white/10 bg-black/95 pb-safe`}>
       <div className="mx-auto max-w-xl grid grid-cols-3 h-16">
         {items.map(([key, Icon, label, path]) => (
           <button
             key={key}
+            type="button"
+            aria-current={active === key ? 'page' : undefined}
             onClick={() => navigate(path)}
             className={`flex flex-col items-center justify-center gap-1 text-[10px] ${active === key ? 'text-[#FFD600]' : 'text-white/45'}`}
           >
@@ -127,10 +129,10 @@ function SongRow({
     </div>
   );
 }
-function Shell({ children }: { children: ReactNode }) {
+function Shell({ children, viewport = false }: { children: ReactNode; viewport?: boolean }) {
   return (
     <div className="min-h-screen bg-black text-white selection:bg-[#FFD600]/30">
-      <div className="mx-auto min-h-screen w-full max-w-xl bg-[radial-gradient(circle_at_top,rgba(255,214,0,0.05),transparent_35%)] pb-20">
+      <div className={`mx-auto w-full max-w-xl bg-[radial-gradient(circle_at_top,rgba(255,214,0,0.05),transparent_35%)] ${viewport ? 'home-viewport' : 'min-h-screen pb-20'}`}>
         {children}
       </div>
     </div>
@@ -165,30 +167,32 @@ export function GuitarCordHome({ songs }: Props) {
   const displayedCategory = categoryItems.find(item => item.key === category)?.label || 'Songs';
 
   return (
-    <Shell>
-      <header className="px-5 pt-safe pt-5 flex items-center justify-between">
+    <Shell viewport>
+      <header className="px-5 pt-safe pb-3 shrink-0 flex items-center justify-between border-b border-white/10">
         <AppLogo />
         <button onClick={() => navigate('/profile')} className="text-white/70" aria-label="Profile">
           <UserCircle2 size={22} />
         </button>
       </header>
 
-      <main className="px-5 pt-8">
-        <section aria-label="Search Myanmar guitar chords">
-          <div className="text-3xl font-black leading-tight">
+      <main className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain" aria-label="Find songs" tabIndex={0}>
+        <div className="px-5 pt-5 pb-4">
+          <h1 className="text-2xl font-black leading-tight">
             🎸 Myanmar Guitar Chords
-          </div>
+          </h1>
           <p className="mt-2 text-sm text-white/45">
             Find a song. See the chords. Start playing.
           </p>
+        </div>
 
-          <div className="mt-5 rounded-2xl bg-[#151517] border border-white/10 px-4 py-4 flex items-center gap-3 focus-within:border-[#FFD600]/60 focus-within:ring-2 focus-within:ring-[#FFD600]/10">
+        <section className="sticky top-0 z-20 bg-black px-5 py-3 border-b border-white/10" aria-label="Search Myanmar guitar chords">
+          <div className="rounded-2xl bg-[#151517] border border-white/10 px-4 py-3 flex items-center gap-3 focus-within:border-[#FFD600]/60 focus-within:ring-2 focus-within:ring-[#FFD600]/10">
             <Search size={20} className="text-[#FFD600] flex-shrink-0" />
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search song / artist / lyric / chord"
-              className="bg-transparent outline-none w-full text-base placeholder:text-white/30"
+              className="bg-transparent outline-none min-w-0 w-full text-base placeholder:text-white/30"
               aria-label="Search song, artist, lyric or chord"
               autoComplete="off"
             />
@@ -203,10 +207,11 @@ export function GuitarCordHome({ songs }: Props) {
             )}
           </div>
 
-          <div className="mt-4 flex gap-2 overflow-x-auto no-scrollbar pb-1">
+          <div className="mt-3 flex gap-2 overflow-x-auto no-scrollbar pb-1">
             {categoryItems.map(({ key, label, Icon }) => (
               <button
                 key={key}
+                aria-pressed={category === key && !search}
                 onClick={() => {
                   setCategory(key);
                   setSearch('');
@@ -222,7 +227,7 @@ export function GuitarCordHome({ songs }: Props) {
           </div>
         </section>
 
-        <section className="mt-7">
+        <section className="px-5 pt-5 pb-4">
           <div className="flex items-center justify-between mb-2">
             <div>
               <h2 className="font-semibold">
@@ -272,11 +277,12 @@ export function GuitarCordHome({ songs }: Props) {
         </section>
 
         {!search.trim() && (
-          <div className="mt-5 rounded-2xl border border-white/10 bg-[#111113] px-4 py-3 text-xs text-white/45">
+          <div className="mx-5 mb-5 rounded-2xl border border-white/10 bg-[#111113] px-4 py-3 text-xs text-white/45">
             Search by Burmese spelling, English spelling, lyric line, artist, or chord to jump straight into the player.
           </div>
         )}
       </main>
+      <BottomNav active="home" contained />
     </Shell>
   );
 }

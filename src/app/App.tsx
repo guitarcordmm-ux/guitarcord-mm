@@ -5,7 +5,7 @@ import { SupabaseBanner } from '../components/SupabaseBanner';
 import { GuitarCordHome } from '../features/songs/pages/Home';
 import type { UnifiedUser } from '../services/auth/authService';
 import type { Song } from '../types';
-import { fetchApprovedSong, fetchApprovedSongBySlug, fetchApprovedSongs } from '../services/songs/songService';
+import { fetchApprovedSong, fetchApprovedSongBySlug, fetchApprovedSongs, getCachedApprovedSong } from '../services/songs/songService';
 import { getSongPath } from '../lib/seo';
 import { SongSeo } from '../features/songs/components/SongSeo';
 import { isUserAdmin, subscribeToAuthChanges } from '../services/auth/authService';
@@ -37,13 +37,15 @@ function Player() {
   const { artistSlug = '', songSlug = '' } = useParams();
   const [searchParams] = useSearchParams();
   const songId = searchParams.get('id')?.trim() || '';
-  const [song, setSong] = useState<Song | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [song, setSong] = useState<Song | null>(() => getCachedApprovedSong(songId, artistSlug, songSlug));
+  const [loading, setLoading] = useState(() => !getCachedApprovedSong(songId, artistSlug, songSlug));
   const [error, setError] = useState('');
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
+    const cachedSong = getCachedApprovedSong(songId, artistSlug, songSlug);
+    if (cachedSong) setSong(cachedSong);
+    setLoading(!cachedSong);
     setError('');
 
     const loadSong = songId ? fetchApprovedSong(songId) : fetchApprovedSongBySlug(artistSlug, songSlug);
@@ -55,7 +57,7 @@ function Player() {
       })
       .catch(err => {
         console.error('Could not load song:', err);
-        if (active) setError(err instanceof Error ? err.message : 'Could not load song.');
+        if (active && !cachedSong) setError(err instanceof Error ? err.message : 'Could not load song.');
       })
       .finally(() => {
         if (active) setLoading(false);

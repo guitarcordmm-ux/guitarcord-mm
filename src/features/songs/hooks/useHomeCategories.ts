@@ -1,23 +1,28 @@
 import { useEffect, useState } from 'react';
-import { fetchHomeSongs } from '../../../services/songs/songService';
+import { fetchHomeSongs, getCachedHomeSongs, prefetchApprovedSongs } from '../../../services/songs/songService';
 import type { Song } from '../../../types';
 
 export type HomeCategory = 'popular' | 'recent' | 'myanmar' | 'easy';
 
 export function useHomeCategories(selectedCategory: HomeCategory) {
-  const [songs, setSongs] = useState<Song[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [songs, setSongs] = useState<Song[]>(() => getCachedHomeSongs(selectedCategory, 8));
+  const [loading, setLoading] = useState(() => getCachedHomeSongs(selectedCategory, 8).length === 0);
   const [error, setError] = useState('');
 
   useEffect(() => {
     let cancelled = false;
-    setSongs([]);
-    setLoading(true);
+    const cachedSongs = getCachedHomeSongs(selectedCategory, 8);
+    setSongs(cachedSongs);
+    setLoading(cachedSongs.length === 0);
     setError('');
 
     fetchHomeSongs(selectedCategory, 8)
       .then(songs => {
-        if (!cancelled) setSongs(songs);
+        if (!cancelled) {
+          setSongs(songs);
+          setError('');
+          void prefetchApprovedSongs(songs.map(song => song.id));
+        }
       })
       .catch(error => {
         if (cancelled) return;

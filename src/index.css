@@ -81,3 +81,14 @@ button {
 * { -ms-overflow-style: none; scrollbar-width: none; }
 
 .safe-bottom { padding-bottom: calc(16px + var(--sab)); }
+
+/* Keep Home's app chrome outside its scrollable content. */
+.home-viewport {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  padding-left: var(--sal);
+  padding-right: var(--sar);
+}
