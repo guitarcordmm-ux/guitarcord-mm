@@ -324,6 +324,7 @@ const SONG_DETAIL_CACHE_TTL_MS = 5 * 60 * 1000;
 const SONG_DETAIL_CACHE_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 const SONG_DETAIL_CACHE_PREFIX = 'guitarcord_song_detail_v1:';
 const songDetailCache = new Map<string, { savedAt: number; song: Song | null }>();
+const songDetailRequests = new Map<string, Promise<Song | null>>();
 
 function readSongDetailCache(key: string): { savedAt: number; song: Song | null } | undefined {
   const memoryCache = songDetailCache.get(key);
@@ -352,13 +353,65 @@ function readSongDetailCache(key: string): { savedAt: number; song: Song | null 
 
 function setSongDetailCache(key: string, song: Song | null): void {
   const cached = { savedAt: Date.now(), song };
-  songDetailCache.set(key, cached);
-  if (!song || typeof window === 'undefined') return;
-  try {
-    window.localStorage.setItem(SONG_DETAIL_CACHE_PREFIX + key, JSON.stringify(cached));
-  } catch (error) {
-    console.warn('Unable to cache song detail:', error);
+  const keys = new Set([key]);
+  if (song) {
+    keys.add(`approved:${song.id}`);
+    if (song.artistSlug && song.songSlug) {
+      keys.add(`approved:${song.artistSlug.toLowerCase()}:${song.songSlug.toLowerCase()}`);
+    }
   }
+  for (const cacheKey of keys) {
+    songDetailCache.set(cacheKey, cached);
+    if (typeof window === 'undefined') continue;
+    try {
+      if (song) window.localStorage.setItem(SONG_DETAIL_CACHE_PREFIX + cacheKey, JSON.stringify(cached));
+      else window.localStorage.removeItem(SONG_DETAIL_CACHE_PREFIX + cacheKey);
+    } catch (error) {
+      console.warn('Unable to cache song detail:', error);
+    }
+  }
+}
+
+function fetchSongDetail(cacheKey: string, params: URLSearchParams): Promise<Song | null> {
+  const cached = readSongDetailCache(cacheKey);
+  if (cached && Date.now() - cached.savedAt <= SONG_DETAIL_CACHE_TTL_MS) return Promise.resolve(cached.song);
+  const pending = songDetailRequests.get(cacheKey);
+  if (pending) return pending;
+
+  // Use the website's public API: direct Supabase access can time out on mobile
+  // networks. Share this request when a user opens a song being prefetched.
+  const request = (async () => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    try {
+      const response = await fetch(apiUrl(`/api/songs?${params.toString()}`), {
+        headers: { Accept: 'application/json' },
+        cache: 'default',
+        signal: controller.signal,
+      });
+      if (response.status === 404) {
+        setSongDetailCache(cacheKey, null);
+        return null;
+      }
+      if (!response.ok) throw new Error(`Song API request failed (${response.status})`);
+      const payload: unknown = await response.json();
+      const rows = Array.isArray(payload) ? payload : isRecord(payload) && Array.isArray(payload.songs) ? payload.songs : null;
+      if (!rows) throw new Error('Invalid song API response.');
+      const row = rows.find(isSongRow);
+      const song = row ? mapRowToSong(row) : null;
+      setSongDetailCache(cacheKey, song);
+      return song;
+    } catch (error) {
+      if (cached?.song) return cached.song;
+      throw error;
+    } finally {
+      clearTimeout(timeout);
+    }
+  })();
+  songDetailRequests.set(cacheKey, request);
+  const cleanup = () => { songDetailRequests.delete(cacheKey); };
+  void request.then(cleanup, cleanup);
+  return request;
 }
 
 export function getCachedApprovedSong(id: string, artistSlug = '', songSlug = ''): Song | null {
@@ -375,26 +428,19 @@ export async function prefetchApprovedSongs(ids: string[]): Promise<void> {
   const missingIds = cleanIds.filter(id => !getCachedApprovedSong(id));
   if (!missingIds.length) return;
 
-  const client = getSupabase();
-  if (!client) return;
-  try {
-    const { data, error } = await client
-      .from('songs')
-      .select('id,song_title,title,artist,composer,album,genre,image_url,tutorial_url,lyrics,tags,status,is_watermarked,created_at,updated_at,artist_slug,song_slug,language,difficulty,play_count,search_aliases,user_id')
-      .eq('status', 'approved')
-      .in('id', missingIds);
-    if (error) throw error;
-    for (const row of Array.isArray(data) ? data : []) {
-      if (!isSongRow(row)) continue;
-      const song = mapRowToSong(row);
-      setSongDetailCache(`approved:${song.id}`, song);
-      if (song.artistSlug && song.songSlug) {
-        setSongDetailCache(`approved:${song.artistSlug.toLowerCase()}:${song.songSlug.toLowerCase()}`, song);
+  // Limit background traffic instead of requesting every visible song at once.
+  let nextIndex = 0;
+  const worker = async () => {
+    while (nextIndex < missingIds.length) {
+      const id = missingIds[nextIndex++];
+      try {
+        await fetchApprovedSong(id);
+      } catch (error) {
+        console.warn('Unable to prefetch song detail:', error);
       }
     }
-  } catch (error) {
-    console.warn('Unable to prefetch visible song details:', error);
-  }
+  };
+  await Promise.all(Array.from({ length: Math.min(3, missingIds.length) }, worker));
 }
 
 export async function fetchApprovedSongBySlug(artistSlug: string, songSlug: string): Promise<Song | null> {
@@ -403,67 +449,7 @@ export async function fetchApprovedSongBySlug(artistSlug: string, songSlug: stri
   if (!cleanArtistSlug || !cleanSongSlug) return null;
 
   const cacheKey = `approved:${cleanArtistSlug.toLowerCase()}:${cleanSongSlug.toLowerCase()}`;
-  const cached = readSongDetailCache(cacheKey);
-  if (cached && Date.now() - cached.savedAt <= SONG_DETAIL_CACHE_TTL_MS) return cached.song;
-
-  const supabase = getSupabase();
-  if (supabase) {
-    try {
-      const { data, error } = await supabase
-        .from('songs')
-        .select('id,song_title,title,artist,composer,album,genre,image_url,tutorial_url,lyrics,tags,status,is_watermarked,created_at,updated_at,artist_slug,song_slug,language,difficulty,play_count,search_aliases,user_id')
-        .eq('status', 'approved')
-        .eq('artist_slug', cleanArtistSlug)
-        .eq('song_slug', cleanSongSlug)
-        .maybeSingle();
-
-      if (!error && data) {
-        const song = mapRowToSong(data);
-        setSongDetailCache(cacheKey, song);
-        return song;
-      }
-
-      if (error) {
-        console.warn('Supabase song lookup failed; using API fallback:', error);
-      }
-    } catch (error) {
-      console.warn('Supabase song lookup failed; using API fallback:', error);
-    }
-  }
-
-  // One network fallback only. Avoid re-fetching the same row by id and avoid
-  // scanning hundreds of catalogue rows when a URL slug does not match.
-  try {
-    const params = new URLSearchParams({
-      artist_slug: cleanArtistSlug,
-      song_slug: cleanSongSlug,
-    });
-    const response = await fetch(apiUrl(`/api/songs?${params.toString()}`), {
-      headers: { Accept: 'application/json' },
-      cache: 'default',
-    });
-
-    if (response.status === 404) {
-      setSongDetailCache(cacheKey, null);
-      return null;
-    }
-    if (!response.ok) throw new Error(`Song API request failed (${response.status})`);
-
-    const payload: unknown = await response.json();
-    const rows = Array.isArray(payload)
-      ? payload
-      : isRecord(payload) && Array.isArray(payload.songs)
-        ? payload.songs
-        : [];
-    const row = rows.find(isSongRow);
-    const song = row ? mapRowToSong(row) : null;
-    setSongDetailCache(cacheKey, song);
-    return song;
-  } catch (error) {
-    console.warn('Song API fallback failed:', error);
-    if (cached?.song) return cached.song;
-    throw error;
-  }
+  return fetchSongDetail(cacheKey, new URLSearchParams({ artist_slug: cleanArtistSlug, song_slug: cleanSongSlug }));
 }
 
 const HOME_CATEGORY_CACHE_TTL_MS = 5 * 60 * 1000;
@@ -581,51 +567,7 @@ export async function fetchApprovedSong(id: string): Promise<Song | null> {
   if (!cleanId) return null;
 
   const cacheKey = `approved:${cleanId}`;
-  const cached = readSongDetailCache(cacheKey);
-  if (cached && Date.now() - cached.savedAt <= SONG_DETAIL_CACHE_TTL_MS) return cached.song;
-
-  const supabase = getSupabase();
-  if (supabase) {
-    try {
-      const { data, error } = await supabase
-        .from('songs')
-        .select('id,song_title,title,artist,composer,album,genre,image_url,tutorial_url,lyrics,tags,status,is_watermarked,created_at,updated_at,artist_slug,song_slug,language,difficulty,play_count,search_aliases,user_id')
-        .eq('status', 'approved')
-        .eq('id', cleanId)
-        .maybeSingle();
-
-      if (!error && data) {
-        const song = mapRowToSong(data);
-        setSongDetailCache(cacheKey, song);
-        return song;
-      }
-      if (error) console.warn('Supabase song ID lookup failed; using API fallback:', error);
-    } catch (error) {
-      console.warn('Supabase song ID lookup failed; using API fallback:', error);
-    }
-  }
-
-  try {
-    const response = await fetch(apiUrl('/api/songs?id=' + encodeURIComponent(cleanId)), {
-      headers: { Accept: 'application/json' },
-      cache: 'default',
-    });
-    if (response.status === 404) return null;
-    if (!response.ok) throw new Error('Song API request failed (' + response.status + ')');
-    const payload: unknown = await response.json();
-    const rows = Array.isArray(payload)
-      ? payload
-      : isRecord(payload) && Array.isArray(payload.songs)
-        ? payload.songs
-        : [];
-    const row = rows.find(isSongRow);
-    const song = row ? mapRowToSong(row) : null;
-    if (song) setSongDetailCache(cacheKey, song);
-    return song;
-  } catch (error) {
-    if (cached?.song) return cached.song;
-    throw error;
-  }
+  return fetchSongDetail(cacheKey, new URLSearchParams({ id: cleanId }));
 }
 
 export async function fetchUserSongs(userId: string): Promise<Song[]> {
