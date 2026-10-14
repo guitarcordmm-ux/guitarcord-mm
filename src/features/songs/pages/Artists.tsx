@@ -8,7 +8,7 @@ function initials(name: string) {
   return name.trim().slice(0, 2) || '🎸';
 }
 
-export function GuitarCordArtists() {
+export function GuitarCordArtists({ embedded = false }: { embedded?: boolean }) {
   const navigate = useNavigate();
   const [artists, setArtists] = useState<ArtistSummary[]>([]);
   const [search, setSearch] = useState('');
@@ -39,18 +39,18 @@ export function GuitarCordArtists() {
   }, [artists, search]);
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      <div className="mx-auto min-h-screen w-full max-w-xl bg-[radial-gradient(circle_at_top,rgba(255,214,0,0.05),transparent_35%)] pb-8">
-        <header className="sticky top-0 z-20 border-b border-white/10 bg-black/95 px-5 pt-safe pt-3 pb-3 backdrop-blur-xl">
+    <div className={`${embedded ? '' : 'min-h-screen'} bg-black text-white`}>
+      <div className="mx-auto w-full max-w-xl pb-8">
+        <header className={`${embedded ? 'pt-4' : 'sticky top-0 z-20 px-5 pt-safe'} border-b border-white/10 bg-black/95 pb-3`}>
           <div className="flex items-center gap-3">
-            <button
+            {!embedded && <button
               type="button"
               onClick={() => navigate(-1)}
               aria-label="Back"
               className="grid h-10 w-10 place-items-center rounded-full bg-white/5 active:scale-95"
             >
               <ChevronLeft size={21} />
-            </button>
+            </button>}
             <div className="min-w-0 flex-1">
               <div className="text-base font-bold">Artists / Singers</div>
               <div className="text-[11px] text-white/40">{artists.length} artists</div>
@@ -64,13 +64,14 @@ export function GuitarCordArtists() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search artist / singer"
+              aria-label="Search artists"
               className="w-full bg-transparent text-sm outline-none placeholder:text-white/30"
               autoComplete="off"
             />
           </div>
         </header>
 
-        <main className="px-5 pt-4">
+        <section aria-label="Artists" className={`${embedded ? '' : 'px-5'} pt-4`}>
           {loading ? (
             <div className="py-16 text-center text-sm text-white/35">Loading artists…</div>
           ) : error ? (
@@ -83,7 +84,7 @@ export function GuitarCordArtists() {
                 <button
                   key={artist.slug}
                   type="button"
-                  onClick={() => navigate(getArtistPath(artist.slug))}
+                  onClick={() => navigate(getArtistPath(artist.name, artist.slug))}
                   className="flex w-full items-center gap-3 py-3 text-left active:scale-[0.99]"
                 >
                   <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-full border border-white/10 bg-[#171719] flex items-center justify-center">
@@ -110,7 +111,7 @@ export function GuitarCordArtists() {
               {search.trim() ? 'No matching artist found.' : 'No artists available yet.'}
             </div>
           )}
-        </main>
+        </section>
       </div>
     </div>
   );

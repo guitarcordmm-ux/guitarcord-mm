@@ -177,6 +177,7 @@ async function handleRequestGet({ request, env }: { request: Request; env: Env }
   upstreamUrl.searchParams.set('limit', String(id || (artistSlug && songSlug) ? 1 : limit));
   if (!id && !(artistSlug && songSlug)) upstreamUrl.searchParams.set('offset', String(offset));
   if (id) upstreamUrl.searchParams.set('id', `eq.${id}`);
+  if (artistSlug) upstreamUrl.searchParams.set('artist_slug', `eq.${artistSlug}`);
   if (artistSlug && songSlug) {
     upstreamUrl.searchParams.set('artist_slug', `eq.${artistSlug}`);
     upstreamUrl.searchParams.set('song_slug', `eq.${songSlug}`);

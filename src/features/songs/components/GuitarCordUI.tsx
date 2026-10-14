@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Search,
   Home,
@@ -26,6 +26,7 @@ import { isUserAdmin, signOutUser } from '../../../services/auth/authService';
 import { useHomeCategories, type HomeCategory } from '../hooks/useHomeCategories';
 
 type Props = { songs: Song[]; user?: User | null };
+const GuitarCordArtists = lazy(() => import('../pages/Artists'));
 
 function AppLogo({ compact = false }: { compact?: boolean }) {
   return (
@@ -290,7 +291,9 @@ export function GuitarCordHome({ songs }: Props) {
 export function GuitarCordLibrary({ songs }: Props) {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
-  const [tab, setTab] = useState<'songs' | 'favorites' | 'downloads'>('songs');
+  const [libraryParams, setLibraryParams] = useSearchParams();
+  const tab = libraryParams.get('tab') || 'songs';
+  const setTab = (value: string) => { setLibraryParams({ tab: value }, { replace: true }); setSearch(''); };
   const [librarySongs, setLibrarySongs] = useState<Song[]>(songs);
   const [loadingMore, setLoadingMore] = useState(false);
   const { results, loading: searchLoading, error: searchError } = useSongSearch(search);
@@ -337,9 +340,10 @@ export function GuitarCordLibrary({ songs }: Props) {
         <div className="mt-5 text-xl font-semibold">My Library</div>
 
         <div className="mt-3 flex gap-2 overflow-x-auto no-scrollbar">
-          {(['songs', 'favorites', 'downloads'] as const).map(t => (
+          {(['songs', 'artists', 'favorites', 'downloads'] as const).map(t => (
             <button
               key={t}
+              aria-pressed={tab === t}
               onClick={() => setTab(t)}
               className={`px-4 py-2 rounded-full text-xs ${tab === t ? 'bg-[#FFD600] text-black font-semibold' : 'bg-[#1a1a1c] text-white/60'}`}
             >
@@ -348,7 +352,7 @@ export function GuitarCordLibrary({ songs }: Props) {
           ))}
         </div>
 
-        <div className="mt-3 rounded-2xl bg-[#151517] px-3.5 py-3 flex items-center gap-2">
+        {tab !== 'artists' && <div className="mt-3 rounded-2xl bg-[#151517] px-3.5 py-3 flex items-center gap-2">
           <Search size={16} className="text-white/45" />
           <input
             value={search}
@@ -361,11 +365,15 @@ export function GuitarCordLibrary({ songs }: Props) {
               <X size={15} className="text-white/30" />
             </button>
           )}
-        </div>
+        </div>}
       </header>
 
       <main className="px-5 pt-3 divide-y divide-white/10">
-        {searchLoading ? (
+        {tab === 'artists' ? (
+          <Suspense fallback={<p className="py-10 text-center text-white/40">Loading artists…</p>}>
+            <GuitarCordArtists embedded />
+          </Suspense>
+        ) : searchLoading ? (
           <div className="py-10 text-center text-sm text-white/35">Searching songs…</div>
         ) : visibleSongs.length ? (
           visibleSongs.map(({ song, lyricMatch }, i) => (

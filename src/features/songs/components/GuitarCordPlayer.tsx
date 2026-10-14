@@ -195,7 +195,7 @@ export function GuitarCordPlayer({ song }: { song: Song }) {
     <div className="min-h-screen bg-black text-white">
       <header className="sticky top-0 z-30 px-5 pt-safe pt-3 pb-3 bg-black/95 backdrop-blur-xl border-b border-white/10">
         <div className="mx-auto max-w-xl flex items-center gap-3">
-          <button onClick={() => navigate('/app')} aria-label="Back" className="w-10 h-10 rounded-full bg-white/5 grid place-items-center active:scale-95">
+          <button onClick={() => window.history.state?.idx > 0 ? navigate(-1) : navigate('/library')} aria-label="Back" className="w-10 h-10 rounded-full bg-white/5 grid place-items-center active:scale-95">
             <ChevronLeft size={22} />
           </button>
           <div className="min-w-0 flex-1">

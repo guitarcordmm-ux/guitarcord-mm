@@ -211,113 +211,66 @@ function groupArtistRows(rows: unknown[]): ArtistSummary[] {
   );
 }
 
-export async function fetchApprovedArtists(): Promise<ArtistSummary[]> {
-  const supabase = getSupabase();
+const artistCatalogueCache = new Map<string, { savedAt: number; songs: Song[] }>();
+const artistCatalogueRequests = new Map<string, Promise<Song[]>>();
 
-  if (supabase) {
-    try {
-      const { data, error } = await supabase
-        .from('songs')
-        .select('artist,artist_slug,image_url,genre')
-        .eq('status', 'approved')
-        .order('artist', { ascending: true });
+async function fetchArtistCatalogue(artistSlug = ''): Promise<Song[]> {
+  const cached = artistCatalogueCache.get(artistSlug);
+  if (cached && Date.now() - cached.savedAt < 5 * 60 * 1000) return cached.songs;
+  const pending = artistCatalogueRequests.get(artistSlug);
+  if (pending) return pending;
 
-      if (!error) {
-        return groupArtistRows(Array.isArray(data) ? data : []);
+  const request = (async () => {
+    const songs: Song[] = [];
+    const pageSize = 100;
+    for (let offset = 0; ; offset += pageSize) {
+      const params = new URLSearchParams({ limit: String(pageSize), offset: String(offset) });
+      if (artistSlug) params.set('artist_slug', artistSlug);
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
+      try {
+        const response = await fetch(apiUrl('/api/songs?' + params), {
+          headers: { Accept: 'application/json' },
+          signal: controller.signal,
+        });
+        if (!response.ok) throw new Error('Artist catalogue request failed (' + response.status + ')');
+        const payload: unknown = await response.json();
+        const rows = Array.isArray(payload) ? payload : isRecord(payload) && Array.isArray(payload.songs) ? payload.songs : null;
+        if (!rows) throw new Error('Invalid artist catalogue response.');
+        songs.push(...rows.filter(isSongRow).map(mapRowToSong));
+        if (rows.length < pageSize) break;
+      } finally {
+        clearTimeout(timeout);
       }
-
-      console.warn('Supabase artist list failed; using API fallback:', error);
-    } catch (error) {
-      console.warn('Supabase artist list failed; using API fallback:', error);
     }
-  }
-
+    const uniqueSongs = [...new Map(songs.map(song => [song.id, song])).values()];
+    artistCatalogueCache.set(artistSlug, { savedAt: Date.now(), songs: uniqueSongs });
+    return uniqueSongs;
+  })();
+  artistCatalogueRequests.set(artistSlug, request);
   try {
-    const response = await fetch(apiUrl('/api/songs?offset=0&limit=50'), {
-      headers: { Accept: 'application/json' },
-      cache: 'default',
-    });
-    if (!response.ok) throw new Error('Artist list API request failed (' + response.status + ')');
-
-    const payload: unknown = await response.json();
-    const rows = Array.isArray(payload)
-      ? payload
-      : isRecord(payload) && Array.isArray(payload.songs)
-        ? payload.songs
-        : [];
-
-    return groupArtistRows(rows);
-  } catch (error) {
-    console.warn('Artist list API fallback failed:', error);
-    return [];
+    return await request;
+  } finally {
+    artistCatalogueRequests.delete(artistSlug);
   }
 }
 
-export async function fetchApprovedArtistSongs(artistSlug: string, limit = 100): Promise<Song[]> {
-  const cleanArtistSlug = artistSlug.trim();
-  if (!cleanArtistSlug) return [];
+export async function fetchApprovedArtists(): Promise<ArtistSummary[]> {
+  const songs = await fetchArtistCatalogue();
+  return groupArtistRows(songs.map(song => ({
+    artist: song.artist, artist_slug: song.artistSlug, image_url: song.imageURL, genre: song.genre,
+  })));
+}
 
-  const safeLimit = Math.min(Math.max(limit, 1), 100);
-  const selectColumns = 'id,song_title,title,artist,composer,album,genre,image_url,tutorial_url,lyrics,tags,status,is_watermarked,created_at,updated_at,artist_slug,song_slug,language,difficulty,play_count,search_aliases,user_id';
-  const supabase = getSupabase();
-
-  if (supabase) {
-    try {
-      const { data, error } = await supabase
-        .from('songs')
-        .select(selectColumns)
-        .eq('status', 'approved')
-        .eq('artist_slug', cleanArtistSlug)
-        .order('created_at', { ascending: false })
-        .limit(safeLimit);
-
-      if (!error) {
-        return (Array.isArray(data) ? data : []).filter(isSongRow).map(mapRowToSong);
-      }
-
-      console.warn('Supabase artist songs lookup failed; using API fallback:', error);
-    } catch (error) {
-      console.warn('Supabase artist songs lookup failed; using API fallback:', error);
-    }
-  }
-
-  try {
-    const params = new URLSearchParams({
-      artist_slug: cleanArtistSlug,
-      limit: String(safeLimit),
-    });
-    const response = await fetch(apiUrl('/api/songs?' + params.toString()), {
-      headers: { Accept: 'application/json' },
-      cache: 'default',
-    });
-
-    if (!response.ok) {
-      if (response.status === 404) return [];
-      throw new Error('Artist songs API request failed (' + response.status + ')');
-    }
-
-    const payload: unknown = await response.json();
-    const rows = Array.isArray(payload)
-      ? payload
-      : isRecord(payload) && Array.isArray(payload.songs)
-        ? payload.songs
-        : [];
-
-    const matches = rows
-      .filter(isSongRow)
-      .map(mapRowToSong)
-      .filter(song => (song.artistSlug || '').toLowerCase() === cleanArtistSlug.toLowerCase());
-
-    return matches;
-  } catch (error) {
-    const cached = readPublicSongsCache();
-    if (cached?.length) {
-      return cached.filter(song =>
-        (song.artistSlug || '').toLowerCase() === cleanArtistSlug.toLowerCase()
-      );
-    }
-    throw error;
-  }
+export async function fetchApprovedArtistSongs(artistSlug: string): Promise<Song[]> {
+  const slug = artistSlug.trim();
+  if (!slug) return [];
+  // Reuse the complete list when the user has just opened Library > Artists.
+  const catalogue = artistCatalogueCache.get('');
+  const songs = catalogue && Date.now() - catalogue.savedAt < 5 * 60 * 1000
+    ? catalogue.songs
+    : await fetchArtistCatalogue(slug);
+  return songs.filter(song => song.artistSlug?.toLowerCase() === slug.toLowerCase());
 }
 
 const SONG_DETAIL_CACHE_TTL_MS = 5 * 60 * 1000;

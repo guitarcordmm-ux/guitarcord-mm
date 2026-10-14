@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
-import { ChevronLeft, Guitar, Play } from 'lucide-react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { ChevronLeft, Disc3, Guitar, Play } from 'lucide-react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import type { Song } from '../../../types';
 import { fetchApprovedArtistSongs } from '../../../services/songs/songService';
 import { getArtistUrl, getSongPath } from '../../../lib/seo';
 import { ArtistSeo } from '../components/ArtistSeo';
+import { groupSongsByAlbum } from '../lib/albums';
 
 function SongItem({ song }: { song: Song }) {
   const navigate = useNavigate();
@@ -37,12 +38,18 @@ export function GuitarCordArtistPage() {
   const { artistSlug = '' } = useParams();
   const navigate = useNavigate();
   const [songs, setSongs] = useState<Song[]>([]);
+  const [params, setParams] = useSearchParams();
+  const albums = useMemo(() => groupSongsByAlbum(songs), [songs]);
+  const albumName = params.get('album');
+  const selectedAlbum = albums.find(album => album.name === albumName);
+  const visibleSongs = albumName ? selectedAlbum?.songs || [] : songs;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     let active = true;
     setLoading(true);
+    setSongs([]);
     setError('');
 
     fetchApprovedArtistSongs(artistSlug)
@@ -83,7 +90,7 @@ export function GuitarCordArtistPage() {
             </button>
             <div className="min-w-0 flex-1">
               <div className="text-[11px] text-white/40">Artist / Singer</div>
-              <div className="truncate text-base font-bold">{artistName}</div>
+              <div className="truncate text-base font-bold">{albumName || artistName}</div>
             </div>
           </div>
         </header>
@@ -127,13 +134,34 @@ export function GuitarCordArtistPage() {
                 </div>
               </section>
 
-              <section className="mt-6">
+              {!albumName && albums.length > 0 && (
+                <section className="mt-6" aria-label="Albums">
+                  <h2 className="mb-2 font-semibold">Albums · {albums.length}</h2>
+                  <div className="divide-y divide-white/10">
+                    {albums.map(album => (
+                      <button key={album.name} type="button" onClick={() => setParams({ album: album.name })}
+                        className="flex w-full items-center gap-3 py-3 text-left">
+                        <Disc3 className="shrink-0 text-[#FFD600]" size={28} />
+                        <span className="min-w-0 flex-1">
+                          <span className="block break-words font-medium">{album.name}</span>
+                          <span className="text-xs text-white/40">{album.songs.length} songs</span>
+                        </span>
+                        <span aria-hidden="true" className="text-white/40">›</span>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              <section className="mt-6" aria-label={albumName ? 'Album songs' : 'All songs'}>
                 <div className="mb-2 flex items-center justify-between">
-                  <h1 className="font-semibold">Songs by {artistName}</h1>
-                  <span className="text-[10px] text-white/35">{songs.length} total</span>
+                  <h1 className="font-semibold break-words">{albumName || 'All songs'}</h1>
+                  <span className="shrink-0 text-[10px] text-white/35">{visibleSongs.length} songs</span>
                 </div>
+                {albumName && <button type="button" onClick={() => setParams({})} className="mb-3 text-sm text-[#FFD600]">View all songs by {artistName}</button>}
                 <div>
-                  {songs.map(song => <SongItem key={song.id} song={song} />)}
+                  {visibleSongs.map(song => <SongItem key={song.id} song={song} />)}
+                  {albumName && !selectedAlbum && <p className="py-6 text-sm text-white/40">This album is no longer available.</p>}
                 </div>
               </section>
 

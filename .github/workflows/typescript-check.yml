@@ -26,3 +26,6 @@ jobs:
 
       - name: Song detail regression tests
         run: node --test scripts/song-detail.test.mjs
+
+      - name: Artist library regression tests
+        run: node --test scripts/artist-library.test.mjs
